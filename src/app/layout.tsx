@@ -24,9 +24,9 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/og.png",
-        width: 1731,
-        height: 909,
+        url: "/og-social.png",
+        width: 1200,
+        height: 630,
         alt: "Neural Relics — Forge permanence from alpha.",
       },
     ],
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Neural Relics",
     description: "Forge permanence from alpha on Bittensor.",
-    images: ["/og.png"],
+    images: ["/og-social.png"],
   },
 };
 
