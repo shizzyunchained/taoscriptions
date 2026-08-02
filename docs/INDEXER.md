@@ -111,6 +111,21 @@ artifact IDs, numbers, ownership states, and payload hashes. A release is not
 production-ready until this reproducibility test passes against a second empty
 database.
 
+After the primary and independent replay workers reach the exact same finalized
+checkpoint, set `DATABASE_URL`, `REPLAY_DATABASE_URL`, and `CHAIN_GENESIS_HASH`,
+then run:
+
+```bash
+npm run indexer:audit
+```
+
+The command is read-only. It computes canonical SHA-256 digests and row counts
+for the checkpoint, finalized block sequence, artifacts (including current
+ownership and evidence), transfers, and rejected operations. It fails if the
+URLs are identical, either checkpoint is missing, or any dataset differs.
+Off-chain marketplace listings are intentionally excluded because they are not
+derived by replaying finalized chain history.
+
 ## Render deployment gate
 
 Render background workers do not expose incoming network traffic, so the local
@@ -126,4 +141,5 @@ The intended first deployment sequence is:
 4. run the pre-deploy migration;
 5. start one worker and confirm its checkpoint reaches the current finalized
    head; and
-6. rebuild the same range into an empty second database and compare artifacts.
+6. rebuild the same range into an empty second database; and
+7. run `npm run indexer:audit` and retain its JSON output as release evidence.

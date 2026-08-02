@@ -10,7 +10,8 @@
     "verify:runtime": "node scripts/verify-runtime.mjs",
     "test:indexer": "node --test indexer/test/*.test.mjs",
     "indexer:migrate": "node indexer/src/migrate.mjs",
-    "indexer:start": "node indexer/src/index.mjs"
+    "indexer:start": "node indexer/src/index.mjs",
+    "indexer:audit": "node indexer/src/compare.mjs"
   },
   "dependencies": {
     "@polkadot/api": "^16.5.6",

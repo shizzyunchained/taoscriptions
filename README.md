@@ -58,6 +58,7 @@ npm run lint
 npm run build
 npm run verify:runtime
 npm run test:indexer
+npm run indexer:audit # requires primary + independent replay databases
 ```
 
 The finalized-block worker lives in `indexer/`. It requires an explicit
