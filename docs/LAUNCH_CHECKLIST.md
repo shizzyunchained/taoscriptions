@@ -17,6 +17,8 @@ No single green build overrides a missing chain, indexer, or wallet gate.
 
 - [ ] A `Bittensor Runtime Compatibility` run passed on the release commit in
       the previous 24 hours.
+      Pull requests trigger this live workflow on every revision, binding the
+      result to the exact head SHA.
 - [ ] The recorded genesis hashes match the intended mainnet and testnet.
 - [ ] The recorded runtime specs are explicitly supported by the indexer.
 - [ ] Required calls, storage entries, and events all remain present.

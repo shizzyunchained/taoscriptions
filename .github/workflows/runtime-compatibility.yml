@@ -1,6 +1,7 @@
 name: Bittensor Runtime Compatibility
 
 on:
+  pull_request:
   workflow_dispatch:
   schedule:
     - cron: "17 9 * * *"
@@ -9,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: runtime-compatibility
+  group: runtime-compatibility-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

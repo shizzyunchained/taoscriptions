@@ -70,5 +70,6 @@ The finalized-block worker lives in `indexer/`. It requires an explicit
 
 Production remains on the protected `main` branch. Feature work is deployed to
 a Vercel preview first, verified against testnet, and only then considered for
-promotion. Pull requests run deterministic CI; live Bittensor compatibility runs
-on a daily schedule and can also be triggered manually before a release.
+promotion. Pull requests run deterministic CI and live Bittensor compatibility
+against their exact head commit; the compatibility workflow also runs daily and
+can be triggered manually before a release.
