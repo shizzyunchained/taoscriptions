@@ -371,6 +371,10 @@ An accepted mint receipt MUST include a matching
 is stored as finalized chain evidence; the estimated fee shown before signing is
 not canonical.
 
+Accepted transfers apply the same fee rule: the finalized fee payer must match
+the transfer signer, and the index stores `actual_fee` rather than the client
+estimate.
+
 ## 16. Reference implementation sources
 
 - Bittensor stake-burn transaction:

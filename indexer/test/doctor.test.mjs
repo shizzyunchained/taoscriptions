@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { REQUIRED_ARTIFACT_COLUMNS, REQUIRED_TABLES, validateDoctorState } from "../src/doctor-lib.mjs";
+import { REQUIRED_ARTIFACT_COLUMNS, REQUIRED_TABLES, REQUIRED_TRANSFER_COLUMNS, validateDoctorState } from "../src/doctor-lib.mjs";
 
 const genesis = `0x${"1".repeat(64)}`;
 const valid = (overrides = {}) => ({
@@ -14,6 +14,7 @@ const valid = (overrides = {}) => ({
   checkpoint: null,
   tables: REQUIRED_TABLES,
   artifactColumns: REQUIRED_ARTIFACT_COLUMNS,
+  transferColumns: REQUIRED_TRANSFER_COLUMNS,
   ...overrides,
 });
 
@@ -21,7 +22,7 @@ test("deployment doctor accepts a migrated empty database at finalized bounds", 
   assert.deepEqual(validateDoctorState(valid()), {
     status: "ready", chainGenesis: genesis, runtimeSpec: 440, finalizedHead: 200,
     startBlock: 100, stopBlock: 150, checkpoint: null,
-    schema: { tables: 6, artifactColumns: 12 },
+    schema: { tables: 6, artifactColumns: 12, transferColumns: 13 },
   });
 });
 
@@ -35,4 +36,5 @@ test("deployment doctor fails closed on chain, runtime, schema, or checkpoint dr
   assert.throws(() => validateDoctorState(valid({ checkpoint: 151 })), /CHECKPOINT_PAST_STOP_BLOCK/);
   assert.throws(() => validateDoctorState(valid({ tables: REQUIRED_TABLES.slice(1) })), /MISSING_SCHEMA_TABLES/);
   assert.throws(() => validateDoctorState(valid({ artifactColumns: REQUIRED_ARTIFACT_COLUMNS.slice(1) })), /MISSING_ARTIFACT_COLUMNS/);
+  assert.throws(() => validateDoctorState(valid({ transferColumns: REQUIRED_TRANSFER_COLUMNS.slice(1) })), /MISSING_TRANSFER_COLUMNS/);
 });

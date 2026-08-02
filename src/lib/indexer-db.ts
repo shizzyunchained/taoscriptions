@@ -265,6 +265,7 @@ export type ArtifactTransfer = {
   toAccountHex: string;
   ownershipNonce: string;
   payloadHash: string;
+  transactionFeeRao: string | null;
 };
 
 export async function listArtifactTransfers(artifactId: string, limit = 100) {
@@ -278,9 +279,11 @@ export async function listArtifactTransfers(artifactId: string, limit = 100) {
     to_account_hex: string;
     ownership_nonce: string;
     payload_hash: string;
+    transaction_fee_rao: string | null;
   }>(
     `SELECT transfer_id, block_number, block_hash, extrinsic_index, extrinsic_hash,
-      from_account_hex, to_account_hex, ownership_nonce, payload_hash
+      from_account_hex, to_account_hex, ownership_nonce, payload_hash,
+      transaction_fee_rao
      FROM transfers WHERE artifact_id = $1
      ORDER BY ownership_nonce ASC LIMIT $2`,
     [artifactId, Math.min(Math.max(limit, 1), 100)],
@@ -295,6 +298,7 @@ export async function listArtifactTransfers(artifactId: string, limit = 100) {
     toAccountHex: row.to_account_hex,
     ownershipNonce: row.ownership_nonce,
     payloadHash: row.payload_hash,
+    transactionFeeRao: row.transaction_fee_rao,
   } satisfies ArtifactTransfer));
 }
 

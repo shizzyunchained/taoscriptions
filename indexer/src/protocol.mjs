@@ -219,6 +219,14 @@ export function validateTransfer({ api, extrinsic, eventRecords }) {
   const destinationHex = accountHex(decoded.payload.to);
   if (signerHex === destinationHex) throw new Error("TRANSFER_TO_CURRENT_OWNER");
   if (!eventRecords.some(({ event }) => api.events.system.ExtrinsicSuccess.is(event))) throw new Error("TRANSFER_EXTRINSIC_FAILED");
+  const feePaid = eventRecords.find(({ event }) => api.events.transactionPayment.TransactionFeePaid.is(event));
+  if (!feePaid) throw new Error("MISSING_TRANSACTION_FEE_EVENT");
+  const [feeSigner, actualFee, tip] = feePaid.event.data;
+  const transactionFeeRao = BigInt(actualFee.toString());
+  const transactionTipRao = BigInt(tip.toString());
+  if (accountHex(feeSigner) !== signerHex || transactionFeeRao <= 0n || transactionTipRao > transactionFeeRao) {
+    throw new Error("TRANSACTION_FEE_EVENT_MISMATCH");
+  }
   const remarked = eventRecords.find(({ event }) => api.events.system.Remarked.is(event));
   if (!remarked || accountHex(remarked.event.data[0]) !== signerHex || remarked.event.data[1].toHex() !== decoded.payloadHash) throw new Error("REMARK_EVENT_MISMATCH");
   return {
@@ -227,5 +235,7 @@ export function validateTransfer({ api, extrinsic, eventRecords }) {
     nonce: decoded.payload.nonce,
     signerHex,
     destinationHex,
+    transactionFeeRao,
+    transactionTipRao,
   };
 }

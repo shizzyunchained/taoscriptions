@@ -130,12 +130,13 @@ async function insertTransfer(client, context, transfer) {
       transfer_id, artifact_id, chain_genesis, block_number, block_hash,
       extrinsic_index, extrinsic_hash, extrinsic_hex,
       from_account_hex, to_account_hex, ownership_nonce,
-      payload_json, payload_hex, payload_hash, evidence_json
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb,$13,$14,$15::jsonb)`,
+      payload_json, payload_hex, payload_hash, transaction_fee_rao, evidence_json
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb,$13,$14,$15,$16::jsonb)`,
     [transferId, transfer.artifactId, expectedGenesis, context.blockNumber, context.blockHash,
       context.extrinsicIndex, context.extrinsic.hash.toHex(), context.extrinsic.toHex(),
       transfer.signerHex, transfer.destinationHex, transfer.nonce,
       JSON.stringify(transfer.payload), transfer.payloadHex, transfer.payloadHash,
+      transfer.transactionFeeRao.toString(),
       JSON.stringify({
         events: context.events.map(({ event }) => ({
           section: event.section,

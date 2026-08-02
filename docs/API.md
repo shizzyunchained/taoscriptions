@@ -37,6 +37,7 @@ the canonical `nr1:<genesis>:<block>:<extrinsic>` identifier.
 Artifact detail includes up to 100 accepted transfers in nonce order. The
 transfer-specific endpoint returns the same provenance plus the current owner
 and ownership nonce.
+Finalized transfer records also expose their actual chain fee in rao.
 Artifact responses include the requested TAO input, actual alpha burned,
 execution limit price, and actual finalized transaction fee in rao.
 

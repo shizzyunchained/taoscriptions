@@ -350,7 +350,6 @@ export default function Home() {
       freshQuote,
       receiptExpectation,
       currentGeneration,
-      runtimeSpec: apiAt.runtimeVersion.specVersion.toString(),
       review: {
         payload: payload.json,
         payloadBytes: payload.byteLength,
@@ -417,10 +416,11 @@ export default function Home() {
                   expected: assembled.receiptExpectation,
                 });
                 const finalizedHash = result.status.asFinalized.toHex().toLowerCase();
-                const [header, signedBlock, blockTimestamp] = await Promise.all([
+                const [header, signedBlock, blockTimestamp, finalizedRuntime] = await Promise.all([
                   assembled.api.rpc.chain.getHeader(finalizedHash),
                   assembled.api.rpc.chain.getBlock(finalizedHash),
                   assembled.api.query.timestamp.now.at(finalizedHash),
+                  assembled.api.rpc.state.getRuntimeVersion(finalizedHash),
                 ]);
                 const txHash = result.txHash.toHex().toLowerCase();
                 const locatedIndex = signedBlock.block.extrinsics.findIndex(
@@ -431,7 +431,7 @@ export default function Home() {
                 }
                 setMintEvidence(createMintEvidence({
                   genesisHash: assembled.api.genesisHash.toHex(),
-                  runtimeSpec: assembled.runtimeSpec,
+                  runtimeSpec: finalizedRuntime.specVersion.toString(),
                   blockNumber: header.number.toString(),
                   blockHash: finalizedHash,
                   extrinsicIndex: locatedIndex,

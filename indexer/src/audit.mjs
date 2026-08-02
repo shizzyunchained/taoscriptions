@@ -17,6 +17,7 @@ const DATASETS = [
   ["transfers", `SELECT transfer_id, artifact_id, block_number, block_hash,
     extrinsic_index, extrinsic_hash, extrinsic_hex, from_account_hex,
     to_account_hex, ownership_nonce, payload_json, payload_hex, payload_hash,
+    transaction_fee_rao,
     evidence_json FROM transfers WHERE chain_genesis = $1
     ORDER BY block_number ASC, extrinsic_index ASC`],
   ["rejections", `SELECT block_number, block_hash, extrinsic_index,

@@ -372,6 +372,11 @@ footer > a:last-child:hover { color: var(--ink); }
 .transfer-review div:last-child { border-bottom: 0; }
 .transfer-review span { color: var(--dim); font-size: 8px; }
 .transfer-review strong { color: #bfc5ba; font: 8px var(--font-geist-mono), monospace; text-align: right; }
+.transfer-evidence { margin-top: 18px; padding: 14px 16px; border: 1px solid rgba(200,245,107,.35); background: rgba(200,245,107,.045); }
+.transfer-evidence div { padding: 7px 0; display: flex; justify-content: space-between; gap: 18px; border-bottom: 1px solid rgba(200,245,107,.12); }
+.transfer-evidence span { color: var(--dim); font-size: 8px; }
+.transfer-evidence strong { color: #c7cdc2; font: 8px var(--font-geist-mono), monospace; text-align: right; overflow-wrap: anywhere; }
+.transfer-evidence button { width: 100%; margin-top: 12px; padding: 11px; border: 1px solid rgba(200,245,107,.4); background: transparent; color: var(--acid); font-size: 9px; font-weight: 700; cursor: pointer; }
 .transfer-button { width: 100%; min-height: 50px; margin-top: 22px; border: 0; background: var(--acid); color: #11150d; font-size: 10px; font-weight: 750; cursor: pointer; }
 .transfer-button.danger { background: var(--danger); }
 .transfer-button:disabled { background: #252a26; color: var(--dim); cursor: default; }

@@ -5,10 +5,13 @@ import Link from "next/link";
 import type { ApiPromise } from "@polkadot/api";
 import { createTransferPayload } from "@/lib/protocol";
 import { formatRao } from "@/lib/format";
+import { assertExpectedGenesis } from "@/lib/chain-guard";
+import { createTransferEvidence, type TransferEvidence } from "@/lib/transfer-evidence";
+import { verifyFinalizedTransferReceipt } from "@/lib/transfer-receipt";
 
 const APP_NAME = "Neural Relics";
 const TESTNET_RPC = process.env.NEXT_PUBLIC_SUBTENSOR_RPC ?? "wss://test.chain.opentensor.ai";
-const TESTNET_GENESIS = "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105";
+const TESTNET_GENESIS = process.env.NEXT_PUBLIC_CHAIN_GENESIS_HASH ?? "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105";
 
 type WalletAccount = { address: string; name: string; source: string; accountHex: string };
 type OwnedRelic = {
@@ -34,6 +37,7 @@ export function WalletWorkspace() {
   const [review, setReview] = useState<TransferReview | null>(null);
   const [transferState, setTransferState] = useState<"idle" | "review" | "signing" | "submitted" | "finalized" | "error">("idle");
   const [transactionHash, setTransactionHash] = useState("");
+  const [transferEvidence, setTransferEvidence] = useState<TransferEvidence | null>(null);
 
   async function loadCollection(address: string) {
     const requestId = ++collectionRequest.current;
@@ -75,14 +79,14 @@ export function WalletWorkspace() {
     const { ApiPromise, WsProvider } = await import("@polkadot/api");
     const api = await ApiPromise.create({ provider: new WsProvider(TESTNET_RPC), noInitWarn: true });
     try {
-      if (api.genesisHash.toHex() !== TESTNET_GENESIS) throw new Error("The configured RPC is not Neural Relics testnet.");
+      assertExpectedGenesis(api.genesisHash.toHex(), TESTNET_GENESIS);
       return await action(api);
     } finally { await api.disconnect(); }
   }
 
   async function reviewTransfer() {
     if (!account || !selected) return;
-    setTransferState("idle"); setMessage(""); setTransactionHash("");
+    setTransferState("idle"); setMessage(""); setTransactionHash(""); setTransferEvidence(null);
     try {
       const [{ u8aToHex }, { blake2AsHex, decodeAddress }] = await Promise.all([import("@polkadot/util"), import("@polkadot/util-crypto")]);
       const destinationHex = u8aToHex(decodeAddress(destination.trim()));
@@ -107,53 +111,95 @@ export function WalletWorkspace() {
 
   async function signTransfer() {
     if (!account || !review) return;
-    setTransferState("signing"); setMessage("");
+    setTransferState("signing"); setMessage(""); setTransferEvidence(null);
     try {
-      const [{ u8aToHex }, { decodeAddress }] = await Promise.all([import("@polkadot/util"), import("@polkadot/util-crypto")]);
       const stateResponse = await fetch(`/api/v1/artifacts/${encodeURIComponent(review.artifact.artifactId)}?fresh=1`, { cache: "no-store" });
       const stateBody = await stateResponse.json() as { artifact?: { ownerAccountHex: string; ownershipNonce: string }; error?: { message?: string } };
       if (!stateResponse.ok || !stateBody.artifact) throw new Error(stateBody.error?.message || "Finalized ownership could not be refreshed.");
       if (stateBody.artifact.ownerAccountHex !== account.accountHex || BigInt(stateBody.artifact.ownershipNonce) + 1n !== BigInt(review.nextNonce)) {
         throw new Error("Finalized ownership changed after review. Reload the wallet collection before signing.");
       }
-      await withApi(async (api) => {
+      const finalizedEvidence = await withApi(async (api) => {
         const { web3FromSource } = await import("@polkadot/extension-dapp");
         const injector = await web3FromSource(account.source);
         const call = api.tx.system.remarkWithEvent(review.payloadHex);
-        await new Promise<void>((resolve, reject) => {
+        return new Promise<TransferEvidence>((resolve, reject) => {
           let unsubscribe: (() => void) | undefined;
           void call.signAndSend(account.address, { signer: injector.signer }, (result) => {
               setTransactionHash(result.txHash.toHex());
               if (result.dispatchError) { unsubscribe?.(); reject(new Error(result.dispatchError.toString())); return; }
               if (result.status.isInBlock) setTransferState("submitted");
               if (result.status.isFinalized) {
-                try {
-                  const success = result.events.some(({ event }) => api.events.system.ExtrinsicSuccess.is(event));
-                  const remarked = result.events.find(({ event }) => api.events.system.Remarked.is(event));
-                  const remarkMatches = remarked
-                    && u8aToHex(decodeAddress(remarked.event.data[0].toString())) === account.accountHex
-                    && remarked.event.data[1].toHex() === review.payloadHash;
-                  unsubscribe?.();
-                  if (!success || !remarkMatches) reject(new Error("The finalized transaction is missing the required matching remark evidence."));
-                  else resolve();
-                } catch (error) { unsubscribe?.(); reject(error); }
+                void (async () => {
+                  try {
+                    const receipt = verifyFinalizedTransferReceipt({
+                      eventRecords: result.events,
+                      signerAccountHex: account.accountHex,
+                      payloadHash: review.payloadHash,
+                    });
+                    const finalizedHash = result.status.asFinalized.toHex().toLowerCase();
+                    const [header, signedBlock, blockTimestamp, finalizedRuntime] = await Promise.all([
+                      api.rpc.chain.getHeader(finalizedHash),
+                      api.rpc.chain.getBlock(finalizedHash),
+                      api.query.timestamp.now.at(finalizedHash),
+                      api.rpc.state.getRuntimeVersion(finalizedHash),
+                    ]);
+                    const txHash = result.txHash.toHex().toLowerCase();
+                    const extrinsicIndex = signedBlock.block.extrinsics.findIndex(
+                      (extrinsic) => extrinsic.hash.toHex().toLowerCase() === txHash,
+                    );
+                    if (extrinsicIndex < 0 || (result.txIndex !== undefined && result.txIndex !== extrinsicIndex)) {
+                      throw new Error("FINALIZED_EXTRINSIC_POSITION_MISMATCH");
+                    }
+                    resolve(createTransferEvidence({
+                      artifactId: review.artifact.artifactId,
+                      genesisHash: api.genesisHash.toHex(),
+                      runtimeSpec: finalizedRuntime.specVersion.toString(),
+                      blockNumber: header.number.toString(),
+                      blockHash: finalizedHash,
+                      extrinsicIndex,
+                      extrinsicHash: txHash,
+                      fromAddress: account.address,
+                      fromAccountHex: account.accountHex,
+                      toAccountHex: review.destination,
+                      ownershipNonce: review.nextNonce,
+                      transactionFeeRao: receipt.transactionFeeRao.toString(),
+                      transactionTipRao: receipt.transactionTipRao.toString(),
+                      payloadHash: review.payloadHash,
+                      finalizedAt: new Date(Number(blockTimestamp.toString())).toISOString(),
+                    }));
+                  } catch (error) { reject(error); }
+                  finally { unsubscribe?.(); }
+                })();
               }
             }).then((stop) => { unsubscribe = stop; }).catch((error) => { unsubscribe?.(); reject(error); });
         });
       });
+      setTransferEvidence(finalizedEvidence);
       setTransferState("finalized");
-      setMessage("Transfer finalized. The new owner appears after the indexer reaches this block.");
+      setMessage("Transfer finalized with a complete chain receipt. The new owner appears after the indexer reaches this block.");
     } catch (error) { setTransferState("error"); setMessage(error instanceof Error ? error.message : "The transfer did not finalize."); }
+  }
+
+  function downloadTransferEvidence() {
+    if (!transferEvidence) return;
+    const blob = new Blob([`${JSON.stringify(transferEvidence, null, 2)}\n`], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${transferEvidence.transferId.replaceAll(":", "-")}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
     <section className="wallet-workspace">
       {!account ? <div className="wallet-gate"><span>SS58 ownership</span><h2>Your wallet is your account.</h2><p>Connect TAOStats Wallet to read finalized relics owned by that AccountId32. Neural Relics never receives a seed phrase.</p><button type="button" onClick={connect} disabled={state === "connecting"}>{state === "connecting" ? "Opening wallet..." : "Connect TAOStats Wallet"}</button>{message && <p className="error-message" role="alert">{message}</p>}</div>
-      : <><header><div><span>Connected owner</span><select aria-label="Connected wallet account" value={account.address} onChange={(event) => { const next = walletAccounts.find((item) => item.address === event.target.value); if (!next) return; setAccount(next); setRelics([]); setSelected(null); setReview(null); setDestination(""); setTransferState("idle"); setState("connecting"); void loadCollection(next.address).catch((error) => { setState("error"); setMessage(error instanceof Error ? error.message : "The collection could not be loaded."); }); }}>{walletAccounts.map((item) => <option key={item.address} value={item.address}>{item.name} · {compact(item.address)}</option>)}</select><p>{compact(account.address)}</p></div><button type="button" disabled={transferState === "signing" || transferState === "submitted"} onClick={() => { collectionRequest.current += 1; setAccount(null); setWalletAccounts([]); setRelics([]); setState("idle"); setSelected(null); }}>Disconnect</button></header>
+      : <><header><div><span>Connected owner</span><select aria-label="Connected wallet account" value={account.address} onChange={(event) => { const next = walletAccounts.find((item) => item.address === event.target.value); if (!next) return; setAccount(next); setRelics([]); setSelected(null); setReview(null); setTransferEvidence(null); setDestination(""); setTransferState("idle"); setState("connecting"); void loadCollection(next.address).catch((error) => { setState("error"); setMessage(error instanceof Error ? error.message : "The collection could not be loaded."); }); }}>{walletAccounts.map((item) => <option key={item.address} value={item.address}>{item.name} · {compact(item.address)}</option>)}</select><p>{compact(account.address)}</p></div><button type="button" disabled={transferState === "signing" || transferState === "submitted"} onClick={() => { collectionRequest.current += 1; setAccount(null); setWalletAccounts([]); setRelics([]); setState("idle"); setSelected(null); setTransferEvidence(null); }}>Disconnect</button></header>
         {state === "offline" || state === "error" ? <div className="wallet-notice" role="status"><strong>{state === "offline" ? "Indexer gate" : "Wallet error"}</strong><p>{message}</p></div>
         : state === "ready" && !relics.length ? <div className="wallet-notice"><strong>No finalized relics</strong><p>This address does not currently own a Neural Relic in indexed testnet state.</p><Link href="/#forge">Open the testnet forge</Link></div>
-        : <div className="owned-layout"><div className="owned-list"><div><span>Finalized collection</span><strong>{relics.length} owned</strong></div>{relics.map((relic) => <button type="button" key={relic.artifactId} className={selected?.artifactId === relic.artifactId ? "active" : ""} onClick={() => { setSelected(relic); setReview(null); setTransferState("idle"); setMessage(""); }}><span>Relic #{relic.globalNumber} · SN{relic.netuid}</span><strong>{relic.name}</strong><small>Ownership nonce {relic.ownershipNonce}</small></button>)}</div>
-          <div className="transfer-console">{selected ? <><span>Canonical transfer</span><h2>{selected.name}</h2><p>This changes Neural Relics protocol ownership after finalization. It does not move TAO or alpha.</p><label><span>Destination SS58 address</span><input value={destination} onChange={(event) => { setDestination(event.target.value); setReview(null); setTransferState("idle"); }} placeholder="5..." /></label>{review && <div className="transfer-review"><div><span>Next nonce</span><strong>{review.nextNonce}</strong></div><div><span>Destination</span><strong>{compact(review.destination)}</strong></div><div><span>Estimated fee</span><strong>{formatRao(review.estimatedFeeRao)} TAO</strong></div><div><span>Payload</span><strong>{review.payloadBytes} bytes</strong></div></div>}{message && <p className={transferState === "finalized" ? "listing-success" : "error-message"} role="status">{message}</p>}{transferState === "review" ? <button type="button" className="transfer-button danger" onClick={signTransfer}>Sign irreversible transfer</button> : <button type="button" className="transfer-button" onClick={reviewTransfer} disabled={!destination || transferState === "signing" || transferState === "submitted" || transferState === "finalized"}>{transferState === "signing" ? "Confirm in TAOStats Wallet" : transferState === "submitted" ? `Finalizing ${compact(transactionHash)}` : transferState === "finalized" ? "Transfer finalized" : "Review transfer"}</button>}<Link href={`/relic/${encodeURIComponent(selected.artifactId)}`}>Inspect full provenance</Link></> : <div className="transfer-empty"><span>Select a relic</span><h2>Ownership actions appear here.</h2><p>Nothing can be signed until you choose one finalized relic.</p></div>}</div></div>}</>}
+        : <div className="owned-layout"><div className="owned-list"><div><span>Finalized collection</span><strong>{relics.length} owned</strong></div>{relics.map((relic) => <button type="button" key={relic.artifactId} className={selected?.artifactId === relic.artifactId ? "active" : ""} onClick={() => { setSelected(relic); setReview(null); setTransferEvidence(null); setTransferState("idle"); setMessage(""); }}><span>Relic #{relic.globalNumber} · SN{relic.netuid}</span><strong>{relic.name}</strong><small>Ownership nonce {relic.ownershipNonce}</small></button>)}</div>
+          <div className="transfer-console">{selected ? <><span>Canonical transfer</span><h2>{selected.name}</h2><p>This changes Neural Relics protocol ownership after finalization. It does not move TAO or alpha.</p><label><span>Destination SS58 address</span><input value={destination} onChange={(event) => { setDestination(event.target.value); setReview(null); setTransferEvidence(null); setTransferState("idle"); }} placeholder="5..." /></label>{review && <div className="transfer-review"><div><span>Next nonce</span><strong>{review.nextNonce}</strong></div><div><span>Destination</span><strong>{compact(review.destination)}</strong></div><div><span>Estimated fee</span><strong>{formatRao(review.estimatedFeeRao)} TAO</strong></div><div><span>Payload</span><strong>{review.payloadBytes} bytes</strong></div></div>}{message && <p className={transferState === "finalized" ? "listing-success" : "error-message"} role="status">{message}</p>}{transferEvidence && <div className="transfer-evidence"><div><span>Transfer ID</span><strong>{transferEvidence.transferId}</strong></div><div><span>Finalized block</span><strong>#{transferEvidence.blockNumber} / {transferEvidence.extrinsicIndex}</strong></div><div><span>Actual fee</span><strong>{formatRao(transferEvidence.transactionFeeRao)} TAO</strong></div><button type="button" onClick={downloadTransferEvidence}>Download finalized proof</button></div>}{transferState === "review" ? <button type="button" className="transfer-button danger" onClick={signTransfer}>Sign irreversible transfer</button> : <button type="button" className="transfer-button" onClick={reviewTransfer} disabled={!destination || transferState === "signing" || transferState === "submitted" || transferState === "finalized"}>{transferState === "signing" ? "Confirm in TAOStats Wallet" : transferState === "submitted" ? `Finalizing ${compact(transactionHash)}` : transferState === "finalized" ? "Transfer finalized" : "Review transfer"}</button>}<Link href={`/relic/${encodeURIComponent(selected.artifactId)}`}>Inspect full provenance</Link></> : <div className="transfer-empty"><span>Select a relic</span><h2>Ownership actions appear here.</h2><p>Nothing can be signed until you choose one finalized relic.</p></div>}</div></div>}</>}
     </section>
   );
 }

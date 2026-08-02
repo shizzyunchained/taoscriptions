@@ -22,6 +22,12 @@ export const REQUIRED_ARTIFACT_COLUMNS = [
   "transaction_fee_rao",
 ];
 
+export const REQUIRED_TRANSFER_COLUMNS = [
+  "artifact_id", "block_hash", "block_number", "chain_genesis", "evidence_json",
+  "extrinsic_hash", "extrinsic_index", "from_account_hex", "ownership_nonce",
+  "payload_hash", "to_account_hex", "transaction_fee_rao", "transfer_id",
+];
+
 function missing(required, actual) {
   const values = new Set(actual);
   return required.filter((value) => !values.has(value));
@@ -30,7 +36,7 @@ function missing(required, actual) {
 export function validateDoctorState(input) {
   const {
     expectedGenesis, actualGenesis, supportedSpec, actualSpec,
-    startBlock, stopBlock, finalizedHead, checkpoint, tables, artifactColumns,
+    startBlock, stopBlock, finalizedHead, checkpoint, tables, artifactColumns, transferColumns,
   } = input;
   if (actualGenesis !== expectedGenesis) throw new Error(`GENESIS_HASH_MISMATCH:${actualGenesis}`);
   if (actualSpec !== supportedSpec) throw new Error(`UNSUPPORTED_RUNTIME_SPEC:${actualSpec}`);
@@ -51,6 +57,8 @@ export function validateDoctorState(input) {
   if (missingTables.length) throw new Error(`MISSING_SCHEMA_TABLES:${missingTables.join(",")}`);
   const missingColumns = missing(REQUIRED_ARTIFACT_COLUMNS, artifactColumns);
   if (missingColumns.length) throw new Error(`MISSING_ARTIFACT_COLUMNS:${missingColumns.join(",")}`);
+  const missingTransferColumns = missing(REQUIRED_TRANSFER_COLUMNS, transferColumns);
+  if (missingTransferColumns.length) throw new Error(`MISSING_TRANSFER_COLUMNS:${missingTransferColumns.join(",")}`);
   return {
     status: "ready",
     chainGenesis: actualGenesis,
@@ -59,6 +67,10 @@ export function validateDoctorState(input) {
     startBlock,
     stopBlock,
     checkpoint,
-    schema: { tables: REQUIRED_TABLES.length, artifactColumns: REQUIRED_ARTIFACT_COLUMNS.length },
+    schema: {
+      tables: REQUIRED_TABLES.length,
+      artifactColumns: REQUIRED_ARTIFACT_COLUMNS.length,
+      transferColumns: REQUIRED_TRANSFER_COLUMNS.length,
+    },
   };
 }

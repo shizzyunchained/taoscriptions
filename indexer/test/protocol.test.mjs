@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { blake2AsHex } from "@polkadot/util-crypto";
-import { findProtocolRemark, parseMintPayload, parseTransferPayload, validateMint } from "../src/protocol.mjs";
+import { findProtocolRemark, parseMintPayload, parseTransferPayload, validateMint, validateTransfer } from "../src/protocol.mjs";
 
 const encode = (value) => new TextEncoder().encode(value);
 const inline = (overrides = {}) => ({
@@ -109,4 +109,29 @@ test("accepted mints require the finalized fee payer and actual fee", () => {
     () => validateMint({ api: { events: guards }, extrinsic, eventRecords: records.slice(1), subnetGeneration: "123" }),
     /MISSING_TRANSACTION_FEE_EVENT/,
   );
+});
+
+test("accepted transfers preserve the finalized actual fee", () => {
+  const signer = `0x${"3".repeat(64)}`;
+  const destination = `0x${"4".repeat(64)}`;
+  const payload = { p: "neural-relics", v: 1, op: "transfer", artifact: `nr1:0x${"1".repeat(64)}:10:2`, to: destination, nonce: 1 };
+  const bytes = encode(JSON.stringify(payload));
+  const payloadHash = blake2AsHex(bytes, 256);
+  const codec = (value, encoded = null) => ({ toString: () => String(value), ...(encoded ? { toHex: () => encoded } : {}) });
+  const event = (section, method, data = []) => ({ event: { section, method, data } });
+  const guards = new Proxy({}, { get: (_target, section) => new Proxy({}, {
+    get: (_section, method) => ({ is: (candidate) => candidate.section === section && candidate.method === method }),
+  }) });
+  const extrinsic = {
+    isSigned: true,
+    signer: codec(signer),
+    method: { section: "system", method: "remarkWithEvent", args: [{ toU8a: () => bytes }] },
+  };
+  const records = [
+    event("transactionPayment", "TransactionFeePaid", [codec(signer), codec(900_000), codec(0)]),
+    event("system", "Remarked", [codec(signer), codec(payloadHash, payloadHash)]),
+    event("system", "ExtrinsicSuccess"),
+  ];
+  assert.equal(validateTransfer({ api: { events: guards }, extrinsic, eventRecords: records }).transactionFeeRao, 900_000n);
+  assert.throws(() => validateTransfer({ api: { events: guards }, extrinsic, eventRecords: records.slice(1) }), /MISSING_TRANSACTION_FEE_EVENT/);
 });

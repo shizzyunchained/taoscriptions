@@ -57,6 +57,8 @@ No single green build overrides a missing chain, indexer, or wallet gate.
 
 - [ ] Listing creation and cancellation signatures verify in TAOStats Wallet.
 - [ ] Transfer or expiry invalidates an active listing.
+- [ ] A real testnet transfer receipt records its canonical transfer ID,
+      finalized position, matching remark, and actual transaction fee.
 - [ ] No purchase, payment, escrow, or settlement endpoint is enabled.
 - [ ] UI still labels marketplace data as signed discovery only.
 

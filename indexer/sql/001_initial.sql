@@ -78,11 +78,15 @@ CREATE TABLE IF NOT EXISTS transfers (
   payload_json JSONB NOT NULL,
   payload_hex TEXT NOT NULL,
   payload_hash TEXT NOT NULL,
+  transaction_fee_rao NUMERIC(20, 0),
   evidence_json JSONB NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (chain_genesis, block_number, extrinsic_index),
   UNIQUE (artifact_id, ownership_nonce)
 );
+
+ALTER TABLE transfers
+  ADD COLUMN IF NOT EXISTS transaction_fee_rao NUMERIC(20, 0);
 
 CREATE INDEX IF NOT EXISTS transfers_artifact_idx
   ON transfers (artifact_id, ownership_nonce);
