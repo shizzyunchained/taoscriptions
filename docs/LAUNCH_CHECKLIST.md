@@ -33,6 +33,8 @@ No single green build overrides a missing chain, indexer, or wallet gate.
 - [ ] The launch record contains genesis hash, block number/hash, extrinsic
       index/hash, signer, subnet generation, requested TAO, limit price, actual
       alpha burned, payload hash, and transaction fee.
+- [ ] `npm run verify:mint-evidence -- <proof.json>` independently passed
+      against finalized chain state, and its JSON output is retained.
 - [ ] Finalized events include `BatchCompleted`, `AlphaBurned`, `AddStakeBurn`,
       `Remarked`, and `ExtrinsicSuccess`, with no dispatch error.
 - [ ] Stale quote, insufficient balance, wallet rejection, and wrong-genesis
@@ -42,6 +44,8 @@ No single green build overrides a missing chain, indexer, or wallet gate.
 
 - [ ] `START_BLOCK` is the finalized block immediately before the first accepted
       protocol candidate.
+- [ ] The same activation block is persisted by both index databases and
+      returned by `/api/v1/status`.
 - [ ] Primary Postgres migration completed before the worker started.
 - [ ] `npm run indexer:doctor` passed against each database and its configured
       chain bounds; both JSON reports are retained.

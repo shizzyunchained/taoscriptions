@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { Buffer } from "node:buffer";
 
 const DATASETS = [
+  ["protocolConfig", `SELECT activation_block FROM protocol_config WHERE chain_genesis = $1`],
   ["checkpoint", `SELECT block_number, block_hash FROM chain_checkpoints WHERE chain_genesis = $1`],
   ["blocks", `SELECT block_number, block_hash, parent_hash, runtime_spec
     FROM indexed_blocks WHERE chain_genesis = $1 ORDER BY block_number ASC`],
@@ -51,6 +52,7 @@ export async function auditSnapshot(client, chainGenesis) {
     return [name, { count: result.rowCount, sha256: digestRows(result.rows) }];
   }));
   const snapshot = Object.fromEntries(entries);
+  if (snapshot.protocolConfig.count !== 1) throw new Error("Each audit database must contain exactly one protocol activation for the configured chain.");
   if (snapshot.checkpoint.count !== 1) throw new Error("Each audit database must contain exactly one checkpoint for the configured chain.");
   return { chainGenesis, datasets: snapshot };
 }

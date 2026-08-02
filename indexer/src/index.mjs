@@ -251,6 +251,19 @@ async function main() {
   const lock = await lockClient.query("SELECT pg_try_advisory_lock(684927314) AS acquired");
   if (!lock.rows[0].acquired) throw new Error("Another Neural Relics indexer owns the database lock.");
 
+  await pool.query(
+    `INSERT INTO protocol_config (chain_genesis, activation_block)
+     VALUES ($1, $2) ON CONFLICT (chain_genesis) DO NOTHING`,
+    [expectedGenesis, startBlock],
+  );
+  const protocolConfig = await pool.query(
+    "SELECT activation_block FROM protocol_config WHERE chain_genesis = $1",
+    [expectedGenesis],
+  );
+  if (!protocolConfig.rowCount || Number(protocolConfig.rows[0].activation_block) !== startBlock) {
+    throw new Error(`ACTIVATION_BLOCK_MISMATCH:${protocolConfig.rows[0]?.activation_block ?? "missing"}`);
+  }
+
   const api = await ApiPromise.create({ provider: new WsProvider(rpcUrl), noInitWarn: true });
   const genesis = api.genesisHash.toHex();
   if (genesis !== expectedGenesis) throw new Error(`GENESIS_HASH_MISMATCH:${genesis}`);

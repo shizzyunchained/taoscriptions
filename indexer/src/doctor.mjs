@@ -23,13 +23,14 @@ let api;
 try {
   api = await ApiPromise.create({ provider: new WsProvider(rpcUrl), noInitWarn: true });
   const finalizedHash = await api.rpc.chain.getFinalizedHead();
-  const [header, runtime, tableResult, columnResult, transferColumnResult, checkpointResult] = await Promise.all([
+  const [header, runtime, tableResult, columnResult, transferColumnResult, checkpointResult, protocolConfigResult] = await Promise.all([
     api.rpc.chain.getHeader(finalizedHash),
     api.rpc.state.getRuntimeVersion(finalizedHash),
     pool.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"),
     pool.query("SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'artifacts'"),
     pool.query("SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'transfers'"),
     pool.query("SELECT block_number FROM chain_checkpoints WHERE chain_genesis = $1", [expectedGenesis]),
+    pool.query("SELECT activation_block FROM protocol_config WHERE chain_genesis = $1", [expectedGenesis]),
   ]);
   const report = validateDoctorState({
     expectedGenesis,
@@ -40,6 +41,7 @@ try {
     stopBlock,
     finalizedHead: header.number.toNumber(),
     checkpoint: checkpointResult.rowCount ? Number(checkpointResult.rows[0].block_number) : null,
+    activationBlock: protocolConfigResult.rowCount ? Number(protocolConfigResult.rows[0].activation_block) : null,
     tables: tableResult.rows.map(({ table_name: name }) => name),
     artifactColumns: columnResult.rows.map(({ column_name: name }) => name),
     transferColumns: transferColumnResult.rows.map(({ column_name: name }) => name),

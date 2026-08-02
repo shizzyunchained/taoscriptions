@@ -26,10 +26,12 @@ test("audit snapshot covers every finalized-state dataset", async () => {
   const pool = new Pool();
   const chain = `0x${"2".repeat(64)}`;
   await pool.query(migration);
+  await pool.query("INSERT INTO protocol_config (chain_genesis, activation_block) VALUES ($1, 9)", [chain]);
   await pool.query("INSERT INTO chain_checkpoints (chain_genesis, block_number, block_hash) VALUES ($1, 10, $2)", [chain, `0x${"3".repeat(64)}`]);
   await pool.query("INSERT INTO indexed_blocks (chain_genesis, block_number, block_hash, parent_hash, runtime_spec) VALUES ($1, 10, $2, $3, 440)", [chain, `0x${"3".repeat(64)}`, `0x${"4".repeat(64)}`]);
   const snapshot = await auditSnapshot(pool, chain);
-  assert.deepEqual(Object.keys(snapshot.datasets), ["checkpoint", "blocks", "artifacts", "transfers", "rejections"]);
+  assert.deepEqual(Object.keys(snapshot.datasets), ["protocolConfig", "checkpoint", "blocks", "artifacts", "transfers", "rejections"]);
+  assert.equal(snapshot.datasets.protocolConfig.count, 1);
   assert.equal(snapshot.datasets.checkpoint.count, 1);
   assert.equal(snapshot.datasets.blocks.count, 1);
   assert.equal(snapshot.datasets.artifacts.count, 0);

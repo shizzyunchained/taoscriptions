@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createMintEvidence } from "../../src/lib/mint-evidence.ts";
+import { createMintEvidence, parseMintEvidenceJson } from "../../src/lib/mint-evidence.ts";
 
 const hash = (character) => `0x${character.repeat(64)}`;
 
@@ -17,4 +17,8 @@ test("builds the canonical relic identifier from finalized chain position", () =
   assert.equal(evidence.artifactId, `nr1:${hash("1")}:7692897:3`);
   assert.equal(evidence.transactionFeeRao, "1710598");
   assert.equal(evidence.protocolVersion, 1);
+  assert.deepEqual(parseMintEvidenceJson(JSON.stringify(evidence)), evidence);
+  assert.throws(() => parseMintEvidenceJson(JSON.stringify({ ...evidence, artifactId: `${evidence.artifactId}-altered` })), /ARTIFACT_ID_MISMATCH/);
+  assert.throws(() => parseMintEvidenceJson(JSON.stringify({ ...evidence, extra: true })), /INVALID_EVIDENCE_FIELDS/);
+  assert.throws(() => parseMintEvidenceJson(JSON.stringify({ ...evidence, transactionFeeRao: "0" })), /INVALID_EVIDENCE_AMOUNT/);
 });

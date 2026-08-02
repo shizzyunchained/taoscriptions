@@ -61,6 +61,7 @@ npm run lint
 npm run build
 npm run verify:runtime
 npm run verify:transaction # constructs and quotes; never signs or submits
+npm run verify:mint-evidence -- downloaded-proof.json # read-only chain replay
 npm run test:indexer
 npm run indexer:doctor # requires a migrated database and explicit START_BLOCK
 npm run indexer:audit # requires primary + independent replay databases

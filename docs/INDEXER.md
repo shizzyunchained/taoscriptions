@@ -28,6 +28,10 @@ For every processed finalized block:
 - validation result and stable reason code;
 - indexer build version.
 
+The database also stores exactly one immutable activation block per genesis.
+Primary and replay databases must agree on it before their row digests can be
+compared.
+
 For every accepted mint:
 
 - canonical artifact ID, global number, and subnet number;
@@ -158,6 +162,9 @@ advancing while finalized heads continue.
 The intended first deployment sequence is:
 
 1. record the finalized block immediately before the first accepted test mint;
+   first run `npm run verify:mint-evidence -- <downloaded-proof.json>` to
+   independently re-read the canonical block, extrinsic, events, runtime, and
+   timestamp. Use its `recommendedStartBlock` only after `verified: true`;
 2. create two dedicated Postgres databases;
 3. choose one finalized audit checkpoint and set the same `START_BLOCK` and
    `STOP_BLOCK` for two workers backed by those separate databases;

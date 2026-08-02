@@ -21,7 +21,7 @@ GET /api/v1/status
 ```
 
 Returns protocol version, chain genesis hash, finalized checkpoint, checkpoint
-time, and accepted artifact count.
+time, immutable activation block, and accepted artifact count.
 
 ## Artifacts
 

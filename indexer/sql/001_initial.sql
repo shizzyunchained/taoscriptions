@@ -18,6 +18,12 @@ CREATE TABLE IF NOT EXISTS chain_checkpoints (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS protocol_config (
+  chain_genesis TEXT PRIMARY KEY,
+  activation_block BIGINT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS artifacts (
   artifact_id TEXT PRIMARY KEY,
   chain_genesis TEXT NOT NULL,

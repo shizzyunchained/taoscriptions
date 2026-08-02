@@ -3,6 +3,7 @@ export const REQUIRED_TABLES = [
   "chain_checkpoints",
   "indexed_blocks",
   "listings",
+  "protocol_config",
   "rejected_operations",
   "transfers",
 ];
@@ -36,7 +37,7 @@ function missing(required, actual) {
 export function validateDoctorState(input) {
   const {
     expectedGenesis, actualGenesis, supportedSpec, actualSpec,
-    startBlock, stopBlock, finalizedHead, checkpoint, tables, artifactColumns, transferColumns,
+    startBlock, stopBlock, finalizedHead, checkpoint, activationBlock, tables, artifactColumns, transferColumns,
   } = input;
   if (actualGenesis !== expectedGenesis) throw new Error(`GENESIS_HASH_MISMATCH:${actualGenesis}`);
   if (actualSpec !== supportedSpec) throw new Error(`UNSUPPORTED_RUNTIME_SPEC:${actualSpec}`);
@@ -53,6 +54,9 @@ export function validateDoctorState(input) {
     if (checkpoint > finalizedHead) throw new Error(`CHECKPOINT_AHEAD_OF_FINALITY:${checkpoint}`);
     if (stopBlock !== null && checkpoint > stopBlock) throw new Error(`CHECKPOINT_PAST_STOP_BLOCK:${checkpoint}`);
   }
+  if (activationBlock !== null && activationBlock !== startBlock) {
+    throw new Error(`ACTIVATION_BLOCK_MISMATCH:${activationBlock}`);
+  }
   const missingTables = missing(REQUIRED_TABLES, tables);
   if (missingTables.length) throw new Error(`MISSING_SCHEMA_TABLES:${missingTables.join(",")}`);
   const missingColumns = missing(REQUIRED_ARTIFACT_COLUMNS, artifactColumns);
@@ -67,6 +71,7 @@ export function validateDoctorState(input) {
     startBlock,
     stopBlock,
     checkpoint,
+    activationBlock: activationBlock ?? startBlock,
     schema: {
       tables: REQUIRED_TABLES.length,
       artifactColumns: REQUIRED_ARTIFACT_COLUMNS.length,

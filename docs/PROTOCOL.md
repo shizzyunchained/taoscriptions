@@ -174,6 +174,15 @@ inner call fails. A plain `Utility.batch` is invalid.
 
 ## 8. Initial state
 
+Each chain deployment publishes one immutable `activation_block`. Conforming
+indexers process that block and every later finalized block, and ignore protocol
+payloads before it. The reference testnet launch sets activation to the block
+immediately before the first verified official mint. Global and subnet ordinal
+numbers are therefore scoped to `(genesis_hash, activation_block)` even though
+the canonical artifact ID remains its objective chain position. The activation
+block MUST be persisted, returned by status APIs, and included in replay audits;
+changing an environment variable after indexing begins cannot redefine it.
+
 For every valid mint:
 
 - `creator` is the extrinsic signer;
