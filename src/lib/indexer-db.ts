@@ -1,5 +1,6 @@
 import "server-only";
 import pg from "pg";
+import { ACTIVE_LISTING_STATE_SQL } from "@/lib/marketplace-state.mjs";
 
 const DEFAULT_LIMIT = 24;
 const MAX_LIMIT = 100;
@@ -366,10 +367,7 @@ export async function listActiveListings(artifactId: string | null, limit = DEFA
      FROM listings l
      JOIN artifacts a ON a.artifact_id = l.artifact_id
      JOIN chain_checkpoints c ON c.chain_genesis = l.chain_genesis
-     WHERE l.chain_genesis = $1 AND l.cancelled_at IS NULL
-       AND l.seller_account_hex = a.owner_account_hex
-       AND l.ownership_nonce = a.ownership_nonce
-       AND l.expiry_block > c.block_number
+     WHERE l.chain_genesis = $1 AND ${ACTIVE_LISTING_STATE_SQL}
        ${artifactFilter}
      ORDER BY l.created_at DESC, l.listing_id DESC
      LIMIT $${values.length}`,

@@ -6,6 +6,7 @@ import { calculateLimitPrice, createInlineMintPayload, DEFAULT_SLIPPAGE_BPS } fr
 import { verifyFinalizedMintReceipt, type MintReceiptExpectation } from "@/lib/mint-receipt";
 import { createMintEvidence, type MintEvidence } from "@/lib/mint-evidence";
 import { assertExpectedGenesis } from "@/lib/chain-guard";
+import { assertMintPreflight } from "@/lib/mint-preflight";
 
 const APP_NAME = "Neural Relics";
 const TESTNET_RPC = process.env.NEXT_PUBLIC_SUBTENSOR_RPC ?? "wss://test.chain.opentensor.ai";
@@ -277,12 +278,6 @@ export default function Home() {
     ]);
     const currentGeneration = generationResult.toString();
     const routeHotkey = routeHotkeyResult.toString();
-    if (currentGeneration !== selectedSubnet.generation) {
-      throw new Error("This subnet was re-registered. Refresh its identity before minting.");
-    }
-    if (subtokenEnabledResult.toString() !== "true") {
-      throw new Error("Alpha operations are currently disabled on this subnet.");
-    }
 
     const decoded = quoteResult as unknown as {
       alphaAmount: { toString(): string };
@@ -299,9 +294,6 @@ export default function Home() {
     };
     if (freshQuote.alphaAmount === 0n) throw new Error("The selected burn no longer returns alpha.");
     const minimumStakeRao = BigInt(apiAt.consts.subtensorModule.initialMinStake.toString());
-    if (freshQuote.taoAmount < minimumStakeRao) {
-      throw new Error(`The pool must receive at least ${formatToken(minimumStakeRao, 9)} TAO after its swap fee.`);
-    }
 
     const payload = createInlineMintPayload({
       netuid: selectedNetuid,
@@ -340,8 +332,26 @@ export default function Home() {
       (accountInfo as unknown as { data: { free: { toString(): string } } }).data.free.toString(),
     );
     const existentialDeposit = BigInt(api.consts.balances.existentialDeposit.toString());
-    if (available < amountRao + estimatedFee + existentialDeposit) {
-      throw new Error("The test wallet does not have enough free TAO for the burn and network fee.");
+    try {
+      assertMintPreflight({
+        reviewedGeneration: selectedSubnet.generation,
+        currentGeneration,
+        subtokenEnabled: subtokenEnabledResult.toString() === "true",
+        poolTaoRao: freshQuote.taoAmount,
+        minimumPoolTaoRao: minimumStakeRao,
+        freeBalanceRao: available,
+        spendRao: amountRao,
+        estimatedFeeRao: estimatedFee,
+        existentialDepositRao: existentialDeposit,
+      });
+    } catch (cause) {
+      if (cause instanceof Error && cause.message === "POOL_INPUT_BELOW_MINIMUM_STAKE") {
+        throw new Error(`The pool must receive at least ${formatToken(minimumStakeRao, 9)} TAO after its swap fee.`);
+      }
+      if (cause instanceof Error && cause.message === "INSUFFICIENT_FREE_TAO") {
+        throw new Error("The test wallet does not have enough free TAO for the burn and network fee.");
+      }
+      throw cause;
     }
 
     return {
