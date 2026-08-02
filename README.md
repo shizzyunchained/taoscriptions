@@ -21,7 +21,8 @@ A v1 mint is one `utility.batchAll` extrinsic containing:
 If either call fails, both calls roll back. See [the protocol](docs/PROTOCOL.md),
 [indexer rules](docs/INDEXER.md), [security model](docs/SECURITY.md), and
 [delivery roadmap](docs/ROADMAP.md). The finalized-state endpoints are described
-in [the API reference](docs/API.md).
+in [the API reference](docs/API.md). Preview promotion is governed by the
+[launch checklist](docs/LAUNCH_CHECKLIST.md).
 
 ## Safety boundary
 
@@ -68,4 +69,5 @@ The finalized-block worker lives in `indexer/`. It requires an explicit
 
 Production remains on the protected `main` branch. Feature work is deployed to
 a Vercel preview first, verified against testnet, and only then considered for
-promotion.
+promotion. Pull requests run deterministic CI; live Bittensor compatibility runs
+on a daily schedule and can also be triggered manually before a release.

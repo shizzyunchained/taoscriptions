@@ -91,4 +91,6 @@ independent review.
 
 Structured worker heartbeats and finalized-lag fields are implemented. External
 log alerts, public beta observation, independent review, and production
-promotion remain pending.
+promotion remain pending. Deterministic pull-request CI, scheduled live runtime
+compatibility checks, dependency update automation, and the preview-to-
+production launch/rollback checklist are implemented.
