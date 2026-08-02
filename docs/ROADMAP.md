@@ -61,7 +61,9 @@ numbers. Rebuild from genesis data and compare outputs before trusting it.
 
 **Status:** worker, schema, strict parser, finalized checkpoints, Render
 blueprint, and deterministic two-database replay audit are implemented;
-database deployment and execution of the independent replay still remain.
+an optional fail-closed stop checkpoint now lets both replay workers halt on the
+same finalized block. Database deployment and execution of the independent
+replay still remain.
 
 ## 8. Add collection and transfer views
 

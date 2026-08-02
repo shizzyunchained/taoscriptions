@@ -17,3 +17,5 @@ services:
         value: "440"
       - key: START_BLOCK
         sync: false
+      - key: STOP_BLOCK
+        sync: false

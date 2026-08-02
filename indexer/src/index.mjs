@@ -2,6 +2,7 @@ import http from "node:http";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { blake2AsHex } from "@polkadot/util-crypto";
 import pg from "pg";
+import { boundedFinalizedTarget, parseBlockBounds, reachedStopBlock } from "./config.mjs";
 import {
   findProtocolRemark,
   INDEXER_VERSION,
@@ -15,11 +16,10 @@ const databaseUrl = process.env.DATABASE_URL;
 const rpcUrl = process.env.SUBTENSOR_RPC ?? "wss://test.chain.opentensor.ai";
 const expectedGenesis = process.env.CHAIN_GENESIS_HASH ?? "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105";
 const supportedSpec = Number.parseInt(process.env.SUPPORTED_SPEC_VERSION ?? "440", 10);
-const startBlock = Number.parseInt(process.env.START_BLOCK ?? "", 10);
+const { startBlock, stopBlock } = parseBlockBounds();
 const port = Number.parseInt(process.env.PORT ?? "10000", 10);
 
 if (!databaseUrl) throw new Error("DATABASE_URL is required.");
-if (!Number.isSafeInteger(startBlock) || startBlock < 1) throw new Error("START_BLOCK must be an explicit positive finalized block number.");
 
 const pool = new pg.Pool({
   connectionString: databaseUrl,
@@ -34,6 +34,7 @@ const health = {
   lagBlocks: null,
   lastCommittedAt: null,
   error: null,
+  stopBlock,
 };
 
 function healthSnapshot() {
@@ -47,7 +48,7 @@ http.createServer((request, response) => {
     response.writeHead(404).end("Not found");
     return;
   }
-  response.writeHead(health.status === "ready" ? 200 : 503, { "content-type": "application/json" });
+  response.writeHead(["ready", "stopped"].includes(health.status) ? 200 : 503, { "content-type": "application/json" });
   response.end(JSON.stringify(healthSnapshot()));
 }).listen(port);
 
@@ -257,27 +258,49 @@ async function main() {
     [expectedGenesis],
   );
   let processed = checkpoint.rowCount ? Number(checkpoint.rows[0].block_number) : startBlock - 1;
+  if (stopBlock !== null && processed > stopBlock) {
+    throw new Error(`CHECKPOINT_PAST_STOP_BLOCK:${processed}`);
+  }
   health.checkpoint = processed;
 
   let queue = Promise.resolve();
-  const catchUp = async (target) => {
-    health.finalizedHead = target;
-    health.lagBlocks = Math.max(target - processed, 0);
+  const catchUp = async (target, finalizedHead = target) => {
+    health.finalizedHead = finalizedHead;
+    health.lagBlocks = Math.max(finalizedHead - processed, 0);
     while (processed < target) {
       await processBlock(api, processed + 1);
       processed += 1;
     }
-    health.status = "ready";
+    health.status = reachedStopBlock(processed, stopBlock) ? "stopped" : "ready";
     health.error = null;
   };
   const finalizedHash = await api.rpc.chain.getFinalizedHead();
   const finalizedHeader = await api.rpc.chain.getHeader(finalizedHash);
-  await catchUp(finalizedHeader.number.toNumber());
-  await api.rpc.chain.subscribeFinalizedHeads((header) => {
-    const target = header.number.toNumber();
-    health.finalizedHead = target;
-    health.lagBlocks = Math.max(target - processed, 0);
-    queue = queue.then(() => catchUp(target)).catch((error) => {
+  const initialHead = finalizedHeader.number.toNumber();
+  await catchUp(boundedFinalizedTarget(initialHead, stopBlock), initialHead);
+  if (reachedStopBlock(processed, stopBlock)) {
+    console.log(JSON.stringify({ event: "indexer_stop_reached", blockNumber: processed }));
+    await api.disconnect();
+    return;
+  }
+
+  let stopping = false;
+  let unsubscribe;
+  unsubscribe = await api.rpc.chain.subscribeFinalizedHeads((header) => {
+    if (stopping) return;
+    const finalizedHead = header.number.toNumber();
+    const target = boundedFinalizedTarget(finalizedHead, stopBlock);
+    health.finalizedHead = finalizedHead;
+    health.lagBlocks = Math.max(finalizedHead - processed, 0);
+    queue = queue.then(async () => {
+      await catchUp(target, finalizedHead);
+      if (reachedStopBlock(processed, stopBlock)) {
+        stopping = true;
+        console.log(JSON.stringify({ event: "indexer_stop_reached", blockNumber: processed }));
+        unsubscribe?.();
+        await api.disconnect();
+      }
+    }).catch((error) => {
       health.status = "paused";
       health.error = String(error.message ?? error).slice(0, 500);
       console.error(error);

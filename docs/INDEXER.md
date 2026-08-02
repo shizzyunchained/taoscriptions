@@ -65,6 +65,13 @@ a Render background worker but disables automatic deploys. It is intentionally
 not launched until a database is selected and `START_BLOCK` is frozen at or
 before the first protocol mint.
 
+For a reproducibility run, set the same optional `STOP_BLOCK` on the primary
+and replay workers. Each worker processes only finalized blocks through that
+checkpoint, reports `stopped` as a healthy state, retains its database advisory
+lock, and stops reading the chain. A database whose existing checkpoint is
+already beyond the requested stop fails closed instead of claiming comparable
+evidence.
+
 The initial worker supports one tested runtime spec per deployment. It reads the
 spec version at every block and stops before committing an unsupported version.
 A rebuild beginning before the configured spec boundary requires a decoder that
@@ -111,9 +118,9 @@ artifact IDs, numbers, ownership states, and payload hashes. A release is not
 production-ready until this reproducibility test passes against a second empty
 database.
 
-After the primary and independent replay workers reach the exact same finalized
-checkpoint, set `DATABASE_URL`, `REPLAY_DATABASE_URL`, and `CHAIN_GENESIS_HASH`,
-then run:
+After the primary and independent replay workers report `stopped` at the exact
+same finalized checkpoint, set `DATABASE_URL`, `REPLAY_DATABASE_URL`, and
+`CHAIN_GENESIS_HASH`, then run:
 
 ```bash
 npm run indexer:audit
@@ -143,10 +150,12 @@ advancing while finalized heads continue.
 The intended first deployment sequence is:
 
 1. record the finalized block immediately before the first accepted test mint;
-2. create a dedicated Postgres database;
-3. set `DATABASE_URL` and `START_BLOCK` in Render;
+2. create two dedicated Postgres databases;
+3. choose one finalized audit checkpoint and set the same `START_BLOCK` and
+   `STOP_BLOCK` for two workers backed by those separate databases;
 4. run the pre-deploy migration;
-5. start one worker and confirm its checkpoint reaches the current finalized
-   head; and
-6. rebuild the same range into an empty second database; and
-7. run `npm run indexer:audit` and retain its JSON output as release evidence.
+5. confirm both workers report `stopped` at the chosen checkpoint;
+6. run `npm run indexer:audit` and retain its JSON output as release evidence;
+7. remove `STOP_BLOCK` from the primary worker only and restart it to follow new
+   finalized heads; and
+8. preserve the stopped replay database as the release comparison record.
