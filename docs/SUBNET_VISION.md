@@ -49,6 +49,20 @@ Subtensor remains the ultimate source of truth.
 7. Register only after the commodity and incentive mechanism work without
    privileged validators.
 
+## Executable prototype
+
+The repository now includes the first deterministic conformance model. Run
+`npm run subnet:demo` to generate one canonical checkpoint, an artifacts-dataset
+challenge, three miner responses, validator scores, and a 2-of-3 gateway result.
+Two miners return the exact commitment and one deliberately diverges. The bad
+answer receives zero correctness score and cannot override the matching quorum.
+
+The checkpoint commits the chain genesis, finalized block position, and exact
+row count plus SHA-256 digest for all six canonical index datasets. Challenges
+bind that root to one dataset and a nonce. The current miner labels are not
+cryptographic identities; signed hotkey responses and unpredictable validator
+nonces belong to the next network phase.
+
 ## Capacity expansion
 
 Additional subnet slots improve the strategic opening for specialized

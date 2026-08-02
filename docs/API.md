@@ -115,3 +115,14 @@ render inscription bytes as HTML.
 Defined codes currently include `INVALID_ARTIFACT_ID`, `INVALID_ACCOUNT`,
 `INVALID_SUBNET`, `INVALID_CHAIN_POSITION`, `NOT_FOUND`, `INDEXER_NOT_READY`,
 `INDEXER_UNAVAILABLE`, and `INTERNAL_ERROR`.
+
+## Proof-network prototype
+
+```text
+GET /api/v1/network/prototype
+```
+
+Returns the deterministic three-miner conformance fixture used by the public
+Network page: canonical checkpoint and challenge commitments, validator scores,
+and a 2-of-3 gateway decision. This endpoint is explicitly a simulation. It
+does not report live miners, a registered netuid, emissions, or chain writes.

@@ -589,7 +589,7 @@ export default function Home() {
       <nav className="nav" aria-label="Main navigation">
         <a className="brand" href="#top" aria-label="Bittensor Relics home"><span className="brand-sigil" aria-hidden="true"><i /></span><span>Bittensor Relics</span></a>
         <div className="nav-links">
-          <a href="#forge">Forge</a><a href="/explore">Explore</a><a href="/marketplace">Market</a><a href="/wallet">My Relics</a><a href="#protocol">Protocol</a>
+          <a href="#forge">Forge</a><a href="/explore">Explore</a><a href="/marketplace">Market</a><a href="/wallet">My Relics</a><a href="/network">Network</a>
           <span className={`chain-status ${dataState}`}><i aria-hidden="true" />{dataState === "ready" ? `Testnet v${runtimeVersion}` : dataState === "error" ? "Chain read paused" : "Reading chain"}</span>
         </div>
       </nav>
@@ -700,7 +700,7 @@ export default function Home() {
         </div>
         <div className="protocol-call"><span>Native call path</span><code>batchAll[ addStakeBurn, remarkWithEvent ]</code><em>No EVM. No custody. Finalized testnet only.</em></div>
         <div className="subnet-vision">
-          <div><span>Planned subnet commodity</span><h3>Proof-serving, not database trust.</h3><p>Relics can work before its own subnet. The destination is stronger: independent miners replay finalized history and serve indexed answers with checkpoint proofs.</p></div>
+          <div><span>Working subnet prototype</span><h3>Proof-serving, not database trust.</h3><p>Relics can work before its own subnet. We now have a deterministic three-miner challenge simulation where the dapp requires matching checkpoint proofs.</p><p><a className="text-link" href="/network">Open the proof network -&gt;</a></p></div>
           <ol><li><span>Miners</span><strong>Index burns, images, numbering, transfers, and ownership.</strong></li><li><span>Validators</span><strong>Challenge random chain positions and score exact correctness.</strong></li><li><span>Dapp</span><strong>Accepts threshold agreement instead of trusting one server.</strong></li></ol>
         </div>
       </section>
