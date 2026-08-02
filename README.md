@@ -50,7 +50,9 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). The default RPC is
 `wss://test.chain.opentensor.ai`; override it with
-`NEXT_PUBLIC_SUBTENSOR_RPC`.
+`NEXT_PUBLIC_SUBTENSOR_RPC`. The browser also pins
+`NEXT_PUBLIC_CHAIN_GENESIS_HASH` and fails closed if that endpoint serves a
+different chain.
 
 ## Verification
 

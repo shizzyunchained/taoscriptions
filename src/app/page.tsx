@@ -5,9 +5,11 @@ import type { ApiPromise } from "@polkadot/api";
 import { calculateLimitPrice, createInlineMintPayload, DEFAULT_SLIPPAGE_BPS } from "@/lib/protocol";
 import { verifyFinalizedMintReceipt, type MintReceiptExpectation } from "@/lib/mint-receipt";
 import { createMintEvidence, type MintEvidence } from "@/lib/mint-evidence";
+import { assertExpectedGenesis } from "@/lib/chain-guard";
 
 const APP_NAME = "Neural Relics";
 const TESTNET_RPC = process.env.NEXT_PUBLIC_SUBTENSOR_RPC ?? "wss://test.chain.opentensor.ai";
+const TESTNET_GENESIS = process.env.NEXT_PUBLIC_CHAIN_GENESIS_HASH ?? "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105";
 const RAO_PER_TAO = 1_000_000_000n;
 
 type WalletAccount = { address: string; name: string; source: string };
@@ -99,6 +101,7 @@ export default function Home() {
         const { ApiPromise, WsProvider } = await import("@polkadot/api");
         const api = await ApiPromise.create({ provider: new WsProvider(TESTNET_RPC), noInitWarn: true });
         activeApi = api;
+        assertExpectedGenesis(api.genesisHash.toHex(), TESTNET_GENESIS);
         if (cancelled) {
           await api.disconnect();
           return;
@@ -228,6 +231,7 @@ export default function Home() {
         disconnectAfterRead = true;
       }
       try {
+        assertExpectedGenesis(api.genesisHash.toHex(), TESTNET_GENESIS);
         const accountInfo = await api.query.system.account(nextAccount.address);
         const raw = BigInt((accountInfo as unknown as { data: { free: { toString(): string } } }).data.free.toString());
         setBalance(raw);
@@ -254,6 +258,7 @@ export default function Home() {
     const api = apiRef.current;
     const amountRao = taoToRao(taoAmount);
     if (!api || dataState !== "ready") throw new Error("The testnet connection is not ready.");
+    assertExpectedGenesis(api.genesisHash.toHex(), TESTNET_GENESIS);
     if (!account) throw new Error("Connect the signing wallet first.");
     if (!selectedSubnet || selectedNetuid === null) throw new Error("Choose a subnet first.");
     if (!amountRao || amountRao === 0n) throw new Error("Enter a valid TAO amount.");
