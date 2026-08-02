@@ -15,6 +15,12 @@ const claims = [
     detail: "Bitcoin contains the inscription bytes, but ord maintains an external index to recognize inscriptions, track sat locations, and calculate inscription numbers. The index can be rebuilt from Bitcoin, yet applications still depend on an indexer to read the protocol conveniently.",
   },
   {
+    verdict: "Verified, not universal",
+    tone: "true",
+    claim: "Many Ethereum NFTs keep the token on-chain while the image lives elsewhere.",
+    detail: "ERC-721 defines tokenURI metadata whose image field is itself a URI. That URI can resolve to Amazon S3, another web server, IPFS, Arweave, or fully on-chain data. Centralized cloud storage is common and mutable, but it is not mandatory and some Ethereum NFTs are fully on-chain.",
+  },
+  {
     verdict: "Verified",
     tone: "true",
     claim: "A bounded Relic image can be stored in a finalized Subtensor transaction.",
@@ -93,8 +99,17 @@ export default function DocsPage() {
         </div>
       </section>
 
+      <section className="docs-section" id="media-custody">
+        <header><span>02 / Media custody</span><h2>An NFT can be on-chain while its image is not.</h2></header>
+        <div className="storage-comparison">
+          <article><span>Common ERC-721 pattern</span><h3>Token on Ethereum.<br />Image behind a URI.</h3><dl><div><dt>Chain stores</dt><dd>Token ID, owner, contract state, tokenURI</dd></div><div><dt>Image may live on</dt><dd>Amazon S3, a project server, CDN, IPFS, or Arweave</dd></div><div><dt>Core risk</dt><dd>An HTTP image can change or disappear independently of the token</dd></div></dl></article>
+          <article><span>Bittensor Relics v1</span><h3>Receipt and image bytes<br />in one finalized transaction.</h3><dl><div><dt>Chain stores</dt><dd>Compressed WebP, manifest, signer, and burn evidence</dd></div><div><dt>Miners serve</dt><dd>Reconstructed bytes plus deterministic checkpoint proofs</dd></div><div><dt>Validators check</dt><dd>Byte hash, envelope, finality, burn match, and canonical order</dd></div></dl></article>
+        </div>
+        <div className="storage-notes"><p><strong>The honest Ethereum comparison:</strong> ERC-721 does not require cloud storage. IPFS and Arweave improve content addressing, and fully on-chain Ethereum NFTs exist. The difference is that Relics v1 makes direct on-chain image bytes a protocol requirement rather than an optional implementation choice.</p><p><strong>The honest Relics limitation:</strong> validators prove that the bytes exist in finalized history and match the Relics rules. They do not judge artistic originality or copyright. Historical retrieval still requires archival chain access; the proposed miner network makes that access replicated, challenged, and measurable.</p></div>
+      </section>
+
       <section className="docs-section" id="answer">
-        <header><span>02 / The Bittensor answer</span><h2>Turn deterministic indexing into a scored commodity.</h2></header>
+        <header><span>03 / The Bittensor answer</span><h2>Turn deterministic indexing into a scored commodity.</h2></header>
         <div className="docs-architecture">
           <article><span>Miners</span><h3>Replay finalized history</h3><p>Independent indexers reconstruct valid mints, exact media bytes, numbering, rejections, ownership, and transfers. They commit the result to deterministic checkpoint hashes.</p></article>
           <b aria-hidden="true">-&gt;</b>
@@ -106,7 +121,7 @@ export default function DocsPage() {
       </section>
 
       <section className="docs-section" id="mint">
-        <header><span>03 / The mint</span><h2>One signature binds sacrifice to artifact.</h2></header>
+        <header><span>04 / The mint</span><h2>One signature binds sacrifice to artifact.</h2></header>
         <div className="mint-callout">
           <code>utility.batchAll([ addStakeBurn(TAO), remarkWithEvent(RELIC_BYTES) ])</code>
           <dl><div><dt>Buy</dt><dd>TAO is exchanged for the selected subnet’s alpha.</dd></div><div><dt>Burn</dt><dd>The acquired alpha stake is immediately and irreversibly burned.</dd></div><div><dt>Inscribe</dt><dd>The exact Relic payload is recorded in the same atomic transaction.</dd></div></dl>
@@ -115,7 +130,7 @@ export default function DocsPage() {
       </section>
 
       <section className="docs-section" id="score-example">
-        <header><span>04 / Example</span><h2>Const, inverted. SCORE, sacrificed.</h2></header>
+        <header><span>05 / Example</span><h2>Const, inverted. SCORE, sacrificed.</h2></header>
         <div className="score-example">
           <div className="score-art" aria-label="Conceptual on-chain image placeholder"><span>IMAGE BYTES</span><strong>CONST<br />HANDSTAND</strong><i>ON-CHAIN</i></div>
           <div><p className="eyebrow">Concept / not yet minted</p><h3>Relic #—</h3><dl><div><dt>Subnet</dt><dd>SCORE</dd></div><div><dt>Desired burn</dt><dd>10,000 SCORE</dd></div><div><dt>Proven after mint</dt><dd>Actual AlphaBurned event</dd></div><div><dt>Media</dt><dd>Exact WebP bytes in finalized remark</dd></div><div><dt>Supply effect</dt><dd>Supply-neutral under current burn semantics</dd></div></dl></div>
@@ -124,16 +139,17 @@ export default function DocsPage() {
       </section>
 
       <section className="docs-section" id="audit">
-        <header><span>05 / Claim audit</span><h2>What is true, false, or still a plan.</h2></header>
+        <header><span>06 / Claim audit</span><h2>What is true, false, or still a plan.</h2></header>
         <div className="claim-audit">
           {claims.map((item) => <article className={item.tone} key={item.claim}><div><span>{item.verdict}</span><i aria-hidden="true" /></div><h3>{item.claim}</h3><p>{item.detail}</p></article>)}
         </div>
       </section>
 
       <section className="docs-section" id="corrected-thesis">
-        <header><span>06 / Publishable thesis</span><h2>The strongest version we can defend.</h2></header>
+        <header><span>07 / Publishable thesis</span><h2>The strongest version we can defend.</h2></header>
         <blockquote>
           <p>Ordinals proved that art can live on-chain, but applications still depend on an off-chain index to interpret order, location, and ownership.</p>
+          <p>Many Ethereum NFTs put ownership on-chain while their metadata points to media stored on a server, cloud bucket, IPFS, or Arweave. Relics v1 instead requires the exact bounded image bytes to be present in finalized Subtensor history.</p>
           <p>Bittensor Relics turns that indexing work into a verifiable digital commodity. Miners independently replay finalized Subtensor history. Validators challenge their checkpoints. The dapp accepts only threshold agreement.</p>
           <p>Every accepted Relic binds exact on-chain media to a finalized subnet-alpha burn. A Relic can therefore prove what was inscribed, who signed it, where it finalized, and how much alpha was sacrificed.</p>
           <p>Each subnet can support a collectible culture tied to its own token economy—without pretending the burn reduces supply when the current runtime says it does not.</p>
@@ -142,11 +158,14 @@ export default function DocsPage() {
       </section>
 
       <section className="docs-section sources" id="sources">
-        <header><span>07 / Primary sources</span><h2>Read the underlying rules.</h2></header>
+        <header><span>08 / Primary sources</span><h2>Read the underlying rules.</h2></header>
         <div>
           <a href="https://docs.ordinals.com/overview.html" target="_blank" rel="noreferrer"><span>Ordinals</span><strong>Index architecture and on-chain inscriptions</strong></a>
           <a href="https://docs.ordinals.com/inscriptions.html" target="_blank" rel="noreferrer"><span>Ordinals</span><strong>Content, IDs, and inscription numbering</strong></a>
           <a href="https://docs.ordinals.com/guides/reindexing.html" target="_blank" rel="noreferrer"><span>Ordinals</span><strong>Rebuilding the ord index database</strong></a>
+          <a href="https://eips.ethereum.org/EIPS/eip-721" target="_blank" rel="noreferrer"><span>Ethereum ERC-721</span><strong>tokenURI and image URI metadata standard</strong></a>
+          <a href="https://eips.ethereum.org/EIPS/eip-2477" target="_blank" rel="noreferrer"><span>Ethereum ERC-2477</span><strong>Integrity limits of mutable metadata URLs</strong></a>
+          <a href="https://docs.opensea.io/docs/metadata-standards" target="_blank" rel="noreferrer"><span>OpenSea</span><strong>Cloud, server, IPFS, Arweave, and on-chain metadata options</strong></a>
           <a href="https://www.bittensor.com/docs" target="_blank" rel="noreferrer"><span>Bittensor</span><strong>Miners produce; validators score</strong></a>
           <a href="https://www.bittensor.com/docs/internals/wasm-contracts" target="_blank" rel="noreferrer"><span>Bittensor</span><strong>Burn is supply-neutral; recycle reduces AlphaOut</strong></a>
           <a href="https://www.bittensor.com/code/pallets/subtensor/src/macros/dispatches.rs" target="_blank" rel="noreferrer"><span>Subtensor source</span><strong>add_stake_burn runtime dispatch</strong></a>
