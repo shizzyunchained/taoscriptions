@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Artifact } from "@/lib/indexer-db";
 import { compactHex, formatRao } from "@/lib/format";
 
@@ -9,7 +10,7 @@ export function RelicCard({ artifact }: { artifact: Artifact }) {
         <span>Relic #{artifact.globalNumber}</span>
         <span>SN{artifact.netuid} / #{artifact.subnetNumber}</span>
       </div>
-      <div className="artifact-mini-orbit" aria-hidden="true"><i /></div>
+      {artifact.mediaByteLength ? <div className="artifact-media"><Image src={`/api/v1/artifacts/${encodeURIComponent(artifact.artifactId)}/media`} alt={artifact.name} width={320} height={320} unoptimized /></div> : <div className="artifact-mini-orbit" aria-hidden="true"><i /></div>}
       <h2>{artifact.name}</h2>
       <p>{artifact.body ?? `${artifact.mediaType} · ${compactHex(artifact.contentHash ?? "unverified")}`}</p>
       <dl>

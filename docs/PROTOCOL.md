@@ -92,31 +92,33 @@ The remark is UTF-8 JSON with no duplicate keys. A v1 mint has this shape:
 }
 ```
 
-For externally stored media, `body` is replaced with both `content_uri` and
-`content_hash`:
+The reference client does not upload images to IPFS, object storage, or a web
+server. Image relics use one binary `remark_with_event` payload:
 
-```json
-{
-  "p": "bittensor-relics",
-  "v": 1,
-  "op": "mint",
-  "netuid": 64,
-  "subnet_generation": 4920351,
-  "name": "Example Image",
-  "media_type": "image/png",
-  "content_uri": "ipfs://bafy...",
-  "content_hash": "sha256:<64-lowercase-hex-characters>"
-}
+```text
+4 bytes   ASCII magic: BRI1
+4 bytes   big-endian unsigned manifest length
+N bytes   UTF-8 JSON manifest
+remainder exact WebP bytes
 ```
+
+The image manifest uses `media_type: "image/webp"`, `encoding: "binary"`,
+`content_hash: "sha256:<hex>"`, `content_length`, `width`, and `height`. It MAY
+also contain the text `body`. The hash and length MUST match the appended bytes.
+Only passive WebP is accepted. The on-chain bytes, not a URL or gateway, are the
+source of truth.
 
 Rules:
 
-- The encoded remark MUST be at most 2,048 bytes.
+- Plain JSON remarks MUST be at most 2,048 bytes.
+- A binary image envelope MUST be at most 16,384 bytes, with at most 12,288
+  appended image bytes and dimensions from 64 through 256 pixels per side.
 - `p`, `v`, `op`, `netuid`, `subnet_generation`, `name`, and `media_type` are
   required.
 - `name` MUST contain 1 to 80 Unicode scalar values after trimming.
-- A mint MUST contain either `body`, or both `content_uri` and `content_hash`,
-  but not both forms.
+- A mint MUST contain inline text, content-addressed legacy media, or a valid
+  binary image envelope. The reference client creates only inline text and
+  fully on-chain binary image forms.
 - Inline `body` MUST contain 1 to 1,024 Unicode scalar values after trimming.
 - `content_hash` MUST identify the exact retrieved bytes, not a transformed or
   rendered representation.
@@ -332,11 +334,11 @@ queryable.
 
 ## 14. Media safety
 
-- Media is rendered from content-addressed bytes and checked against
-  `content_hash` before display.
+- On-chain image bytes are reconstructed from the finalized remark and checked
+  against `content_hash` before indexing or display.
 - SVG, HTML, and other active formats MUST be sandboxed or served as downloads.
 - User text MUST be escaped; inscription content is never trusted HTML.
-- External gateways are availability helpers, not the source of truth.
+- The reference image client MUST NOT depend on an external media gateway.
 
 ## 15. Client safety requirements
 

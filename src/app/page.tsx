@@ -3,7 +3,14 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ApiPromise } from "@polkadot/api";
-import { calculateLimitPrice, createInlineMintPayload, DEFAULT_SLIPPAGE_BPS } from "@/lib/protocol";
+import {
+  calculateLimitPrice,
+  createInlineMintPayload,
+  createOnChainImageMintPayload,
+  DEFAULT_SLIPPAGE_BPS,
+  MAX_MINT_REMARK_BYTES,
+  MAX_ONCHAIN_IMAGE_BYTES,
+} from "@/lib/protocol";
 import { verifyFinalizedMintReceipt, type MintReceiptExpectation } from "@/lib/mint-receipt";
 import { createMintEvidence, type MintEvidence } from "@/lib/mint-evidence";
 import { assertExpectedGenesis } from "@/lib/chain-guard";
@@ -13,6 +20,7 @@ const APP_NAME = "Bittensor Relics";
 const TESTNET_RPC = process.env.NEXT_PUBLIC_SUBTENSOR_RPC ?? "wss://test.chain.opentensor.ai";
 const TESTNET_GENESIS = process.env.NEXT_PUBLIC_CHAIN_GENESIS_HASH ?? "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105";
 const RAO_PER_TAO = 1_000_000_000n;
+const ALLOWED_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 
 type WalletAccount = { address: string; name: string; source: string };
 type Subnet = { netuid: number; generation: string; name: string; symbol: string; ownerHotkey: string };
@@ -20,11 +28,13 @@ type BurnQuote = { alphaAmount: bigint; alphaSlippage: bigint; priceRao: bigint;
 type MintReview = {
   payload: string;
   payloadBytes: number;
+  imageBytes: number;
   limitPrice: bigint;
   estimatedFee: bigint;
   quoteBlock: string;
   routeHotkey: string;
 };
+type OnChainImage = { bytes: Uint8Array; previewUrl: string; contentHash: string; width: number; height: number };
 type ConnectionState = "idle" | "connecting" | "connected" | "error";
 type DataState = "connecting" | "ready" | "error";
 type MintState = "idle" | "review" | "signing" | "submitted" | "finalized" | "error";
@@ -71,6 +81,44 @@ function formatBps(bps: bigint) {
   return `${bps / 100n}.${(bps % 100n).toString().padStart(2, "0")}%`;
 }
 
+function canvasBlob(canvas: HTMLCanvasElement, quality: number) {
+  return new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", quality));
+}
+
+async function prepareOnChainImage(file: File): Promise<OnChainImage> {
+  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+    throw new Error("Choose a PNG, JPG, or WebP image.");
+  }
+  if (file.size > 15_000_000) throw new Error("Choose an original image smaller than 15 MB.");
+  const bitmap = await createImageBitmap(file);
+  try {
+    const crop = Math.min(bitmap.width, bitmap.height);
+    const sourceX = (bitmap.width - crop) / 2;
+    const sourceY = (bitmap.height - crop) / 2;
+    for (const size of [256, 224, 192, 160, 128, 96, 64]) {
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const context = canvas.getContext("2d", { alpha: false });
+      if (!context) throw new Error("This browser cannot prepare the image.");
+      context.drawImage(bitmap, sourceX, sourceY, crop, crop, 0, 0, size, size);
+      for (const quality of [0.82, 0.72, 0.62, 0.52, 0.42]) {
+        const blob = await canvasBlob(canvas, quality);
+        if (!blob || blob.type !== "image/webp") continue;
+        if (blob.size <= MAX_ONCHAIN_IMAGE_BYTES) {
+          const bytes = new Uint8Array(await blob.arrayBuffer());
+          const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+          const contentHash = `sha256:${Array.from(digest, (value) => value.toString(16).padStart(2, "0")).join("")}`;
+          return { bytes, previewUrl: URL.createObjectURL(blob), contentHash, width: size, height: size };
+        }
+      }
+    }
+  } finally {
+    bitmap.close();
+  }
+  throw new Error("The image could not be compressed safely for an on-chain mint.");
+}
+
 export default function Home() {
   const apiRef = useRef<ApiPromise | null>(null);
   const [dataState, setDataState] = useState<DataState>("connecting");
@@ -88,11 +136,43 @@ export default function Home() {
   const [walletError, setWalletError] = useState("");
   const [relicName, setRelicName] = useState("");
   const [relicBody, setRelicBody] = useState("");
+  const [onChainImage, setOnChainImage] = useState<OnChainImage | null>(null);
+  const [imageState, setImageState] = useState<"idle" | "processing" | "ready" | "error">("idle");
+  const [imageError, setImageError] = useState("");
   const [mintState, setMintState] = useState<MintState>("idle");
   const [mintReview, setMintReview] = useState<MintReview | null>(null);
   const [mintError, setMintError] = useState("");
   const [transactionHash, setTransactionHash] = useState("");
   const [mintEvidence, setMintEvidence] = useState<MintEvidence | null>(null);
+
+  useEffect(() => () => {
+    if (onChainImage) URL.revokeObjectURL(onChainImage.previewUrl);
+  }, [onChainImage]);
+
+  async function chooseImage(file: File | undefined) {
+    setImageError("");
+    setMintReview(null);
+    setMintState("idle");
+    if (!file) return;
+    setImageState("processing");
+    try {
+      const prepared = await prepareOnChainImage(file);
+      setOnChainImage(prepared);
+      setImageState("ready");
+    } catch (cause) {
+      setOnChainImage(null);
+      setImageState("error");
+      setImageError(cause instanceof Error ? cause.message : "The image could not be prepared.");
+    }
+  }
+
+  function removeImage() {
+    setOnChainImage(null);
+    setImageState("idle");
+    setImageError("");
+    setMintReview(null);
+    setMintState("idle");
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -296,12 +376,16 @@ export default function Home() {
     if (freshQuote.alphaAmount === 0n) throw new Error("The selected burn no longer returns alpha.");
     const minimumStakeRao = BigInt(apiAt.consts.subtensorModule.initialMinStake.toString());
 
-    const payload = createInlineMintPayload({
+    const payload = onChainImage ? createOnChainImageMintPayload({
       netuid: selectedNetuid,
       subnetGeneration: currentGeneration,
       name: relicName,
       body: relicBody,
-    });
+      imageBytes: onChainImage.bytes,
+      contentHash: onChainImage.contentHash,
+      width: onChainImage.width,
+      height: onChainImage.height,
+    }) : createInlineMintPayload({ netuid: selectedNetuid, subnetGeneration: currentGeneration, name: relicName, body: relicBody });
     const signerAccountHex = api.registry.createType("AccountId32", account.address).toHex().toLowerCase();
     const routeHotkeyHex = api.registry.createType("AccountId32", routeHotkey).toHex().toLowerCase();
     if (routeHotkeyHex === `0x${"0".repeat(64)}`) throw new Error("The subnet does not expose a registered owner hotkey.");
@@ -364,6 +448,7 @@ export default function Home() {
       review: {
         payload: payload.json,
         payloadBytes: payload.byteLength,
+        imageBytes: onChainImage?.bytes.length ?? 0,
         limitPrice,
         estimatedFee,
         quoteBlock: header.number.toString(),
@@ -536,7 +621,16 @@ export default function Home() {
 
             <div className="step-label content-step"><span>03</span>Write the relic</div>
             <label className="field"><span>Name</span><input maxLength={80} value={relicName} onChange={(event) => { setRelicName(event.target.value); setMintReview(null); setMintState("idle"); }} placeholder="A name that survives the moment" /></label>
-            <label className="field inscription-field"><span>Inscription</span><textarea maxLength={1024} value={relicBody} onChange={(event) => { setRelicBody(event.target.value); setMintReview(null); setMintState("idle"); }} placeholder="The text permanently bound to this alpha burn" /><small>{Array.from(relicBody).length}/1,024 characters</small></label>
+            <div className="onchain-upload">
+              <div className="upload-heading"><div><span>On-chain image</span><strong>Stored inside the finalized transaction</strong></div>{onChainImage && <button type="button" onClick={removeImage}>Remove</button>}</div>
+              {onChainImage ? (
+                <div className="upload-preview"><Image src={onChainImage.previewUrl} alt="On-chain relic preview" width={256} height={256} unoptimized /><div><strong>{onChainImage.width} × {onChainImage.height} WebP</strong><span>{onChainImage.bytes.length.toLocaleString()} / {MAX_ONCHAIN_IMAGE_BYTES.toLocaleString()} bytes</span><small>No IPFS. No external URL. These exact bytes will be signed.</small></div></div>
+              ) : (
+                <label className="upload-drop"><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => void chooseImage(event.target.files?.[0])} disabled={imageState === "processing"} /><span aria-hidden="true">+</span><strong>{imageState === "processing" ? "Compressing for chain..." : "Choose a personal image"}</strong><small>PNG, JPG, or WebP · automatically cropped and compressed</small></label>
+              )}
+              {imageError && <p className="error-message" role="alert">{imageError}</p>}
+            </div>
+            <label className="field inscription-field"><span>{onChainImage ? "Inscription (optional)" : "Inscription"}</span><textarea maxLength={1024} value={relicBody} onChange={(event) => { setRelicBody(event.target.value); setMintReview(null); setMintState("idle"); }} placeholder="The text permanently bound to this alpha burn" /><small>{Array.from(relicBody).length}/1,024 characters</small></label>
 
             <div className="step-label wallet-step"><span>04</span>Connect the signer</div>
             {account ? (
@@ -560,7 +654,7 @@ export default function Home() {
                 <div><span>Registered burn hotkey</span><strong>{shortAddress(mintReview.routeHotkey)}</strong></div>
                 <div><span>Maximum ending spot price (2%)</span><strong>{formatPrice(mintReview.limitPrice)}</strong></div>
                 <div><span>Estimated chain fee</span><strong>{formatToken(mintReview.estimatedFee, 7)} TAO</strong></div>
-                <div><span>Inscription payload</span><strong>{mintReview.payloadBytes} / 2,048 bytes</strong></div>
+                <div><span>{mintReview.imageBytes ? "On-chain image" : "Inscription payload"}</span><strong>{mintReview.payloadBytes.toLocaleString()} / {(mintReview.imageBytes ? MAX_MINT_REMARK_BYTES : 2_048).toLocaleString()} bytes</strong></div>
               </div>
             )}
             {mintError && <p className="error-message" role="alert">{mintError}</p>}

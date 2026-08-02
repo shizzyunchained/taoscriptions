@@ -44,6 +44,8 @@ CREATE TABLE IF NOT EXISTS artifacts (
   body TEXT,
   content_uri TEXT,
   content_hash TEXT,
+  media_bytes BYTEA,
+  media_byte_length INTEGER,
   payload_json JSONB NOT NULL,
   payload_hex TEXT NOT NULL,
   payload_hash TEXT NOT NULL,
@@ -61,6 +63,8 @@ CREATE TABLE IF NOT EXISTS artifacts (
 
 ALTER TABLE artifacts
   ADD COLUMN IF NOT EXISTS transaction_fee_rao NUMERIC(20, 0);
+ALTER TABLE artifacts ADD COLUMN IF NOT EXISTS media_bytes BYTEA;
+ALTER TABLE artifacts ADD COLUMN IF NOT EXISTS media_byte_length INTEGER;
 
 CREATE INDEX IF NOT EXISTS artifacts_owner_idx
   ON artifacts (chain_genesis, owner_account_hex, global_number DESC);

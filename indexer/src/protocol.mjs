@@ -1,12 +1,27 @@
 import { blake2AsHex, decodeAddress } from "@polkadot/util-crypto";
 import { u8aToHex } from "@polkadot/util";
+import { createHash } from "node:crypto";
 
-export const INDEXER_VERSION = "0.1.0";
+export const INDEXER_VERSION = "0.2.0";
 const ALLOWED_KEYS = new Set([
   "p", "v", "op", "netuid", "subnet_generation", "name", "media_type",
-  "body", "content_uri", "content_hash",
+  "body", "content_uri", "content_hash", "encoding", "content_length", "width", "height",
 ]);
 const TRANSFER_KEYS = new Set(["p", "v", "op", "artifact", "to", "nonce"]);
+const IMAGE_MAGIC = Uint8Array.from([0x42, 0x52, 0x49, 0x31]);
+const MAX_JSON_REMARK_BYTES = 2_048;
+const MAX_MINT_REMARK_BYTES = 16_384;
+const MAX_ONCHAIN_IMAGE_BYTES = 12_288;
+
+function hasImageMagic(bytes) {
+  return bytes.length >= IMAGE_MAGIC.length && IMAGE_MAGIC.every((value, index) => bytes[index] === value);
+}
+
+function isWebP(bytes) {
+  return bytes.length >= 12
+    && Buffer.from(bytes.slice(0, 4)).toString("ascii") === "RIFF"
+    && Buffer.from(bytes.slice(8, 12)).toString("ascii") === "WEBP";
+}
 
 function strictJsonScan(text) {
   let cursor = 0;
@@ -92,30 +107,52 @@ function strictJsonScan(text) {
 }
 
 export function parseMintPayload(bytes) {
-  const { payload, text, payloadHex, payloadHash } = parseProtocolPayload(bytes);
+  const { payload, text, payloadHex, payloadHash, mediaBytes } = parseProtocolPayload(bytes);
   if (Object.keys(payload).some((key) => !ALLOWED_KEYS.has(key))) throw new Error("UNKNOWN_FIELD");
   if (payload.p !== "bittensor-relics" || payload.v !== 1 || payload.op !== "mint") throw new Error("UNSUPPORTED_PROTOCOL");
   if (!Number.isInteger(payload.netuid) || payload.netuid <= 0 || payload.netuid > 65_535) throw new Error("INVALID_NETUID");
   if (!Number.isSafeInteger(payload.subnet_generation) || payload.subnet_generation < 0) throw new Error("INVALID_SUBNET_GENERATION");
   if (typeof payload.name !== "string" || Array.from(payload.name.trim()).length < 1 || Array.from(payload.name.trim()).length > 80) throw new Error("INVALID_NAME");
   if (typeof payload.media_type !== "string" || payload.media_type.length < 1 || payload.media_type.length > 255) throw new Error("INVALID_MEDIA_TYPE");
-  const inline = typeof payload.body === "string";
+  const onchain = payload.encoding === "binary" && mediaBytes instanceof Uint8Array;
+  const inline = typeof payload.body === "string" && !onchain;
   const external = typeof payload.content_uri === "string" && typeof payload.content_hash === "string";
-  if (inline === external) throw new Error("INVALID_CONTENT_FORM");
+  if ([inline, external, onchain].filter(Boolean).length !== 1) throw new Error("INVALID_CONTENT_FORM");
   if (inline && (Array.from(payload.body.trim()).length < 1 || Array.from(payload.body.trim()).length > 1_024)) throw new Error("INVALID_BODY");
   if (external && !/^sha256:[0-9a-f]{64}$/.test(payload.content_hash)) throw new Error("INVALID_CONTENT_HASH");
   if (external && !/^ipfs:\/\/[a-zA-Z0-9]+(?:\/.*)?$/.test(payload.content_uri)) throw new Error("INVALID_CONTENT_URI");
-  return { payload, text, payloadHex, payloadHash };
+  if (onchain) {
+    if (payload.media_type !== "image/webp") throw new Error("INVALID_ONCHAIN_MEDIA_TYPE");
+    if (!isWebP(mediaBytes)) throw new Error("INVALID_WEBP_BYTES");
+    if (typeof payload.body === "string" && Array.from(payload.body.trim()).length > 1_024) throw new Error("INVALID_BODY");
+    if (!Number.isSafeInteger(payload.content_length) || payload.content_length !== mediaBytes.length) throw new Error("CONTENT_LENGTH_MISMATCH");
+    if (mediaBytes.length < 1 || mediaBytes.length > MAX_ONCHAIN_IMAGE_BYTES) throw new Error("INVALID_ONCHAIN_MEDIA_LENGTH");
+    if (![payload.width, payload.height].every((value) => Number.isSafeInteger(value) && value >= 64 && value <= 256)) throw new Error("INVALID_IMAGE_DIMENSIONS");
+    const contentHash = `sha256:${createHash("sha256").update(mediaBytes).digest("hex")}`;
+    if (payload.content_hash !== contentHash) throw new Error("CONTENT_HASH_MISMATCH");
+  }
+  return { payload, text, payloadHex, payloadHash, mediaBytes };
 }
 
 export function parseProtocolPayload(bytes) {
-  if (bytes.length > 2_048) throw new Error("PAYLOAD_TOO_LARGE");
-  const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  let manifestBytes = bytes;
+  let mediaBytes = null;
+  if (hasImageMagic(bytes)) {
+    if (bytes.length > MAX_MINT_REMARK_BYTES || bytes.length < 9) throw new Error("PAYLOAD_TOO_LARGE");
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const manifestLength = view.getUint32(4, false);
+    if (manifestLength < 2 || manifestLength > 4_096 || 8 + manifestLength >= bytes.length) throw new Error("INVALID_IMAGE_ENVELOPE");
+    manifestBytes = bytes.slice(8, 8 + manifestLength);
+    mediaBytes = bytes.slice(8 + manifestLength);
+  } else if (bytes.length > MAX_JSON_REMARK_BYTES) {
+    throw new Error("PAYLOAD_TOO_LARGE");
+  }
+  const text = new TextDecoder("utf-8", { fatal: true }).decode(manifestBytes);
   strictJsonScan(text);
   const payload = JSON.parse(text);
   if (!payload || Array.isArray(payload) || typeof payload !== "object") throw new Error("PAYLOAD_NOT_OBJECT");
   if (payload.p !== "bittensor-relics" || payload.v !== 1 || typeof payload.op !== "string") throw new Error("UNSUPPORTED_PROTOCOL");
-  return { payload, text, payloadHex: u8aToHex(bytes), payloadHash: blake2AsHex(bytes, 256) };
+  return { payload, text, payloadHex: u8aToHex(bytes), payloadHash: blake2AsHex(bytes, 256), mediaBytes };
 }
 
 export function parseTransferPayload(bytes) {
@@ -137,6 +174,7 @@ export function accountHex(value) {
 export function findProtocolRemark(call) {
   if (call.section === "system" && call.method === "remarkWithEvent") {
     const bytes = call.args[0].toU8a(true);
+    if (hasImageMagic(bytes)) return bytes;
     const text = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
     let decodedProtocol = false;
     try { decodedProtocol = JSON.parse(text)?.p === "bittensor-relics"; } catch {}

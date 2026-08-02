@@ -29,6 +29,7 @@ time, immutable activation block, and accepted artifact count.
 GET /api/v1/artifacts?limit=24&cursor=120
 GET /api/v1/artifacts/:artifactId
 GET /api/v1/artifacts/:artifactId/transfers
+GET /api/v1/artifacts/:artifactId/media
 ```
 
 Lists artifacts newest-first. `limit` is capped at 100. `cursor` is the last
@@ -40,6 +41,11 @@ and ownership nonce.
 Finalized transfer records also expose their actual chain fee in rao.
 Artifact responses include the requested TAO input, actual alpha burned,
 execution limit price, and actual finalized transaction fee in rao.
+
+The media endpoint returns the exact WebP bytes reconstructed from an on-chain
+binary mint envelope. It never redirects to external storage. Responses are
+immutable, use the indexed media type, and include the on-chain SHA-256 hash as
+the ETag.
 
 Wallet review may add `fresh=1` to artifact detail or owner collection requests.
 Successful responses then use `Cache-Control: no-store` so a signing decision is

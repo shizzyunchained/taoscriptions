@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { ApiPromise, HttpProvider, WsProvider } from "@polkadot/api";
 import { blake2AsHex, encodeAddress } from "@polkadot/util-crypto";
-import { calculateLimitPrice, createInlineMintPayload, DEFAULT_SLIPPAGE_BPS } from "../src/lib/protocol.ts";
+import { calculateLimitPrice, createInlineMintPayload, createOnChainImageMintPayload, DEFAULT_SLIPPAGE_BPS, MAX_ONCHAIN_IMAGE_BYTES } from "../src/lib/protocol.ts";
 
 const endpoint = process.env.SUBTENSOR_RPC ?? "https://test.chain.opentensor.ai";
 const expectedGenesis = process.env.CHAIN_GENESIS_HASH ?? "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105";
@@ -79,6 +80,26 @@ try {
   const roundTrip = api.registry.createType("Call", encodedCall);
   assert.equal(roundTrip.toHex(), encodedCall, "CALL_ROUND_TRIP_MISMATCH");
   const payment = await batch.paymentInfo(signer);
+  const imageBytes = new Uint8Array(MAX_ONCHAIN_IMAGE_BYTES);
+  imageBytes.set(new TextEncoder().encode("RIFF"), 0);
+  imageBytes.set(new TextEncoder().encode("WEBP"), 8);
+  const imagePayload = createOnChainImageMintPayload({
+    netuid: selected.netuid,
+    subnetGeneration: generation,
+    name: "Bittensor Relics on-chain image proof",
+    body: "Unsigned maximum-size image verification. This payload is never submitted.",
+    imageBytes,
+    contentHash: `sha256:${createHash("sha256").update(imageBytes).digest("hex")}`,
+    width: 256,
+    height: 256,
+  });
+  const imageBatch = api.tx.utility.batchAll([
+    api.tx.subtensorModule.addStakeBurn(routeHotkey, selected.netuid, taoAmountRao.toString(), limitPrice.toString()),
+    api.tx.system.remarkWithEvent(imagePayload.hex),
+  ]);
+  const imageCallHex = imageBatch.method.toHex();
+  assert.equal(api.registry.createType("Call", imageCallHex).toHex(), imageCallHex, "IMAGE_CALL_ROUND_TRIP_MISMATCH");
+  const imagePayment = await imageBatch.paymentInfo(signer);
 
   console.log(JSON.stringify({
     checkedAt: new Date().toISOString(),
@@ -106,6 +127,13 @@ try {
     payloadHash: blake2AsHex(payload.hex, 256),
     encodedCallBytes: (encodedCall.length - 2) / 2,
     encodedCallHash: blake2AsHex(encodedCall, 256),
+    onchainImage: {
+      imageBytes: imageBytes.length,
+      payloadBytes: imagePayload.byteLength,
+      estimatedExtrinsicFeeRao: imagePayment.partialFee.toString(),
+      encodedCallBytes: (imageCallHex.length - 2) / 2,
+      encodedCallHash: blake2AsHex(imageCallHex, 256),
+    },
     callPath: ["utility.batchAll", "subtensorModule.addStakeBurn", "system.remarkWithEvent"],
   }, null, 2));
 } finally {

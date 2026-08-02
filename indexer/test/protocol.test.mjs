@@ -1,9 +1,24 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createHash } from "node:crypto";
 import { blake2AsHex } from "@polkadot/util-crypto";
 import { findProtocolRemark, parseMintPayload, parseTransferPayload, validateMint, validateTransfer } from "../src/protocol.mjs";
 
 const encode = (value) => new TextEncoder().encode(value);
+const imageEnvelope = (imageBytes, overrides = {}) => {
+  const manifest = encode(JSON.stringify({
+    p: "bittensor-relics", v: 1, op: "mint", netuid: 1, subnet_generation: 123,
+    name: "On-chain portrait", media_type: "image/webp", encoding: "binary",
+    content_hash: `sha256:${createHash("sha256").update(imageBytes).digest("hex")}`,
+    content_length: imageBytes.length, width: 128, height: 128, ...overrides,
+  }));
+  const bytes = new Uint8Array(8 + manifest.length + imageBytes.length);
+  bytes.set([0x42, 0x52, 0x49, 0x31]);
+  new DataView(bytes.buffer).setUint32(4, manifest.length, false);
+  bytes.set(manifest, 8);
+  bytes.set(imageBytes, 8 + manifest.length);
+  return bytes;
+};
 const inline = (overrides = {}) => ({
   p: "bittensor-relics",
   v: 1,
@@ -31,6 +46,17 @@ test("accepts a content-addressed mint", () => {
   });
   delete payload.body;
   assert.equal(parseMintPayload(encode(JSON.stringify(payload))).payload.media_type, "image/png");
+});
+
+test("accepts fully on-chain WebP bytes and rejects tampering", () => {
+  const media = Uint8Array.from([0x52, 0x49, 0x46, 0x46, 1, 2, 3, 4, 0x57, 0x45, 0x42, 0x50]);
+  const bytes = imageEnvelope(media);
+  const result = parseMintPayload(bytes);
+  assert.deepEqual(result.mediaBytes, media);
+  assert.equal(result.payload.content_length, media.length);
+  const tampered = bytes.slice();
+  tampered[tampered.length - 5] ^= 0xff;
+  assert.throws(() => parseMintPayload(tampered), /CONTENT_HASH_MISMATCH/);
 });
 
 test("rejects duplicate keys, floats, unknown fields, and oversized remarks", () => {

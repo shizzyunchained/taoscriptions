@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteMark } from "@/components/site-mark";
@@ -39,8 +40,8 @@ export default async function RelicPage({ params }: Props) {
         <section className="indexer-empty relic-unavailable"><span>Proof unavailable</span><h1>The finalized indexer is offline.</h1><p>This page will not render an unverified artifact from URL data alone.</p><Link href="/explore">Return to collection</Link></section>
       ) : artifact ? (
         <article className="relic-detail">
-          <header><div><p className="eyebrow">Finalized relic #{artifact.globalNumber}</p><h1>{artifact.name}</h1><p>SN{artifact.netuid} artifact #{artifact.subnetNumber}</p></div><div className="detail-orbit" aria-hidden="true"><i /></div></header>
-          <section className="relic-content"><span>{artifact.mediaType}</span>{artifact.body ? <p>{artifact.body}</p> : <div><strong>External content is not rendered until its hash is verified.</strong><code>{artifact.contentUri}</code><code>{artifact.contentHash}</code></div>}</section>
+          <header><div><p className="eyebrow">Finalized relic #{artifact.globalNumber}</p><h1>{artifact.name}</h1><p>SN{artifact.netuid} artifact #{artifact.subnetNumber}</p></div>{artifact.mediaByteLength ? <div className="detail-media"><Image src={`/api/v1/artifacts/${encodeURIComponent(artifact.artifactId)}/media`} alt={artifact.name} width={320} height={320} unoptimized /></div> : <div className="detail-orbit" aria-hidden="true"><i /></div>}</header>
+          <section className="relic-content"><span>{artifact.mediaType}{artifact.mediaByteLength ? ` · ${artifact.mediaByteLength.toLocaleString()} bytes fully on-chain` : ""}</span>{artifact.body ? <p>{artifact.body}</p> : artifact.mediaByteLength ? <div><strong>The exact image bytes are stored in the finalized mint transaction.</strong><code>{artifact.contentHash}</code></div> : <div><strong>External content is not rendered until its hash is verified.</strong><code>{artifact.contentUri}</code><code>{artifact.contentHash}</code></div>}</section>
           <section className="proof-grid">
             <div><span>TAO spent</span><strong>{formatRao(artifact.taoSpentRao)} TAO</strong></div>
             <div><span>Alpha burned</span><strong>{formatRao(artifact.alphaBurnedRao)}</strong></div>

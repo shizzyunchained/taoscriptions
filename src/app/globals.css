@@ -107,6 +107,25 @@ h1 span { display: block; color: var(--ember-bright); font-style: italic; }
 .amount-field input { padding-right: 62px; font: 16px var(--font-geist-mono), monospace; }
 .amount-field em { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--ember); font: 10px var(--font-geist-mono), monospace; font-style: normal; }
 .field small { display: block; margin-top: 8px; color: var(--dim); font-size: 9px; }
+.onchain-upload { margin-top: 15px; border: 1px solid var(--line-strong); background: rgba(200,245,107,.018); }
+.upload-heading { min-height: 54px; padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; gap: 20px; border-bottom: 1px solid var(--line); }
+.upload-heading span, .upload-heading strong { display: block; }
+.upload-heading span { color: var(--dim); font: 9px var(--font-geist-mono), monospace; text-transform: uppercase; letter-spacing: .08em; }
+.upload-heading strong { margin-top: 4px; color: #afb5aa; font-size: 9px; font-weight: 500; }
+.upload-heading button { padding: 7px 10px; border: 1px solid rgba(255,141,120,.3); background: transparent; color: var(--danger); font-size: 8px; cursor: pointer; }
+.upload-drop { min-height: 154px; padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; }
+.upload-drop input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
+.upload-drop > span { width: 38px; height: 38px; border: 1px solid rgba(255,159,67,.42); border-radius: 50%; display: grid; place-items: center; color: var(--ember); font: 20px var(--font-geist-mono), monospace; }
+.upload-drop strong { margin-top: 12px; color: var(--ink); font-size: 12px; }
+.upload-drop small { margin-top: 6px; color: var(--dim); font-size: 9px; }
+.upload-drop:focus-within { box-shadow: inset 0 0 0 1px var(--ember); }
+.upload-preview { padding: 15px; display: grid; grid-template-columns: 118px 1fr; gap: 18px; align-items: center; }
+.upload-preview img { width: 118px; height: 118px; border: 1px solid rgba(200,245,107,.25); object-fit: cover; }
+.upload-preview strong, .upload-preview span, .upload-preview small { display: block; }
+.upload-preview strong { color: var(--ink); font: 11px var(--font-geist-mono), monospace; }
+.upload-preview span { margin-top: 8px; color: var(--acid); font: 9px var(--font-geist-mono), monospace; }
+.upload-preview small { margin-top: 11px; color: var(--dim); font-size: 9px; line-height: 1.5; }
+.onchain-upload > .error-message { margin: 0 15px 15px; }
 .subnet-meta { margin-top: 11px; display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
 .subnet-meta div { padding: 11px 12px; background: rgba(255,255,255,.025); }
 .subnet-meta span { display: block; color: var(--dim); font-size: 8px; text-transform: uppercase; letter-spacing: .08em; }
@@ -238,6 +257,8 @@ footer > a:last-child:hover { color: var(--ink); }
 .artifact-mini-orbit::before { width: 76px; height: 76px; border: 1px solid rgba(200,245,107,.25); }
 .artifact-mini-orbit::after { position: absolute; width: 4px; height: 4px; background: var(--ember); box-shadow: 0 0 18px var(--ember); }
 .artifact-mini-orbit i { position: absolute; width: 42px; height: 42px; border: 1px dashed rgba(255,255,255,.17); }
+.artifact-media { position: relative; width: 160px; height: 160px; margin: 24px auto; border: 1px solid rgba(200,245,107,.28); background: #080a08; overflow: hidden; }
+.artifact-media img { width: 100%; height: 100%; object-fit: cover; }
 .artifact-card h2 { overflow: hidden; color: var(--ink); font-size: 20px; font-weight: 560; text-overflow: ellipsis; white-space: nowrap; }
 .artifact-card > p { height: 44px; margin-top: 10px; overflow: hidden; color: var(--dim); font-size: 10px; line-height: 1.55; }
 .artifact-card dl { margin: 20px 0; padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -261,6 +282,8 @@ footer > a:last-child:hover { color: var(--ink); }
 .detail-orbit::before { width: 158px; height: 158px; border: 1px solid rgba(200,245,107,.27); }
 .detail-orbit::after { width: 8px; height: 8px; background: var(--ember); box-shadow: 0 0 28px var(--ember); }
 .detail-orbit i { width: 92px; height: 92px; border: 1px dashed rgba(255,255,255,.18); }
+.detail-media { justify-self: center; width: 260px; height: 260px; border: 1px solid rgba(200,245,107,.3); background: #080a08; box-shadow: 0 0 70px rgba(200,245,107,.07); overflow: hidden; }
+.detail-media img { width: 100%; height: 100%; object-fit: cover; }
 .relic-content { padding: clamp(28px, 5vw, 54px); border: 1px solid var(--line); border-top: 0; }
 .relic-content > span { color: var(--dim); font: 8px var(--font-geist-mono), monospace; text-transform: uppercase; }
 .relic-content > p { max-width: 800px; margin-top: 22px; color: #d5d8d1; font-size: clamp(18px, 2.4vw, 30px); line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }

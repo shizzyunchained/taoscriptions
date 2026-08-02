@@ -30,6 +30,7 @@ export type Artifact = {
   body: string | null;
   contentUri: string | null;
   contentHash: string | null;
+  mediaByteLength: number | null;
   payloadHash: string;
   taoSpentRao: string;
   alphaBurnedRao: string;
@@ -56,6 +57,7 @@ type ArtifactRow = {
   body: string | null;
   content_uri: string | null;
   content_hash: string | null;
+  media_byte_length: number | null;
   payload_hash: string;
   tao_spent_rao: string;
   alpha_burned_rao: string;
@@ -109,6 +111,7 @@ function artifact(row: ArtifactRow): Artifact {
     body: row.body,
     contentUri: row.content_uri,
     contentHash: row.content_hash,
+    mediaByteLength: row.media_byte_length,
     payloadHash: row.payload_hash,
     taoSpentRao: row.tao_spent_rao,
     alphaBurnedRao: row.alpha_burned_rao,
@@ -175,7 +178,7 @@ export async function listArtifacts(filters: ListFilters) {
     `SELECT artifact_id, block_number, block_hash, extrinsic_index, extrinsic_hash,
       global_number, subnet_number, netuid, subnet_generation,
       creator_account_hex, owner_account_hex, hotkey_account_hex,
-      name, media_type, body, content_uri, content_hash, payload_hash,
+      name, media_type, body, content_uri, content_hash, media_byte_length, payload_hash,
       tao_spent_rao, alpha_burned_rao, limit_price_rao, transaction_fee_rao, ownership_nonce
      FROM artifacts ${where}
      ORDER BY global_number DESC
@@ -192,12 +195,22 @@ export async function getArtifact(artifactId: string) {
     `SELECT artifact_id, block_number, block_hash, extrinsic_index, extrinsic_hash,
       global_number, subnet_number, netuid, subnet_generation,
       creator_account_hex, owner_account_hex, hotkey_account_hex,
-      name, media_type, body, content_uri, content_hash, payload_hash,
+      name, media_type, body, content_uri, content_hash, media_byte_length, payload_hash,
       tao_spent_rao, alpha_burned_rao, limit_price_rao, transaction_fee_rao, ownership_nonce
      FROM artifacts WHERE artifact_id = $1`,
     [artifactId],
   );
   return result.rows[0] ? artifact(result.rows[0]) : null;
+}
+
+export async function getArtifactMedia(artifactId: string) {
+  const result = await pool().query<{ media_type: string; media_bytes: Buffer; content_hash: string }>(
+    `SELECT media_type, media_bytes, content_hash FROM artifacts
+     WHERE artifact_id = $1 AND media_bytes IS NOT NULL`,
+    [artifactId],
+  );
+  const row = result.rows[0];
+  return row ? { mediaType: row.media_type, bytes: row.media_bytes, contentHash: row.content_hash } : null;
 }
 
 export type RejectedOperation = {
