@@ -31,17 +31,18 @@ test("artifact numbering and chain positions are unique", async () => {
     `0x${"3".repeat(64)}`, "0x0102", "1", "1", 1, "5",
     `0x${"4".repeat(64)}`, `0x${"5".repeat(64)}`, "Test", "text/plain;charset=utf-8",
     "hello", null, null, JSON.stringify({ p: "neural-relics" }), "0x7b7d",
-    `0x${"6".repeat(64)}`, "5000000", "5200000000", "1000000", JSON.stringify({ events: [] }),
+    `0x${"6".repeat(64)}`, "5000000", "5200000000", "1000000", "1710598", JSON.stringify({ events: [] }),
   ];
   const insert = `INSERT INTO artifacts (
     artifact_id, chain_genesis, block_number, block_hash, extrinsic_index,
     extrinsic_hash, extrinsic_hex, global_number, subnet_number, netuid,
     subnet_generation, creator_account_hex, owner_account_hex, hotkey_account_hex,
     name, media_type, body, content_uri, content_hash, payload_json, payload_hex,
-    payload_hash, tao_spent_rao, alpha_burned_rao, limit_price_rao, evidence_json
+    payload_hash, tao_spent_rao, alpha_burned_rao, limit_price_rao,
+    transaction_fee_rao, evidence_json
   ) VALUES (
     $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$12,$13,$14,$15,$16,$17,$18,
-    $19::jsonb,$20,$21,$22,$23,$24,$25::jsonb
+    $19::jsonb,$20,$21,$22,$23,$24,$25,$26::jsonb
   )`;
   await pool.query(insert, values);
   const duplicate = [...values];

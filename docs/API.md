@@ -37,6 +37,8 @@ the canonical `nr1:<genesis>:<block>:<extrinsic>` identifier.
 Artifact detail includes up to 100 accepted transfers in nonce order. The
 transfer-specific endpoint returns the same provenance plus the current owner
 and ownership nonce.
+Artifact responses include the requested TAO input, actual alpha burned,
+execution limit price, and actual finalized transaction fee in rao.
 
 Wallet review may add `fresh=1` to artifact detail or owner collection requests.
 Successful responses then use `Cache-Control: no-store` so a signing decision is

@@ -49,6 +49,17 @@ export function verifyFinalizedMintReceipt(input: {
     throw new Error("ATOMIC_BATCH_FAILED");
   }
 
+  const feePaid = eventRecords.find((record) => isEvent(record, "transactionPayment", "TransactionFeePaid"));
+  if (!feePaid) throw new Error("MISSING_TRANSACTION_FEE_EVENT");
+  const [feeSigner, actualFee, tip] = eventData(feePaid);
+  const transactionFeeRao = BigInt(actualFee.toString());
+  const transactionTipRao = BigInt(tip.toString());
+  if (
+    codecHex(feeSigner, "TRANSACTION_FEE_SIGNER") !== signerHex
+    || transactionFeeRao <= 0n
+    || transactionTipRao > transactionFeeRao
+  ) throw new Error("TRANSACTION_FEE_EVENT_MISMATCH");
+
   const stakeBurn = eventRecords.find((record) => isEvent(record, "subtensorModule", "AddStakeBurn"));
   if (!stakeBurn) throw new Error("MISSING_ADD_STAKE_BURN_EVENT");
   const [eventNetuid, eventHotkey, eventAmount, eventAlpha] = eventData(stakeBurn);
@@ -84,5 +95,5 @@ export function verifyFinalizedMintReceipt(input: {
     throw new Error("REMARK_EVENT_MISMATCH");
   }
 
-  return { alphaBurnedRao };
+  return { alphaBurnedRao, transactionFeeRao, transactionTipRao };
 }

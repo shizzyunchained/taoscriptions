@@ -90,10 +90,10 @@ async function insertArtifact(client, context, mint) {
       creator_account_hex, owner_account_hex, hotkey_account_hex,
       name, media_type, body, content_uri, content_hash,
       payload_json, payload_hex, payload_hash,
-      tao_spent_rao, alpha_burned_rao, limit_price_rao, evidence_json
+      tao_spent_rao, alpha_burned_rao, limit_price_rao, transaction_fee_rao, evidence_json
     ) VALUES (
       $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$12,$13,$14,$15,$16,$17,$18,
-      $19::jsonb,$20,$21,$22,$23,$24,$25::jsonb
+      $19::jsonb,$20,$21,$22,$23,$24,$25,$26::jsonb
     )`,
     [artifactId, expectedGenesis, context.blockNumber, context.blockHash, context.extrinsicIndex,
       context.extrinsic.hash.toHex(), context.extrinsic.toHex(),
@@ -103,7 +103,7 @@ async function insertArtifact(client, context, mint) {
       mint.payload.body?.trim() ?? null, mint.payload.content_uri ?? null,
       mint.payload.content_hash ?? null, JSON.stringify(mint.payload), mint.payloadHex,
       mint.payloadHash, mint.taoSpentRao.toString(), mint.alphaBurnedRao.toString(),
-      mint.limitPriceRao.toString(), JSON.stringify({
+      mint.limitPriceRao.toString(), mint.transactionFeeRao.toString(), JSON.stringify({
         events: context.events.map(({ event }) => ({
           section: event.section,
           method: event.method,

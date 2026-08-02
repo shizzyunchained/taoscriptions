@@ -366,6 +366,11 @@ or retry as a market order without a new user review and signature.
 Mainnet minting remains disabled until the testnet implementation, indexer,
 documentation, and security gates are complete.
 
+An accepted mint receipt MUST include a matching
+`TransactionPayment.TransactionFeePaid` event for the signer. Its `actual_fee`
+is stored as finalized chain evidence; the estimated fee shown before signing is
+not canonical.
+
 ## 16. Reference implementation sources
 
 - Bittensor stake-burn transaction:

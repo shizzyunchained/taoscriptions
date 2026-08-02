@@ -166,6 +166,11 @@ h1 span { display: block; color: var(--ember-bright); font-style: italic; }
 .mint-success strong { color: var(--acid); font-size: 12px; }
 .mint-success span { margin-top: 6px; color: #b5bbb1; font: 9px var(--font-geist-mono), monospace; }
 .mint-success p { margin-top: 10px; color: var(--dim); font-size: 10px; line-height: 1.5; }
+.mint-success dl { margin-top: 14px; border-top: 1px solid rgba(200,245,107,.18); }
+.mint-success dl div { padding: 8px 0; display: flex; justify-content: space-between; gap: 16px; border-bottom: 1px solid rgba(200,245,107,.12); }
+.mint-success dt { color: var(--dim); font-size: 8px; }
+.mint-success dd { color: #c8cec3; font: 8px var(--font-geist-mono), monospace; text-align: right; overflow-wrap: anywhere; }
+.mint-success button { width: 100%; margin-top: 14px; padding: 12px; border: 1px solid rgba(200,245,107,.45); background: transparent; color: var(--acid); font-size: 9px; font-weight: 700; cursor: pointer; }
 
 .protocol-section { padding-bottom: 90px; }
 .protocol-steps { margin-top: 50px; display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); }
@@ -267,7 +272,7 @@ footer > a:last-child:hover { color: var(--ink); }
 .relic-content strong, .relic-content code { display: block; }
 .relic-content strong { color: #bfc4ba; font-size: 11px; }
 .relic-content code { margin-top: 10px; color: var(--dim); font: 9px var(--font-geist-mono), monospace; overflow-wrap: anywhere; }
-.proof-grid { display: grid; grid-template-columns: repeat(4, 1fr); border-left: 1px solid var(--line); }
+.proof-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); border-left: 1px solid var(--line); }
 .proof-grid div { min-height: 110px; padding: 24px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .proof-grid span { display: block; color: var(--dim); font-size: 8px; text-transform: uppercase; }
 .proof-grid strong { display: block; margin-top: 10px; color: var(--ink); font: 10px var(--font-geist-mono), monospace; overflow-wrap: anywhere; }

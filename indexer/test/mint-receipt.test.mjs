@@ -11,6 +11,7 @@ const expected = { signerAccountHex: signer, routeHotkeyHex: hotkey, netuid: 1, 
 
 function validEvents() {
   return [
+    event("transactionPayment", "TransactionFeePaid", [codec(signer, signer), codec(1_710_598), codec(0)]),
     event("subtensorModule", "AddStakeBurn", [codec(1), codec(hotkey, hotkey), codec(5_000_000), codec(5_203_000_000)]),
     event("subtensorModule", "AlphaBurned", [codec(signer, signer), codec(hotkey, hotkey), codec(5_203_000_000), codec(1)]),
     event("system", "Remarked", [codec(signer, signer), codec(remarkHash, remarkHash)]),
@@ -20,7 +21,11 @@ function validEvents() {
 }
 
 test("accepts only a finalized mint receipt matching every signed intent field", () => {
-  assert.deepEqual(verifyFinalizedMintReceipt({ eventRecords: validEvents(), expected }), { alphaBurnedRao: 5_203_000_000n });
+  assert.deepEqual(verifyFinalizedMintReceipt({ eventRecords: validEvents(), expected }), {
+    alphaBurnedRao: 5_203_000_000n,
+    transactionFeeRao: 1_710_598n,
+    transactionTipRao: 0n,
+  });
 });
 
 test("rejects a receipt with missing success or mismatched burn and remark evidence", () => {
@@ -29,9 +34,13 @@ test("rejects a receipt with missing success or mismatched burn and remark evide
     /MINT_EXTRINSIC_FAILED/,
   );
   const wrongHotkeyEvents = validEvents();
-  wrongHotkeyEvents[0] = event("subtensorModule", "AddStakeBurn", [codec(1), codec(signer, signer), codec(5_000_000), codec(5_203_000_000)]);
+  wrongHotkeyEvents[1] = event("subtensorModule", "AddStakeBurn", [codec(1), codec(signer, signer), codec(5_000_000), codec(5_203_000_000)]);
   assert.throws(() => verifyFinalizedMintReceipt({ eventRecords: wrongHotkeyEvents, expected }), /ADD_STAKE_BURN_EVENT_MISMATCH/);
   const wrongRemarkEvents = validEvents();
-  wrongRemarkEvents[2] = event("system", "Remarked", [codec(signer, signer), codec(`0x${"b".repeat(64)}`, `0x${"b".repeat(64)}`)]);
+  wrongRemarkEvents[3] = event("system", "Remarked", [codec(signer, signer), codec(`0x${"b".repeat(64)}`, `0x${"b".repeat(64)}`)]);
   assert.throws(() => verifyFinalizedMintReceipt({ eventRecords: wrongRemarkEvents, expected }), /REMARK_EVENT_MISMATCH/);
+  assert.throws(
+    () => verifyFinalizedMintReceipt({ eventRecords: validEvents().filter(({ event: item }) => item.method !== "TransactionFeePaid"), expected }),
+    /MISSING_TRANSACTION_FEE_EVENT/,
+  );
 });

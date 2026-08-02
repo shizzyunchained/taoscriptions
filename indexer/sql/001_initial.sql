@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS artifacts (
   tao_spent_rao NUMERIC(20, 0) NOT NULL,
   alpha_burned_rao NUMERIC(20, 0) NOT NULL,
   limit_price_rao NUMERIC(20, 0) NOT NULL,
+  transaction_fee_rao NUMERIC(20, 0),
   evidence_json JSONB NOT NULL,
   ownership_nonce BIGINT NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -51,6 +52,9 @@ CREATE TABLE IF NOT EXISTS artifacts (
   UNIQUE (chain_genesis, global_number),
   UNIQUE (chain_genesis, netuid, subnet_generation, subnet_number)
 );
+
+ALTER TABLE artifacts
+  ADD COLUMN IF NOT EXISTS transaction_fee_rao NUMERIC(20, 0);
 
 CREATE INDEX IF NOT EXISTS artifacts_owner_idx
   ON artifacts (chain_genesis, owner_account_hex, global_number DESC);

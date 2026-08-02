@@ -33,6 +33,7 @@ export type Artifact = {
   taoSpentRao: string;
   alphaBurnedRao: string;
   limitPriceRao: string;
+  transactionFeeRao: string | null;
   ownershipNonce: string;
 };
 
@@ -58,6 +59,7 @@ type ArtifactRow = {
   tao_spent_rao: string;
   alpha_burned_rao: string;
   limit_price_rao: string;
+  transaction_fee_rao: string | null;
   ownership_nonce: string;
 };
 
@@ -110,6 +112,7 @@ function artifact(row: ArtifactRow): Artifact {
     taoSpentRao: row.tao_spent_rao,
     alphaBurnedRao: row.alpha_burned_rao,
     limitPriceRao: row.limit_price_rao,
+    transactionFeeRao: row.transaction_fee_rao,
     ownershipNonce: row.ownership_nonce,
   };
 }
@@ -170,7 +173,7 @@ export async function listArtifacts(filters: ListFilters) {
       global_number, subnet_number, netuid, subnet_generation,
       creator_account_hex, owner_account_hex, hotkey_account_hex,
       name, media_type, body, content_uri, content_hash, payload_hash,
-      tao_spent_rao, alpha_burned_rao, limit_price_rao, ownership_nonce
+      tao_spent_rao, alpha_burned_rao, limit_price_rao, transaction_fee_rao, ownership_nonce
      FROM artifacts ${where}
      ORDER BY global_number DESC
      LIMIT $${values.length}`,
@@ -187,7 +190,7 @@ export async function getArtifact(artifactId: string) {
       global_number, subnet_number, netuid, subnet_generation,
       creator_account_hex, owner_account_hex, hotkey_account_hex,
       name, media_type, body, content_uri, content_hash, payload_hash,
-      tao_spent_rao, alpha_burned_rao, limit_price_rao, ownership_nonce
+      tao_spent_rao, alpha_burned_rao, limit_price_rao, transaction_fee_rao, ownership_nonce
      FROM artifacts WHERE artifact_id = $1`,
     [artifactId],
   );

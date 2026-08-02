@@ -179,6 +179,15 @@ export function validateMint({ api, extrinsic, eventRecords, subnetGeneration })
   const hasBatch = eventRecords.some(({ event }) => api.events.utility.BatchCompleted.is(event));
   if (!hasSuccess || !hasBatch) throw new Error("ATOMIC_BATCH_FAILED");
 
+  const feePaid = eventRecords.find(({ event }) => api.events.transactionPayment.TransactionFeePaid.is(event));
+  if (!feePaid) throw new Error("MISSING_TRANSACTION_FEE_EVENT");
+  const [feeSigner, actualFee, tip] = feePaid.event.data;
+  const transactionFeeRao = BigInt(actualFee.toString());
+  const transactionTipRao = BigInt(tip.toString());
+  if (accountHex(feeSigner) !== signer || transactionFeeRao <= 0n || transactionTipRao > transactionFeeRao) {
+    throw new Error("TRANSACTION_FEE_EVENT_MISMATCH");
+  }
+
   const stakeBurn = eventRecords.find(({ event }) => api.events.subtensorModule.AddStakeBurn.is(event));
   if (!stakeBurn) throw new Error("MISSING_ADD_STAKE_BURN_EVENT");
   const [eventNetuid, eventHotkey, eventAmount, eventAlpha] = stakeBurn.event.data;
@@ -194,7 +203,10 @@ export function validateMint({ api, extrinsic, eventRecords, subnetGeneration })
   const remarked = eventRecords.find(({ event }) => api.events.system.Remarked.is(event));
   if (!remarked || accountHex(remarked.event.data[0]) !== signer || remarked.event.data[1].toHex() !== remarkHash) throw new Error("REMARK_EVENT_MISMATCH");
 
-  return { ...decoded, netuid, taoSpentRao, alphaBurnedRao, limitPriceRao, creatorHex: signer, hotkeyHex };
+  return {
+    ...decoded, netuid, taoSpentRao, alphaBurnedRao, limitPriceRao,
+    transactionFeeRao, transactionTipRao, creatorHex: signer, hotkeyHex,
+  };
 }
 
 export function validateTransfer({ api, extrinsic, eventRecords }) {

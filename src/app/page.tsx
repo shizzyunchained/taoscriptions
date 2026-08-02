@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ApiPromise } from "@polkadot/api";
 import { calculateLimitPrice, createInlineMintPayload, DEFAULT_SLIPPAGE_BPS } from "@/lib/protocol";
 import { verifyFinalizedMintReceipt, type MintReceiptExpectation } from "@/lib/mint-receipt";
+import { createMintEvidence, type MintEvidence } from "@/lib/mint-evidence";
 
 const APP_NAME = "Neural Relics";
 const TESTNET_RPC = process.env.NEXT_PUBLIC_SUBTENSOR_RPC ?? "wss://test.chain.opentensor.ai";
@@ -87,6 +88,7 @@ export default function Home() {
   const [mintReview, setMintReview] = useState<MintReview | null>(null);
   const [mintError, setMintError] = useState("");
   const [transactionHash, setTransactionHash] = useState("");
+  const [mintEvidence, setMintEvidence] = useState<MintEvidence | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -342,6 +344,8 @@ export default function Home() {
       batch,
       freshQuote,
       receiptExpectation,
+      currentGeneration,
+      runtimeSpec: apiAt.runtimeVersion.specVersion.toString(),
       review: {
         payload: payload.json,
         payloadBytes: payload.byteLength,
@@ -356,6 +360,7 @@ export default function Home() {
   async function reviewMint() {
     setMintError("");
     setTransactionHash("");
+    setMintEvidence(null);
     try {
       const assembled = await assembleMint();
       setQuote(assembled.freshQuote);
@@ -371,6 +376,7 @@ export default function Home() {
   async function signMint() {
     if (!account) return;
     setMintError("");
+    setMintEvidence(null);
     setMintState("signing");
     try {
       const assembled = await assembleMint();
@@ -399,17 +405,56 @@ export default function Home() {
           }
           if (result.status.isInBlock) setMintState("submitted");
           if (result.status.isFinalized) {
-            try {
-              verifyFinalizedMintReceipt({
-                eventRecords: result.events,
-                expected: assembled.receiptExpectation,
-              });
-              setMintState("finalized");
-            } catch {
-              setMintError("The finalized events did not exactly match the Neural Relics transaction you signed.");
-              setMintState("error");
-            }
-            subscription.unsubscribe?.();
+            void (async () => {
+              try {
+                const receipt = verifyFinalizedMintReceipt({
+                  eventRecords: result.events,
+                  expected: assembled.receiptExpectation,
+                });
+                const finalizedHash = result.status.asFinalized.toHex().toLowerCase();
+                const [header, signedBlock, blockTimestamp] = await Promise.all([
+                  assembled.api.rpc.chain.getHeader(finalizedHash),
+                  assembled.api.rpc.chain.getBlock(finalizedHash),
+                  assembled.api.query.timestamp.now.at(finalizedHash),
+                ]);
+                const txHash = result.txHash.toHex().toLowerCase();
+                const locatedIndex = signedBlock.block.extrinsics.findIndex(
+                  (extrinsic) => extrinsic.hash.toHex().toLowerCase() === txHash,
+                );
+                if (locatedIndex < 0 || (result.txIndex !== undefined && result.txIndex !== locatedIndex)) {
+                  throw new Error("FINALIZED_EXTRINSIC_POSITION_MISMATCH");
+                }
+                setMintEvidence(createMintEvidence({
+                  genesisHash: assembled.api.genesisHash.toHex(),
+                  runtimeSpec: assembled.runtimeSpec,
+                  blockNumber: header.number.toString(),
+                  blockHash: finalizedHash,
+                  extrinsicIndex: locatedIndex,
+                  extrinsicHash: txHash,
+                  signerAddress: account.address,
+                  signerAccountHex: assembled.receiptExpectation.signerAccountHex,
+                  routeHotkey: assembled.review.routeHotkey,
+                  routeHotkeyHex: assembled.receiptExpectation.routeHotkeyHex,
+                  netuid: assembled.receiptExpectation.netuid,
+                  subnetGeneration: assembled.currentGeneration,
+                  taoSpentRao: assembled.receiptExpectation.taoAmountRao.toString(),
+                  alphaBurnedRao: receipt.alphaBurnedRao.toString(),
+                  limitPriceRao: assembled.review.limitPrice.toString(),
+                  transactionFeeRao: receipt.transactionFeeRao.toString(),
+                  transactionTipRao: receipt.transactionTipRao.toString(),
+                  payload: assembled.review.payload,
+                  payloadHash: assembled.receiptExpectation.remarkHash,
+                  quoteBlock: assembled.review.quoteBlock,
+                  finalizedAt: new Date(Number(blockTimestamp.toString())).toISOString(),
+                }));
+                setMintState("finalized");
+              } catch {
+                setMintError("The finalized chain proof did not exactly match the Neural Relics transaction you signed.");
+                setMintState("error");
+              } finally {
+                subscription.unsubscribe?.();
+              }
+            })();
           }
         },
       );
@@ -417,6 +462,17 @@ export default function Home() {
       setMintError(cause instanceof Error ? cause.message : "The wallet did not complete the testnet mint.");
       setMintState("error");
     }
+  }
+
+  function downloadMintEvidence() {
+    if (!mintEvidence) return;
+    const blob = new Blob([`${JSON.stringify(mintEvidence, null, 2)}\n`], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${mintEvidence.artifactId.replaceAll(":", "-")}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -490,8 +546,18 @@ export default function Home() {
               </div>
             )}
             {mintError && <p className="error-message" role="alert">{mintError}</p>}
-            {mintState === "finalized" ? (
-              <div className="mint-success"><strong>Relic mint finalized</strong><span>{shortAddress(transactionHash)}</span><p>The indexer will assign its canonical number from finalized block order.</p></div>
+            {mintState === "finalized" && mintEvidence ? (
+              <div className="mint-success">
+                <strong>Relic mint finalized</strong>
+                <span>{mintEvidence.artifactId}</span>
+                <dl>
+                  <div><dt>Finalized block</dt><dd>#{mintEvidence.blockNumber} / {mintEvidence.extrinsicIndex}</dd></div>
+                  <div><dt>Alpha burned</dt><dd>{formatToken(BigInt(mintEvidence.alphaBurnedRao), 7)} {selectedSubnet?.symbol}</dd></div>
+                  <div><dt>Actual chain fee</dt><dd>{formatToken(BigInt(mintEvidence.transactionFeeRao), 7)} TAO</dd></div>
+                  <div><dt>Transaction</dt><dd>{shortAddress(mintEvidence.extrinsicHash)}</dd></div>
+                </dl>
+                <button type="button" onClick={downloadMintEvidence}>Download finalized proof</button>
+              </div>
             ) : mintState === "review" ? (
               <button className="forge-button danger" type="button" onClick={signMint}>Sign and forge on testnet <span>Irreversible test burn</span></button>
             ) : (

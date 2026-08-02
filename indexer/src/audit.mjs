@@ -10,6 +10,7 @@ const DATASETS = [
     subnet_generation, creator_account_hex, owner_account_hex, hotkey_account_hex,
     name, media_type, body, content_uri, content_hash, payload_json, payload_hex,
     payload_hash, tao_spent_rao, alpha_burned_rao, limit_price_rao,
+    transaction_fee_rao,
     ownership_nonce, evidence_json
     FROM artifacts WHERE chain_genesis = $1
     ORDER BY block_number ASC, extrinsic_index ASC`],
