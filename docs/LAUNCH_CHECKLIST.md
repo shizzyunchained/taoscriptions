@@ -43,6 +43,8 @@ No single green build overrides a missing chain, indexer, or wallet gate.
 - [ ] `START_BLOCK` is the finalized block immediately before the first accepted
       protocol candidate.
 - [ ] Primary Postgres migration completed before the worker started.
+- [ ] `npm run indexer:doctor` passed against each database and its configured
+      chain bounds; both JSON reports are retained.
 - [ ] The primary worker reached the current finalized head and emits healthy
       heartbeats with bounded lag.
 - [ ] A second empty Postgres database replayed the identical block range.

@@ -12,6 +12,7 @@
     "verify:transaction": "node scripts/verify-transaction.mjs",
     "test:indexer": "node --test indexer/test/*.test.mjs",
     "indexer:migrate": "node indexer/src/migrate.mjs",
+    "indexer:doctor": "node indexer/src/doctor.mjs",
     "indexer:start": "node indexer/src/index.mjs",
     "indexer:audit": "node indexer/src/compare.mjs"
   },

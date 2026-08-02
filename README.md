@@ -62,6 +62,7 @@ npm run build
 npm run verify:runtime
 npm run verify:transaction # constructs and quotes; never signs or submits
 npm run test:indexer
+npm run indexer:doctor # requires a migrated database and explicit START_BLOCK
 npm run indexer:audit # requires primary + independent replay databases
 ```
 

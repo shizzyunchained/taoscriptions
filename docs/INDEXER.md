@@ -61,9 +61,9 @@ accepts the mint. Replaying a block returns the previously stored result.
 `indexer/src` implements the finalized-head worker, strict payload parser,
 Postgres migration, atomic block checkpointing, evidence retention, rejection
 records, and deterministic mint numbering. The checked-in `render.yaml` defines
-a Render background worker but disables automatic deploys. It is intentionally
-not launched until a database is selected and `START_BLOCK` is frozen at or
-before the first protocol mint.
+separate primary and replay background workers and disables automatic deploys
+for both. They are intentionally not launched until two databases are selected
+and `START_BLOCK` is frozen at or before the first protocol mint.
 
 For a reproducibility run, set the same optional `STOP_BLOCK` on the primary
 and replay workers. Each worker processes only finalized blocks through that
@@ -140,6 +140,14 @@ health endpoint is diagnostic rather than a Render HTTP health check. Deployment
 requires a paid worker plan, a Postgres `DATABASE_URL`, and an explicit
 `START_BLOCK`; none of those are created automatically by this repository.
 
+Render runs `npm run indexer:migrate && npm run indexer:doctor` before starting
+the worker. The doctor is read-only after migration and fails the deployment if
+the RPC genesis or finalized runtime spec differs from configuration, either
+block bound is not finalized, an existing checkpoint conflicts with those
+bounds, or the required evidence schema (including actual transaction fees) is
+missing. Its JSON report never prints the database URL and should be retained
+with the deployment record.
+
 The worker emits a structured `indexer_health` JSON heartbeat every 60 seconds
 and on fatal startup failure. It reports status, chain, checkpoint, latest seen
 finalized head, lag in blocks, last committed time, indexer version, and the
@@ -153,7 +161,8 @@ The intended first deployment sequence is:
 2. create two dedicated Postgres databases;
 3. choose one finalized audit checkpoint and set the same `START_BLOCK` and
    `STOP_BLOCK` for two workers backed by those separate databases;
-4. run the pre-deploy migration;
+4. run the pre-deploy migration and retain each successful `indexer:doctor`
+   report;
 5. confirm both workers report `stopped` at the chosen checkpoint;
 6. run `npm run indexer:audit` and retain its JSON output as release evidence;
 7. remove `STOP_BLOCK` from the primary worker only and restart it to follow new
