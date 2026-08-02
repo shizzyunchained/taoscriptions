@@ -38,11 +38,14 @@ try {
   assert.ok(selected, "NO_ACTIVE_SUBNET_WITH_NONZERO_QUOTE");
 
   const generation = (await apiAt.query.subtensorModule.networkRegisteredAt(selected.netuid)).toString();
+  assert.equal((await apiAt.query.subtensorModule.subtokenEnabled(selected.netuid)).toString(), "true", "SUBTOKEN_DISABLED");
+  const minimumStakeRao = BigInt(apiAt.consts.subtensorModule.initialMinStake.toString());
   const routeHotkey = (await apiAt.query.subtensorModule.subnetOwnerHotkey(selected.netuid)).toString();
   assert.notEqual(api.registry.createType("AccountId32", routeHotkey).toHex(), `0x${"0".repeat(64)}`, "MISSING_SUBNET_OWNER_HOTKEY");
   const routeHotkeyOwner = (await apiAt.query.subtensorModule.owner(routeHotkey)).toString();
   assert.notEqual(api.registry.createType("AccountId32", routeHotkeyOwner).toHex(), `0x${"0".repeat(64)}`, "UNREGISTERED_ROUTE_HOTKEY");
   const currentSpotPrice = BigInt((await apiAt.call.swapRuntimeApi.currentAlphaPrice(selected.netuid)).toString());
+  assert.ok(BigInt(selected.quote.taoAmount.toString()) >= minimumStakeRao, "POOL_INPUT_BELOW_MINIMUM_STAKE");
   const limitPrice = calculateLimitPrice(currentSpotPrice, DEFAULT_SLIPPAGE_BPS);
   const payload = createInlineMintPayload({
     netuid: selected.netuid,
@@ -89,6 +92,7 @@ try {
     netuid: selected.netuid,
     subnetGeneration: generation,
     taoAmountRao: taoAmountRao.toString(),
+    minimumStakeRao: minimumStakeRao.toString(),
     expectedAlphaRao: selected.alphaAmount.toString(),
     alphaSlippageRao: selected.quote.alphaSlippage.toString(),
     taoFeeRao: selected.quote.taoFee.toString(),

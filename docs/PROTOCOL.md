@@ -341,6 +341,10 @@ Before requesting a mint signature, the site MUST display:
 - current network and genesis hash;
 - a plain warning that the spend and burn are irreversible.
 
+The client MUST also fail before requesting a signature when the subnet's
+subtoken is disabled, its registered route hotkey no longer exists, or the
+simulated TAO paid into the pool after swap fees is below `DefaultMinStake`.
+
 The client MUST simulate or quote using the current runtime, pin the generation,
 spot price, quote, and review block to one finalized chain snapshot, recheck
 immediately before signing, and never silently replace a failed limited order

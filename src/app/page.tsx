@@ -261,9 +261,10 @@ export default function Home() {
       api.at(finalizedHash),
       api.rpc.chain.getHeader(finalizedHash),
     ]);
-    const [generationResult, routeHotkeyResult, priceResult, quoteResult] = await Promise.all([
+    const [generationResult, routeHotkeyResult, subtokenEnabledResult, priceResult, quoteResult] = await Promise.all([
       apiAt.query.subtensorModule.networkRegisteredAt(selectedNetuid),
       apiAt.query.subtensorModule.subnetOwnerHotkey(selectedNetuid),
+      apiAt.query.subtensorModule.subtokenEnabled(selectedNetuid),
       apiAt.call.swapRuntimeApi.currentAlphaPrice(selectedNetuid),
       apiAt.call.swapRuntimeApi.simSwapTaoForAlpha(selectedNetuid, amountRao.toString()),
     ]);
@@ -271,6 +272,9 @@ export default function Home() {
     const routeHotkey = routeHotkeyResult.toString();
     if (currentGeneration !== selectedSubnet.generation) {
       throw new Error("This subnet was re-registered. Refresh its identity before minting.");
+    }
+    if (subtokenEnabledResult.toString() !== "true") {
+      throw new Error("Alpha operations are currently disabled on this subnet.");
     }
 
     const decoded = quoteResult as unknown as {
@@ -287,6 +291,10 @@ export default function Home() {
       taoFee: BigInt(decoded.taoFee.toString()),
     };
     if (freshQuote.alphaAmount === 0n) throw new Error("The selected burn no longer returns alpha.");
+    const minimumStakeRao = BigInt(apiAt.consts.subtensorModule.initialMinStake.toString());
+    if (freshQuote.taoAmount < minimumStakeRao) {
+      throw new Error(`The pool must receive at least ${formatToken(minimumStakeRao, 9)} TAO after its swap fee.`);
+    }
 
     const payload = createInlineMintPayload({
       netuid: selectedNetuid,
