@@ -26,9 +26,15 @@ try {
     auditSnapshot(replay, chainGenesis),
   ]);
   const differences = compareSnapshots(primarySnapshot, replaySnapshot);
-  console.log(JSON.stringify({ primary: primarySnapshot, replay: replaySnapshot, differences }, null, 2));
   if (differences.length) throw new Error(`INDEX_REPLAY_MISMATCH: ${differences.join(", ")}`);
-  console.log("Neural Relics replay audit passed: both finalized indexes are identical.");
+  console.log(JSON.stringify({
+    checkedAt: new Date().toISOString(),
+    verified: true,
+    submitted: false,
+    primary: primarySnapshot,
+    replay: replaySnapshot,
+    differences,
+  }, null, 2));
 } finally {
   await Promise.all([primary.end(), replay.end()]);
 }

@@ -20,9 +20,10 @@ A v1 mint is one `utility.batchAll` extrinsic containing:
 
 If either call fails, both calls roll back. See [the protocol](docs/PROTOCOL.md),
 [indexer rules](docs/INDEXER.md), [security model](docs/SECURITY.md), and
-[delivery roadmap](docs/ROADMAP.md). The finalized-state endpoints are described
-in [the API reference](docs/API.md). Preview promotion is governed by the
-[launch checklist](docs/LAUNCH_CHECKLIST.md).
+[next ten launch gates](docs/ROADMAP.md). The finalized-state endpoints are
+described in [the API reference](docs/API.md). Preview promotion is governed by
+the [launch checklist](docs/LAUNCH_CHECKLIST.md) and a machine-checked
+[release evidence record](docs/RELEASE_EVIDENCE.md).
 
 ## Safety boundary
 
@@ -62,6 +63,7 @@ npm run build
 npm run verify:runtime
 npm run verify:transaction # constructs and quotes; never signs or submits
 npm run verify:mint-evidence -- downloaded-proof.json # read-only chain replay
+npm run release:check -- release-record.json # fails until all ten gates agree
 npm run test:indexer
 npm run indexer:doctor # requires a migrated database and explicit START_BLOCK
 npm run indexer:audit # requires primary + independent replay databases

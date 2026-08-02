@@ -10,6 +10,8 @@ No single green build overrides a missing chain, indexer, or wallet gate.
       commit.
 - [ ] No unresolved high-severity review or security findings remain.
 - [ ] Production dependency audit reports no high or critical vulnerabilities.
+- [ ] `npm run release:check -- <release-record.json>` passes and every
+      evidence item references this exact release commit.
 - [ ] `main` still points to the previously known-good production release until
       every later section is signed off.
 

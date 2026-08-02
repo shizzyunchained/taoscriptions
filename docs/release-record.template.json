@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "product": "Neural Relics",
+  "network": "Bittensor testnet",
+  "release": {
+    "commitSha": "REPLACE_WITH_40_CHARACTER_GIT_SHA",
+    "pullRequestUrl": "https://github.com/shizzyunchained/taoscriptions/pull/3",
+    "previewUrl": "REPLACE_WITH_PROTECTED_VERCEL_PREVIEW_URL",
+    "createdAt": "REPLACE_WITH_UTC_ISO_TIMESTAMP"
+  },
+  "steps": [
+    { "id": 1, "status": "pending", "evidence": [] },
+    { "id": 2, "status": "pending", "evidence": [] },
+    { "id": 3, "status": "pending", "evidence": [] },
+    { "id": 4, "status": "pending", "evidence": [] },
+    { "id": 5, "status": "pending", "evidence": [] },
+    { "id": 6, "status": "pending", "evidence": [] },
+    { "id": 7, "status": "pending", "evidence": [] },
+    { "id": 8, "status": "pending", "evidence": [] },
+    { "id": 9, "status": "pending", "evidence": [] },
+    { "id": 10, "status": "pending", "evidence": [] }
+  ]
+}
