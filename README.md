@@ -1,31 +1,57 @@
-# TAOscriptions
+# Neural Relics
 
-The native inscription experience for Subtensor. This milestone connects to an
-injected Bittensor wallet, displays the selected SS58 account, reads its testnet
-TAO balance, and lets the user mint a small text inscription with a signed
-`system.remarkWithEvent` transaction.
+Neural Relics is a non-EVM Bittensor application for forging numbered digital
+artifacts by atomically buying and burning subnet alpha. The chain proves the
+burn and inscription; a deterministic indexer derives artifact numbers and
+ownership from finalized blocks.
 
-## Safety
+The current branch is deliberately testnet-first. It reads live subnet
+identities and alpha quotes, connects to an injected SS58 wallet, and keeps the
+transaction action locked until the complete atomic mint path is verified.
 
-- Testnet only
-- Text inscription minting through `system.remarkWithEvent`
-- No transfers, marketplace ownership rules, or image storage
-- No seed phrases or private keys handled by the application
+## What makes a relic
+
+A v1 mint is one `utility.batchAll` extrinsic containing:
+
+1. `subtensorModule.addStakeBurn` for the selected subnet, with an explicit
+   price limit.
+2. `system.remarkWithEvent` containing a canonical Neural Relics inscription.
+
+If either call fails, both calls roll back. See [the protocol](docs/PROTOCOL.md),
+[indexer rules](docs/INDEXER.md), [security model](docs/SECURITY.md), and
+[delivery roadmap](docs/ROADMAP.md).
+
+## Safety boundary
+
+- Testnet before mainnet
+- No seed phrases or private keys handled by the website
 - No EVM and no subnet
+- Finalized blocks only
+- Marketplace settlement remains disabled until payment and derived ownership
+  can be made loss-safe
 
 ## Local development
 
-Install dependencies and start the development server:
-
 ```bash
 npm install
+npm run verify:runtime
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The wallet connector expects
-an injected Substrate-compatible browser wallet such as the TAOStats extension.
+Open [http://localhost:3000](http://localhost:3000). The default RPC is
+`wss://test.chain.opentensor.ai`; override it with
+`NEXT_PUBLIC_SUBTENSOR_RPC`.
 
-## Deploy on Vercel
+## Verification
 
-Create a new Vercel project from this repository. The public testnet endpoint is
-used by default and can be overridden with `NEXT_PUBLIC_SUBTENSOR_RPC`.
+```bash
+npm run lint
+npm run build
+npm run verify:runtime
+```
+
+## Deployment
+
+Production remains on the protected `main` branch. Feature work is deployed to
+a Vercel preview first, verified against testnet, and only then considered for
+promotion.

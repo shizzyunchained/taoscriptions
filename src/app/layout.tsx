@@ -13,9 +13,30 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TAOscriptions — Native TAO Inscriptions",
+  metadataBase: new URL("https://taoscriptions.vercel.app"),
+  title: "Neural Relics — Alpha Burn Artifacts on Bittensor",
   description:
-    "Connect your TAOStats wallet to the native inscription experience for Subtensor.",
+    "Forge numbered digital artifacts by atomically buying and burning subnet alpha on Bittensor.",
+  applicationName: "Neural Relics",
+  openGraph: {
+    title: "Neural Relics",
+    description: "Forge permanence from alpha on Bittensor.",
+    type: "website",
+    images: [
+      {
+        url: "/og.png",
+        width: 1731,
+        height: 909,
+        alt: "Neural Relics — Forge permanence from alpha.",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Neural Relics",
+    description: "Forge permanence from alpha on Bittensor.",
+    images: ["/og.png"],
+  },
 };
 
 export default function RootLayout({
@@ -24,11 +45,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en">
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        {children}
+      </body>
     </html>
   );
 }

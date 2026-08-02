@@ -1,542 +1,300 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ApiPromise } from "@polkadot/api";
-import type { DispatchError } from "@polkadot/types/interfaces";
 
-const APP_NAME = "TAOscriptions";
-const TESTNET_RPC =
-  process.env.NEXT_PUBLIC_SUBTENSOR_RPC ?? "wss://test.chain.opentensor.ai";
+const APP_NAME = "Neural Relics";
+const TESTNET_RPC = process.env.NEXT_PUBLIC_SUBTENSOR_RPC ?? "wss://test.chain.opentensor.ai";
+const RAO_PER_TAO = 1_000_000_000n;
 
-type WalletAccount = {
-  address: string;
-  name: string;
-  source: string;
-};
-
+type WalletAccount = { address: string; name: string; source: string };
+type Subnet = { netuid: number; generation: string; name: string; symbol: string; ownerHotkey: string };
+type BurnQuote = { alphaAmount: bigint; alphaSlippage: bigint; priceRao: bigint; taoFee: bigint };
 type ConnectionState = "idle" | "connecting" | "connected" | "error";
-type MintState =
-  | "idle"
-  | "preparing"
-  | "awaiting-signature"
-  | "broadcasting"
-  | "finalized"
-  | "error";
-
-type InscriptionProof = {
-  title: string;
-  content: string;
-  transactionHash: string;
-  blockHash: string;
-};
-
-const MAX_TITLE_LENGTH = 60;
-const MAX_CONTENT_LENGTH = 280;
+type DataState = "connecting" | "ready" | "error";
 
 function shortAddress(address: string) {
   if (address.length < 18) return address;
-  return `${address.slice(0, 9)}…${address.slice(-8)}`;
+  return `${address.slice(0, 8)}...${address.slice(-7)}`;
 }
 
-function formatTao(raw: bigint) {
-  const whole = raw / 1_000_000_000n;
-  const fraction = (raw % 1_000_000_000n)
-    .toString()
-    .padStart(9, "0")
-    .slice(0, 4)
-    .replace(/0+$/, "");
-
-  return `${whole.toLocaleString()}${fraction ? `.${fraction}` : ""} τ`;
+function decodeHexText(hex: string) {
+  if (!hex.startsWith("0x") || hex.length <= 2) return "";
+  try {
+    const pairs = hex.slice(2).match(/.{1,2}/g) ?? [];
+    const bytes = new Uint8Array(pairs.map((pair) => Number.parseInt(pair, 16)));
+    return new TextDecoder().decode(bytes).replace(/\0/g, "").trim();
+  } catch {
+    return "";
+  }
 }
 
-function buildInscriptionPayload(title: string, content: string) {
-  return JSON.stringify({
-    p: "taoscriptions",
-    v: 1,
-    op: "mint",
-    type: "text/plain;charset=utf-8",
-    title,
-    content,
-  });
+function taoToRao(value: string) {
+  const normalized = value.trim();
+  if (!/^\d+(\.\d{0,9})?$/.test(normalized)) return null;
+  const [whole, fraction = ""] = normalized.split(".");
+  return BigInt(whole) * RAO_PER_TAO + BigInt(fraction.padEnd(9, "0"));
 }
 
-function utf8ToHex(value: string) {
-  const bytes = new TextEncoder().encode(value);
-  return `0x${Array.from(bytes, (byte) =>
-    byte.toString(16).padStart(2, "0"),
-  ).join("")}`;
+function formatToken(raw: bigint, maximumFractionDigits = 5) {
+  const whole = raw / RAO_PER_TAO;
+  const fraction = (raw % RAO_PER_TAO).toString().padStart(9, "0").slice(0, maximumFractionDigits).replace(/0+$/, "");
+  return `${whole.toLocaleString()}${fraction ? `.${fraction}` : ""}`;
 }
 
-function transactionErrorMessage(
-  api: Pick<ApiPromise, "registry">,
-  dispatchError: DispatchError,
-) {
-  if (!dispatchError.isModule) return dispatchError.toString();
+function formatPrice(raw: bigint) {
+  return raw === 0n ? "--" : `${formatToken(raw, 7)} TAO / alpha`;
+}
 
-  const decoded = api.registry.findMetaError(dispatchError.asModule);
-  return `${decoded.section}.${decoded.name}: ${decoded.docs.join(" ")}`;
+function quoteImpactBps(quote: BurnQuote) {
+  const noSlippageAmount = quote.alphaAmount + quote.alphaSlippage;
+  return noSlippageAmount === 0n ? 0n : (quote.alphaSlippage * 10_000n) / noSlippageAmount;
+}
+
+function formatBps(bps: bigint) {
+  return `${bps / 100n}.${(bps % 100n).toString().padStart(2, "0")}%`;
 }
 
 export default function Home() {
-  const [status, setStatus] = useState<ConnectionState>("idle");
+  const apiRef = useRef<ApiPromise | null>(null);
+  const [dataState, setDataState] = useState<DataState>("connecting");
+  const [runtimeVersion, setRuntimeVersion] = useState("--");
+  const [subnets, setSubnets] = useState<Subnet[]>([]);
+  const [selectedNetuid, setSelectedNetuid] = useState<number | null>(null);
+  const [taoAmount, setTaoAmount] = useState("0.005");
+  const [quote, setQuote] = useState<BurnQuote | null>(null);
+  const [quoteError, setQuoteError] = useState("");
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [walletState, setWalletState] = useState<ConnectionState>("idle");
   const [account, setAccount] = useState<WalletAccount | null>(null);
-  const [balance, setBalance] = useState<string>("—");
-  const [error, setError] = useState<string>("");
-  const [copied, setCopied] = useState(false);
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [mintState, setMintState] = useState<MintState>("idle");
-  const [mintError, setMintError] = useState("");
-  const [proof, setProof] = useState<InscriptionProof | null>(null);
+  const [balance, setBalance] = useState<bigint | null>(null);
+  const [walletError, setWalletError] = useState("");
 
-  const buttonLabel = useMemo(() => {
-    if (status === "connecting") return "Opening TAOStats…";
-    if (status === "connected") return "Wallet connected";
-    return "Connect TAOStats Wallet";
-  }, [status]);
+  useEffect(() => {
+    let cancelled = false;
+    let activeApi: ApiPromise | null = null;
+
+    async function loadSubnets() {
+      try {
+        const { ApiPromise, WsProvider } = await import("@polkadot/api");
+        const api = await ApiPromise.create({ provider: new WsProvider(TESTNET_RPC), noInitWarn: true });
+        activeApi = api;
+        if (cancelled) {
+          await api.disconnect();
+          return;
+        }
+        apiRef.current = api;
+        setRuntimeVersion(api.runtimeVersion.specVersion.toString());
+
+        const entries = await api.query.subtensorModule.networksAdded.entries();
+        const netuids = entries
+          .filter(([, enabled]) => enabled.toString() === "true")
+          .map(([key]) => Number.parseInt(key.args[0].toString(), 10))
+          .filter((netuid) => netuid > 0)
+          .sort((left, right) => left - right);
+        const [identities, symbols, generations, ownerHotkeys] = await Promise.all([
+          api.query.subtensorModule.subnetIdentitiesV3.multi(netuids),
+          api.query.subtensorModule.tokenSymbol.multi(netuids),
+          api.query.subtensorModule.networkRegisteredAt.multi(netuids),
+          api.query.subtensorModule.subnetOwnerHotkey.multi(netuids),
+        ]);
+
+        const nextSubnets = netuids.map((netuid, index) => {
+          const identity = identities[index].toHuman() as { subnetName?: string } | null;
+          const symbol = decodeHexText(symbols[index].toHex());
+          return {
+            netuid,
+            generation: generations[index].toString(),
+            name: identity?.subnetName || `Subnet ${netuid}`,
+            symbol: symbol || `alpha-${netuid}`,
+            ownerHotkey: ownerHotkeys[index].toString(),
+          };
+        });
+
+        if (!cancelled) {
+          setSubnets(nextSubnets);
+          setSelectedNetuid(nextSubnets[0]?.netuid ?? null);
+          setDataState("ready");
+        }
+      } catch {
+        if (!cancelled) setDataState("error");
+      }
+    }
+
+    void loadSubnets();
+    return () => {
+      cancelled = true;
+      apiRef.current = null;
+      if (activeApi) void activeApi.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    const api = apiRef.current;
+    const amountRao = taoToRao(taoAmount);
+    if (!api || selectedNetuid === null || !amountRao || amountRao === 0n) {
+      setQuote(null);
+      return;
+    }
+
+    let cancelled = false;
+    const timeout = window.setTimeout(async () => {
+      setQuoteLoading(true);
+      setQuoteError("");
+      try {
+        const [priceResult, quoteResult] = await Promise.all([
+          api.call.swapRuntimeApi.currentAlphaPrice(selectedNetuid),
+          api.call.swapRuntimeApi.simSwapTaoForAlpha(selectedNetuid, amountRao.toString()),
+        ]);
+        const decoded = quoteResult as unknown as {
+          alphaAmount: { toString(): string };
+          alphaSlippage: { toString(): string };
+          taoFee: { toString(): string };
+        };
+        const nextQuote = {
+          alphaAmount: BigInt(decoded.alphaAmount.toString()),
+          alphaSlippage: BigInt(decoded.alphaSlippage.toString()),
+          priceRao: BigInt(priceResult.toString()),
+          taoFee: BigInt(decoded.taoFee.toString()),
+        };
+        if (nextQuote.alphaAmount === 0n) throw new Error("This amount cannot be quoted on the selected subnet.");
+        if (!cancelled) setQuote(nextQuote);
+      } catch (cause) {
+        if (!cancelled) {
+          setQuote(null);
+          setQuoteError(cause instanceof Error ? cause.message : "The burn quote is temporarily unavailable.");
+        }
+      } finally {
+        if (!cancelled) setQuoteLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [selectedNetuid, taoAmount, dataState]);
+
+  const selectedSubnet = useMemo(() => subnets.find((subnet) => subnet.netuid === selectedNetuid) ?? null, [selectedNetuid, subnets]);
 
   async function connectWallet() {
-    setStatus("connecting");
-    setError("");
-
+    setWalletState("connecting");
+    setWalletError("");
     try {
-      const { web3Accounts, web3Enable } = await import(
-        "@polkadot/extension-dapp"
-      );
-      const { ApiPromise, WsProvider } = await import("@polkadot/api");
+      const { web3Accounts, web3Enable } = await import("@polkadot/extension-dapp");
       const extensions = await web3Enable(APP_NAME);
-      if (extensions.length === 0) {
-        throw new Error(
-          "TAOStats Wallet was not detected. Install or unlock the TAOStats Chrome extension, then try again.",
-        );
-      }
-
+      if (extensions.length === 0) throw new Error("Unlock TAOStats Wallet, then try connecting again.");
       const accounts = await web3Accounts();
-      if (accounts.length === 0) {
-        throw new Error(
-          "No wallet account was shared. Open TAOStats Wallet and approve access for this site.",
-        );
-      }
-
-      const preferred =
-        accounts.find((item) =>
-          /tao.?stats|bittensor/i.test(item.meta.source ?? ""),
-        ) ?? accounts[0];
-
+      if (accounts.length === 0) throw new Error("Share one account from TAOStats Wallet to continue.");
+      const preferred = accounts.find((item) => /tao.?stats|bittensor/i.test(item.meta.source ?? "")) ?? accounts[0];
       const nextAccount = {
         address: preferred.address,
         name: preferred.meta.name || "TAOStats account",
         source: preferred.meta.source || extensions[0]?.name || "TAOStats",
       };
 
-      setAccount(nextAccount);
-
-      const provider = new WsProvider(TESTNET_RPC);
-      const api = await ApiPromise.create({ provider });
-
+      let api = apiRef.current;
+      let disconnectAfterRead = false;
+      if (!api) {
+        const { ApiPromise, WsProvider } = await import("@polkadot/api");
+        api = await ApiPromise.create({ provider: new WsProvider(TESTNET_RPC), noInitWarn: true });
+        disconnectAfterRead = true;
+      }
       try {
-        const accountInfo = await api.query.system.account(
-          nextAccount.address,
-        );
-        const raw = BigInt(
-          (accountInfo as unknown as { data: { free: { toString(): string } } })
-            .data.free.toString(),
-        );
-        setBalance(formatTao(raw));
+        const accountInfo = await api.query.system.account(nextAccount.address);
+        const raw = BigInt((accountInfo as unknown as { data: { free: { toString(): string } } }).data.free.toString());
+        setBalance(raw);
       } finally {
-        await api.disconnect();
+        if (disconnectAfterRead) await api.disconnect();
       }
 
-      setStatus("connected");
+      setAccount(nextAccount);
+      setWalletState("connected");
     } catch (cause) {
-      setAccount(null);
-      setBalance("—");
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "The wallet connection could not be completed.",
-      );
-      setStatus("error");
+      setWalletError(cause instanceof Error ? cause.message : "The wallet connection could not be completed.");
+      setWalletState("error");
     }
   }
 
   function disconnectWallet() {
     setAccount(null);
-    setBalance("—");
-    setError("");
-    setCopied(false);
-    setMintState("idle");
-    setMintError("");
-    setProof(null);
-    setStatus("idle");
+    setBalance(null);
+    setWalletError("");
+    setWalletState("idle");
   }
-
-  async function copyAddress() {
-    if (!account) return;
-    await navigator.clipboard.writeText(account.address);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1500);
-  }
-
-  async function mintInscription() {
-    const cleanTitle = title.trim();
-    const cleanContent = content.trim();
-
-    if (!account || !cleanTitle || !cleanContent) return;
-
-    setMintState("preparing");
-    setMintError("");
-    setProof(null);
-
-    const payload = buildInscriptionPayload(cleanTitle, cleanContent);
-
-    try {
-      const [{ ApiPromise, WsProvider }, { web3FromSource }] =
-        await Promise.all([
-          import("@polkadot/api"),
-          import("@polkadot/extension-dapp"),
-        ]);
-      const injector = await web3FromSource(account.source);
-      const api = await ApiPromise.create({
-        provider: new WsProvider(TESTNET_RPC),
-      });
-
-      try {
-        if (!api.tx.system.remarkWithEvent) {
-          throw new Error(
-            "This Subtensor runtime does not currently support inscription remarks.",
-          );
-        }
-
-        const transaction = api.tx.system.remarkWithEvent(utf8ToHex(payload));
-
-        setMintState("awaiting-signature");
-
-        await new Promise<void>((resolve, reject) => {
-          let unsubscribe: (() => void) | undefined;
-
-          transaction
-            .signAndSend(
-              account.address,
-              { signer: injector.signer },
-              (result) => {
-                if (result.dispatchError) {
-                  unsubscribe?.();
-                  reject(
-                    new Error(
-                      transactionErrorMessage(api, result.dispatchError),
-                    ),
-                  );
-                  return;
-                }
-
-                if (result.status.isBroadcast || result.status.isInBlock) {
-                  setMintState("broadcasting");
-                }
-
-                if (result.status.isFinalized) {
-                  setProof({
-                    title: cleanTitle,
-                    content: cleanContent,
-                    transactionHash: result.txHash.toHex(),
-                    blockHash: result.status.asFinalized.toHex(),
-                  });
-                  setMintState("finalized");
-                  unsubscribe?.();
-                  resolve();
-                }
-              },
-            )
-            .then((stop) => {
-              unsubscribe = stop;
-            })
-            .catch(reject);
-        });
-      } finally {
-        await api.disconnect();
-      }
-    } catch (cause) {
-      setMintError(
-        cause instanceof Error
-          ? cause.message
-          : "The inscription transaction could not be completed.",
-      );
-      setMintState("error");
-    }
-  }
-
-  const isMinting =
-    mintState === "preparing" ||
-    mintState === "awaiting-signature" ||
-    mintState === "broadcasting";
-
-  const mintButtonLabel =
-    mintState === "preparing"
-      ? "Preparing inscription…"
-      : mintState === "awaiting-signature"
-        ? "Approve in TAOStats…"
-        : mintState === "broadcasting"
-          ? "Waiting for finalization…"
-          : "Mint test inscription";
 
   return (
     <main className="site-shell">
-      <div className="ambient ambient-one" />
-      <div className="ambient ambient-two" />
-
+      <div className="grain" aria-hidden="true" />
       <nav className="nav" aria-label="Main navigation">
-        <a className="brand" href="#" aria-label="TAOscriptions home">
-          <span className="brand-mark" aria-hidden="true">
-            τ
-          </span>
-          <span>TAOscriptions</span>
-        </a>
-        <div className="nav-actions">
-          <details className="mint-menu">
-            <summary>
-              Mint
-              <span aria-hidden="true">⌄</span>
-            </summary>
-            <div className="mint-dropdown">
-              <a href="#mint">
-                <span className="menu-icon" aria-hidden="true">T</span>
-                <span>
-                  <strong>Text inscription</strong>
-                  <small>Available on testnet</small>
-                </span>
-                <em>Live</em>
-              </a>
-              <div className="menu-item-disabled" aria-disabled="true">
-                <span className="menu-icon" aria-hidden="true">◆</span>
-                <span>
-                  <strong>Image inscription</strong>
-                  <small>Media stored with proof</small>
-                </span>
-                <em>Soon</em>
-              </div>
-              <div className="menu-item-disabled" aria-disabled="true">
-                <span className="menu-icon" aria-hidden="true">C</span>
-                <span>
-                  <strong>Create collection</strong>
-                  <small>Group inscriptions together</small>
-                </span>
-                <em>Soon</em>
-              </div>
-            </div>
-          </details>
-          <div className="network-badge">
-            <span className="network-dot" aria-hidden="true" />
-            Subtensor Testnet
-          </div>
+        <a className="brand" href="#top" aria-label="Neural Relics home"><span className="brand-sigil" aria-hidden="true"><i /></span><span>Neural Relics</span></a>
+        <div className="nav-links">
+          <a href="#forge">Forge</a><a href="#protocol">Protocol</a>
+          <span className={`chain-status ${dataState}`}><i aria-hidden="true" />{dataState === "ready" ? `Testnet v${runtimeVersion}` : dataState === "error" ? "RPC unavailable" : "Reading chain"}</span>
         </div>
       </nav>
 
-      <section className="hero">
-        <div className="eyebrow">
-          <span>Native TAO inscriptions</span>
-          <span className="eyebrow-divider" />
-          <span>No EVM</span>
+      <section className="hero" id="top">
+        <div className="hero-copy">
+          <p className="eyebrow">Native alpha burn artifacts</p>
+          <h1>Forge permanence<span>from alpha.</span></h1>
+          <p className="intro">Choose a Bittensor subnet. Buy and permanently burn its alpha. Receive a numbered digital relic proven by one finalized Subtensor transaction.</p>
+          <div className="hero-actions"><a className="primary-link" href="#forge">Preview a forge <span aria-hidden="true">-&gt;</span></a><a className="text-link" href="#protocol">How the proof works</a></div>
+          <dl className="hero-facts"><div><dt>Execution</dt><dd>Native SS58</dd></div><div><dt>Settlement</dt><dd>Finalized blocks</dd></div><div><dt>Contracts</dt><dd>No EVM</dd></div></dl>
         </div>
 
-        <h1>Your TAO wallet.<br />Your on-chain identity.</h1>
-        <p className="intro">
-          Connect your TAOStats wallet to enter the first native inscription
-          experience built for Subtensor.
-        </p>
-
-        <div className="wallet-card">
-          <div className="card-heading">
-            <div>
-              <p className="card-kicker">
-                {account ? "Connected account" : "Start here"}
-              </p>
-              <h2>{account ? account.name : "Connect your wallet"}</h2>
-            </div>
-            <span className={`status-orb ${account ? "online" : ""}`}>
-              {account ? "Live" : "Testnet"}
-            </span>
-          </div>
-
-          {account ? (
-            <div className="account-panel">
-              <div className="account-row">
-                <div>
-                  <span className="field-label">SS58 address</span>
-                  <button
-                    className="address-button"
-                    type="button"
-                    onClick={copyAddress}
-                    aria-label="Copy wallet address"
-                  >
-                    {shortAddress(account.address)}
-                    <span>{copied ? "Copied" : "Copy"}</span>
-                  </button>
-                </div>
-                <div className="balance-block">
-                  <span className="field-label">Testnet balance</span>
-                  <strong>{balance}</strong>
-                </div>
-              </div>
-              <div className="provider-row">
-                <span>Wallet provider</span>
-                <strong>{account.source}</strong>
-              </div>
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={disconnectWallet}
-              >
-                Disconnect
-              </button>
-            </div>
-          ) : (
-            <>
-              <button
-                className="connect-button"
-                type="button"
-                onClick={connectWallet}
-                disabled={status === "connecting"}
-              >
-                <span className="button-icon" aria-hidden="true">τ</span>
-                {buttonLabel}
-                <span className="button-arrow" aria-hidden="true">→</span>
-              </button>
-
-              {error && <p className="error-message" role="alert">{error}</p>}
-
-              <p className="privacy-note">
-                We never see your seed phrase or private keys. TAOStats asks
-                you to approve every connection and transaction.
-              </p>
-            </>
-          )}
-        </div>
-
-        <div className="mint-card" id="mint">
-            <div className="card-heading">
-              <div>
-                <p className="card-kicker">Protocol experiment · Step 1</p>
-                <h2>Mint a text inscription</h2>
-              </div>
-              <span className="status-orb">Testnet only</span>
-            </div>
-
-            <p className="mint-explainer">
-              Your wallet signs a TAOscriptions message into a native
-              Subtensor transaction. Only testnet TAO fees apply.
-            </p>
-
-            {account ? (
-              <>
-              <label className="input-group">
-              <span>Title</span>
-              <input
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                maxLength={MAX_TITLE_LENGTH}
-                placeholder="My first TAOscription"
-                disabled={isMinting}
-              />
-              <small>{title.length}/{MAX_TITLE_LENGTH}</small>
-            </label>
-
-            <label className="input-group">
-              <span>Inscription</span>
-              <textarea
-                value={content}
-                onChange={(event) => setContent(event.target.value)}
-                maxLength={MAX_CONTENT_LENGTH}
-                placeholder="Write something permanent for the testnet…"
-                rows={4}
-                disabled={isMinting}
-              />
-              <small>{content.length}/{MAX_CONTENT_LENGTH}</small>
-            </label>
-
-            <button
-              className="mint-button"
-              type="button"
-              onClick={mintInscription}
-              disabled={
-                isMinting || title.trim() === "" || content.trim() === ""
-              }
-            >
-              {mintButtonLabel}
-              <span aria-hidden="true">↗</span>
-            </button>
-
-            {mintError && (
-              <p className="error-message" role="alert">{mintError}</p>
-            )}
-
-            {proof && (
-              <div className="proof-card" aria-live="polite">
-                <div className="proof-status">
-                  <span aria-hidden="true">✓</span>
-                  <div>
-                    <strong>Inscription finalized</strong>
-                    <p>{proof.title}</p>
-                  </div>
-                </div>
-                <blockquote>{proof.content}</blockquote>
-                <dl>
-                  <div>
-                    <dt>Transaction</dt>
-                    <dd title={proof.transactionHash}>
-                      {shortAddress(proof.transactionHash)}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Block</dt>
-                    <dd title={proof.blockHash}>
-                      {shortAddress(proof.blockHash)}
-                    </dd>
-                  </div>
-                </dl>
-              </div>
-            )}
-
-              </>
-            ) : (
-              <div className="mint-locked">
-                <span className="lock-mark" aria-hidden="true">τ</span>
-                <div>
-                  <strong>Connect to unlock minting</strong>
-                  <p>Your TAOStats wallet signs every inscription.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={connectWallet}
-                  disabled={status === "connecting"}
-                >
-                  {status === "connecting" ? "Opening wallet…" : "Connect wallet"}
-                </button>
-              </div>
-            )}
-
-            <p className="protocol-note">
-              Experimental protocol record. Transfers and marketplace
-              ownership rules are not enabled yet.
-            </p>
-          </div>
-
-        <div className="trust-row" aria-label="Product principles">
-          <div><span>01</span><p>Native SS58</p></div>
-          <div><span>02</span><p>Non-custodial</p></div>
-          <div><span>03</span><p>Open protocol</p></div>
+        <div className="relic-preview" aria-label="Example alpha burn receipt">
+          <div className="relic-topline"><span>Relic proof</span><span>Testnet preview</span></div>
+          <div className="relic-orbit" aria-hidden="true"><span className="orbit orbit-one" /><span className="orbit orbit-two" /><span className="orbit-core" /></div>
+          <div className="relic-number"><span>Subnet artifact</span><strong>SN{selectedSubnet?.netuid ?? "--"} / #0001</strong></div>
+          <div className="receipt-grid"><div><span>TAO committed</span><strong>{taoAmount || "0"} TAO</strong></div><div><span>Alpha destroyed</span><strong>{quote ? formatToken(quote.alphaAmount, 4) : "--"} {selectedSubnet?.symbol}</strong></div></div>
+          <p>Burn event + inscription, bound inside one atomic extrinsic.</p>
         </div>
       </section>
 
-      <footer>
-        <p>Testnet inscription preview · No mainnet transactions enabled</p>
-        <a
-          href="https://taostats.io/bittensor-chrome-wallet"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Get TAOStats Wallet ↗
-        </a>
-      </footer>
+      <section className="forge-section" id="forge">
+        <div className="section-heading"><div><p className="eyebrow">Forge preview</p><h2>See exactly what the mint would burn.</h2></div><p>This stage only reads testnet. The transaction button stays locked until the quote, wallet checks, and atomic mint pass verification.</p></div>
+        <div className="forge-layout">
+          <div className="forge-card">
+            <div className="step-label"><span>01</span>Select a subnet</div>
+            <label className="field"><span>Alpha economy</span><select value={selectedNetuid ?? ""} onChange={(event) => setSelectedNetuid(Number.parseInt(event.target.value, 10))} disabled={dataState !== "ready"}>{subnets.map((subnet) => <option key={`${subnet.netuid}-${subnet.generation}`} value={subnet.netuid}>SN{subnet.netuid} - {subnet.name} ({subnet.symbol})</option>)}</select></label>
+            <div className="subnet-meta"><div><span>Subnet generation</span><strong>{selectedSubnet?.generation ?? "--"}</strong></div><div><span>Canonical identity</span><strong>{selectedSubnet ? `SN${selectedSubnet.netuid}:${selectedSubnet.generation}` : "--"}</strong></div></div>
+
+            <div className="step-label amount-step"><span>02</span>Choose a burn amount</div>
+            <label className="field amount-field"><span>TAO permanently committed</span><div><input inputMode="decimal" value={taoAmount} onChange={(event) => setTaoAmount(event.target.value)} aria-describedby="amount-help" /><em>TAO</em></div><small id="amount-help">Testnet TAO only. Nothing is submitted yet.</small></label>
+            <div className="amount-options" aria-label="Preset test amounts">{["0.005", "0.05", "0.5"].map((amount) => <button key={amount} type="button" className={taoAmount === amount ? "active" : ""} onClick={() => setTaoAmount(amount)}>{amount} TAO</button>)}</div>
+
+            <div className="step-label wallet-step"><span>03</span>Connect the signer</div>
+            {account ? (
+              <div className="connected-wallet"><div className="account-avatar" aria-hidden="true">N</div><div><strong>{account.name}</strong><span>{shortAddress(account.address)}</span></div><div className="account-balance"><span>Test balance</span><strong>{balance === null ? "--" : `${formatToken(balance, 4)} TAO`}</strong></div><button type="button" onClick={disconnectWallet}>Disconnect</button></div>
+            ) : (
+              <button className="wallet-button" type="button" onClick={connectWallet} disabled={walletState === "connecting"}><span className="wallet-symbol" aria-hidden="true">N</span>{walletState === "connecting" ? "Opening TAOStats Wallet..." : "Connect TAOStats Wallet"}<span aria-hidden="true">-&gt;</span></button>
+            )}
+            {walletError && <p className="error-message" role="alert">{walletError}</p>}
+          </div>
+
+          <aside className="quote-card" aria-live="polite">
+            <div className="quote-header"><div><span>Live chain quote</span><strong>{selectedSubnet?.name ?? "Select a subnet"}</strong></div><span className="read-only">Read only</span></div>
+            <div className="burn-output"><span>Estimated alpha destroyed</span><strong className={quoteLoading ? "loading" : ""}>{quote ? formatToken(quote.alphaAmount, 6) : "--"}</strong><em>{selectedSubnet?.symbol ?? "alpha"}</em></div>
+            <dl className="quote-details"><div><dt>Spot price</dt><dd>{quote ? formatPrice(quote.priceRao) : "--"}</dd></div><div><dt>Pool fee</dt><dd>{quote ? `${formatToken(quote.taoFee, 7)} TAO` : "--"}</dd></div><div><dt>Price impact</dt><dd>{quote ? formatBps(quoteImpactBps(quote)) : "--"}</dd></div><div><dt>Execution</dt><dd>Atomic batch</dd></div></dl>
+            {quoteError && <p className="quote-error">{quoteError}</p>}
+            <div className="burn-warning"><span aria-hidden="true">!</span><p>The finished mint will permanently spend the TAO and burn the purchased alpha. It cannot be reversed.</p></div>
+            <button className="forge-button" type="button" disabled>Forge transaction locked <span>Testnet verification next</span></button>
+          </aside>
+        </div>
+      </section>
+
+      <section className="protocol-section" id="protocol">
+        <div className="section-heading protocol-heading"><div><p className="eyebrow">One signature, three facts</p><h2>The chain proves the sacrifice.</h2></div><p>Neural Relics never pretends metadata lives inside a fungible alpha token. The artifact is derived from public, reproducible chain evidence.</p></div>
+        <div className="protocol-steps">
+          <article><span>01 / Buy</span><h3>TAO enters the selected pool.</h3><p>The native runtime swaps the committed TAO for that subnet&apos;s alpha.</p></article>
+          <article><span>02 / Burn</span><h3>The acquired alpha is destroyed.</h3><p>A finalized AlphaBurned event records the exact amount, subnet, and signer.</p></article>
+          <article><span>03 / Inscribe</span><h3>The Relic is permanently identified.</h3><p>The matching remark and burn share one atomic transaction and one canonical number.</p></article>
+        </div>
+        <div className="protocol-call"><span>Native call path</span><code>batchAll[ addStakeBurn, remarkWithEvent ]</code><em>No EVM. No custody. Finalized testnet only.</em></div>
+      </section>
+
+      <footer><a className="brand footer-brand" href="#top"><span className="brand-sigil" aria-hidden="true"><i /></span><span>Neural Relics</span></a><p>Alpha burn artifacts on Subtensor. Testnet research build.</p><a href="https://taostats.io/bittensor-chrome-wallet" target="_blank" rel="noreferrer">TAOStats Wallet -&gt;</a></footer>
     </main>
   );
 }
