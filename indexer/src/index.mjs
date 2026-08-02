@@ -26,7 +26,21 @@ const pool = new pg.Pool({
   ssl: databaseUrl.includes("localhost") ? false : { rejectUnauthorized: false },
   max: 5,
 });
-const health = { status: "starting", chain: expectedGenesis, checkpoint: startBlock - 1, error: null };
+const health = {
+  status: "starting",
+  chain: expectedGenesis,
+  checkpoint: startBlock - 1,
+  finalizedHead: null,
+  lagBlocks: null,
+  lastCommittedAt: null,
+  error: null,
+};
+
+function healthSnapshot() {
+  return { event: "indexer_health", version: INDEXER_VERSION, ...health };
+}
+
+setInterval(() => console.log(JSON.stringify(healthSnapshot())), 60_000).unref();
 
 http.createServer((request, response) => {
   if (request.url !== "/health") {
@@ -34,7 +48,7 @@ http.createServer((request, response) => {
     return;
   }
   response.writeHead(health.status === "ready" ? 200 : 503, { "content-type": "application/json" });
-  response.end(JSON.stringify({ ...health, version: INDEXER_VERSION }));
+  response.end(JSON.stringify(healthSnapshot()));
 }).listen(port);
 
 function scopedEvents(records, extrinsicIndex) {
@@ -220,6 +234,8 @@ async function processBlock(api, blockNumber) {
     );
     await client.query("COMMIT");
     health.checkpoint = blockNumber;
+    health.lastCommittedAt = new Date().toISOString();
+    health.lagBlocks = health.finalizedHead === null ? null : Math.max(health.finalizedHead - blockNumber, 0);
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
@@ -245,6 +261,8 @@ async function main() {
 
   let queue = Promise.resolve();
   const catchUp = async (target) => {
+    health.finalizedHead = target;
+    health.lagBlocks = Math.max(target - processed, 0);
     while (processed < target) {
       await processBlock(api, processed + 1);
       processed += 1;
@@ -257,6 +275,8 @@ async function main() {
   await catchUp(finalizedHeader.number.toNumber());
   await api.rpc.chain.subscribeFinalizedHeads((header) => {
     const target = header.number.toNumber();
+    health.finalizedHead = target;
+    health.lagBlocks = Math.max(target - processed, 0);
     queue = queue.then(() => catchUp(target)).catch((error) => {
       health.status = "paused";
       health.error = String(error.message ?? error).slice(0, 500);
@@ -268,6 +288,7 @@ async function main() {
 main().catch(async (error) => {
   health.status = "error";
   health.error = String(error.message ?? error).slice(0, 500);
+  console.error(JSON.stringify(healthSnapshot()));
   console.error(error);
   process.exit(1);
 });

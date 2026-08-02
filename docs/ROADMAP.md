@@ -88,3 +88,7 @@ and promote to mainnet only after reproducible finalization tests and an
 independent review.
 
 **Status:** ongoing.
+
+Structured worker heartbeats and finalized-lag fields are implemented. External
+log alerts, public beta observation, independent review, and production
+promotion remain pending.

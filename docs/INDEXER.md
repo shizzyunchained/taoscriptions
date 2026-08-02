@@ -133,6 +133,13 @@ health endpoint is diagnostic rather than a Render HTTP health check. Deployment
 requires a paid worker plan, a Postgres `DATABASE_URL`, and an explicit
 `START_BLOCK`; none of those are created automatically by this repository.
 
+The worker emits a structured `indexer_health` JSON heartbeat every 60 seconds
+and on fatal startup failure. It reports status, chain, checkpoint, latest seen
+finalized head, lag in blocks, last committed time, indexer version, and the
+current error. Production monitoring should alert when status is not `ready`,
+lag grows beyond the documented catch-up threshold, or `lastCommittedAt` stops
+advancing while finalized heads continue.
+
 The intended first deployment sequence is:
 
 1. record the finalized block immediately before the first accepted test mint;
