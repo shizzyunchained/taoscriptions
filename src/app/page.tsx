@@ -286,9 +286,43 @@ export default function Home() {
           </span>
           <span>TAOscriptions</span>
         </a>
-        <div className="network-badge">
-          <span className="network-dot" aria-hidden="true" />
-          Subtensor Testnet
+        <div className="nav-actions">
+          <details className="mint-menu">
+            <summary>
+              Mint
+              <span aria-hidden="true">⌄</span>
+            </summary>
+            <div className="mint-dropdown">
+              <a href="#mint">
+                <span className="menu-icon" aria-hidden="true">T</span>
+                <span>
+                  <strong>Text inscription</strong>
+                  <small>Available on testnet</small>
+                </span>
+                <em>Live</em>
+              </a>
+              <div className="menu-item-disabled" aria-disabled="true">
+                <span className="menu-icon" aria-hidden="true">◆</span>
+                <span>
+                  <strong>Image inscription</strong>
+                  <small>Media stored with proof</small>
+                </span>
+                <em>Soon</em>
+              </div>
+              <div className="menu-item-disabled" aria-disabled="true">
+                <span className="menu-icon" aria-hidden="true">C</span>
+                <span>
+                  <strong>Create collection</strong>
+                  <small>Group inscriptions together</small>
+                </span>
+                <em>Soon</em>
+              </div>
+            </div>
+          </details>
+          <div className="network-badge">
+            <span className="network-dot" aria-hidden="true" />
+            Subtensor Testnet
+          </div>
         </div>
       </nav>
 
@@ -373,8 +407,7 @@ export default function Home() {
           )}
         </div>
 
-        {account && (
-          <div className="mint-card">
+        <div className="mint-card" id="mint">
             <div className="card-heading">
               <div>
                 <p className="card-kicker">Protocol experiment · Step 1</p>
@@ -388,7 +421,9 @@ export default function Home() {
               Subtensor transaction. Only testnet TAO fees apply.
             </p>
 
-            <label className="input-group">
+            {account ? (
+              <>
+              <label className="input-group">
               <span>Title</span>
               <input
                 value={title}
@@ -456,12 +491,29 @@ export default function Home() {
               </div>
             )}
 
+              </>
+            ) : (
+              <div className="mint-locked">
+                <span className="lock-mark" aria-hidden="true">τ</span>
+                <div>
+                  <strong>Connect to unlock minting</strong>
+                  <p>Your TAOStats wallet signs every inscription.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={connectWallet}
+                  disabled={status === "connecting"}
+                >
+                  {status === "connecting" ? "Opening wallet…" : "Connect wallet"}
+                </button>
+              </div>
+            )}
+
             <p className="protocol-note">
               Experimental protocol record. Transfers and marketplace
               ownership rules are not enabled yet.
             </p>
           </div>
-        )}
 
         <div className="trust-row" aria-label="Product principles">
           <div><span>01</span><p>Native SS58</p></div>
