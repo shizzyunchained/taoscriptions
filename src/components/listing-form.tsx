@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { buildListingMessage } from "@/lib/listing-message.mjs";
 
-const APP_NAME = "Neural Relics";
+const APP_NAME = "Bittensor Relics";
 const RAO_PER_TAO = 1_000_000_000n;
 
 function taoToRao(value: string) {

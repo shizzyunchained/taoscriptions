@@ -1,4 +1,4 @@
-# Neural Relics Security Model
+# Bittensor Relics Security Model
 
 ## Protected assets
 

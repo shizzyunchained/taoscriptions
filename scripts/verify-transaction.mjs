@@ -1,15 +1,18 @@
 import assert from "node:assert/strict";
-import { ApiPromise, WsProvider } from "@polkadot/api";
+import { ApiPromise, HttpProvider, WsProvider } from "@polkadot/api";
 import { blake2AsHex, encodeAddress } from "@polkadot/util-crypto";
 import { calculateLimitPrice, createInlineMintPayload, DEFAULT_SLIPPAGE_BPS } from "../src/lib/protocol.ts";
 
-const endpoint = process.env.SUBTENSOR_RPC ?? "wss://test.chain.opentensor.ai";
+const endpoint = process.env.SUBTENSOR_RPC ?? "https://test.chain.opentensor.ai";
 const expectedGenesis = process.env.CHAIN_GENESIS_HASH ?? "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105";
 const expectedSpec = Number.parseInt(process.env.SUPPORTED_SPEC_VERSION ?? "440", 10);
 const taoAmountRao = 5_000_000n;
 const signer = encodeAddress(new Uint8Array(32).fill(7), 42);
 
-const api = await ApiPromise.create({ provider: new WsProvider(endpoint), noInitWarn: true });
+const provider = endpoint.startsWith("http://") || endpoint.startsWith("https://")
+  ? new HttpProvider(endpoint)
+  : new WsProvider(endpoint);
+const api = await ApiPromise.create({ provider, noInitWarn: true });
 try {
   assert.equal(api.genesisHash.toHex(), expectedGenesis, "GENESIS_HASH_MISMATCH");
   assert.equal(api.runtimeVersion.specVersion.toNumber(), expectedSpec, "UNSUPPORTED_RUNTIME_SPEC");
@@ -50,7 +53,7 @@ try {
   const payload = createInlineMintPayload({
     netuid: selected.netuid,
     subnetGeneration: generation,
-    name: "Neural Relics construction proof",
+    name: "Bittensor Relics construction proof",
     body: "Unsigned live-runtime verification. This payload is never submitted.",
   });
   const batch = api.tx.utility.batchAll([

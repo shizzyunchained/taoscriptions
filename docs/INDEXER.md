@@ -1,4 +1,4 @@
-# Neural Relics Indexer v1
+# Bittensor Relics Indexer v1
 
 This document turns `PROTOCOL.md` into an implementation boundary. The protocol
 document wins if these notes conflict.

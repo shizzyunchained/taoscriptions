@@ -1,5 +1,5 @@
 export type TransferEvidence = {
-  protocol: "neural-relics"; protocolVersion: 1; operation: "transfer"; network: "testnet";
+  protocol: "bittensor-relics"; protocolVersion: 1; operation: "transfer"; network: "testnet";
   transferId: string; artifactId: string; genesisHash: string; runtimeSpec: string;
   blockNumber: string; blockHash: string; extrinsicIndex: number; extrinsicHash: string;
   fromAddress: string; fromAccountHex: string; toAccountHex: string; ownershipNonce: number;
@@ -20,7 +20,7 @@ export function createTransferEvidence(input: Input): TransferEvidence {
     throw new Error("INVALID_CHAIN_POSITION");
   }
   return {
-    protocol: "neural-relics", protocolVersion: 1, operation: "transfer", network: "testnet",
+    protocol: "bittensor-relics", protocolVersion: 1, operation: "transfer", network: "testnet",
     ...input, genesisHash, blockHash, extrinsicHash, payloadHash: input.payloadHash.toLowerCase(),
     transferId: `nrt1:${genesisHash}:${input.blockNumber}:${input.extrinsicIndex}`,
   };

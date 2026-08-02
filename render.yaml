@@ -1,6 +1,6 @@
 services:
   - type: worker
-    name: neural-relics-indexer
+    name: bittensor-relics-indexer
     runtime: node
     buildCommand: npm ci
     preDeployCommand: npm run indexer:migrate && npm run indexer:doctor
@@ -20,7 +20,7 @@ services:
       - key: STOP_BLOCK
         sync: false
   - type: worker
-    name: neural-relics-indexer-replay
+    name: bittensor-relics-indexer-replay
     runtime: node
     buildCommand: npm ci
     preDeployCommand: npm run indexer:migrate && npm run indexer:doctor

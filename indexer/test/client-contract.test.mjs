@@ -10,7 +10,7 @@ import {
 import { parseMintPayload, parseTransferPayload } from "../src/protocol.mjs";
 
 const genesis = `0x${"1".repeat(64)}`;
-const artifactId = `nr1:${genesis}:100:2`;
+const artifactId = `br1:${genesis}:100:2`;
 
 test("browser mint bytes satisfy the strict indexer contract", () => {
   const created = createInlineMintPayload({

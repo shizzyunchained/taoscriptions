@@ -41,7 +41,7 @@ export default async function ExplorePage({
         </section>
       ) : result && result.artifacts.length > 0 ? (
         <>
-          <section className="artifact-grid" aria-label="Finalized Neural Relics">
+          <section className="artifact-grid" aria-label="Finalized Bittensor Relics">
             {result.artifacts.map((artifact) => <RelicCard key={artifact.artifactId} artifact={artifact} />)}
           </section>
           {result.nextCursor && <div className="pagination"><Link href={`/explore?cursor=${result.nextCursor}`}>Load earlier relics <span aria-hidden="true">-&gt;</span></Link></div>}

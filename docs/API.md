@@ -1,4 +1,4 @@
-# Neural Relics read API v1
+# Bittensor Relics read API v1
 
 The API exposes only state derived from finalized Bittensor blocks. It never
 creates artifacts, changes ownership, or treats a pending transaction as
@@ -33,7 +33,7 @@ GET /api/v1/artifacts/:artifactId/transfers
 
 Lists artifacts newest-first. `limit` is capped at 100. `cursor` is the last
 global artifact number from the previous response. The detail endpoint requires
-the canonical `nr1:<genesis>:<block>:<extrinsic>` identifier.
+the canonical `br1:<genesis>:<block>:<extrinsic>` identifier.
 Artifact detail includes up to 100 accepted transfers in nonce order. The
 transfer-specific endpoint returns the same provenance plus the current owner
 and ownership nonce.
@@ -72,7 +72,7 @@ GET /api/v1/accounts/:ss58OrAccountId32/artifacts?limit=24&cursor=120
 ```
 
 The account is decoded and normalized to a 32-byte hex AccountId before the
-database query. The returned owner is Neural Relics protocol ownership, not a
+database query. The returned owner is Bittensor Relics protocol ownership, not a
 native NFT state recognized by Subtensor.
 
 ## Subnet-generation collection
@@ -101,7 +101,7 @@ render inscription bytes as HTML.
 {
   "error": {
     "code": "INDEXER_UNAVAILABLE",
-    "message": "The Neural Relics indexer is not configured."
+    "message": "The Bittensor Relics indexer is not configured."
   }
 }
 ```

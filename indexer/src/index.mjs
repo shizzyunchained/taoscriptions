@@ -70,7 +70,7 @@ async function reject(client, context, reason, bytes) {
 }
 
 async function insertArtifact(client, context, mint) {
-  const artifactId = `nr1:${expectedGenesis}:${context.blockNumber}:${context.extrinsicIndex}`;
+  const artifactId = `br1:${expectedGenesis}:${context.blockNumber}:${context.extrinsicIndex}`;
   const existing = await client.query("SELECT 1 FROM artifacts WHERE artifact_id = $1", [artifactId]);
   if (existing.rowCount) return;
   const globalResult = await client.query(
@@ -249,7 +249,7 @@ async function processBlock(api, blockNumber) {
 async function main() {
   const lockClient = await pool.connect();
   const lock = await lockClient.query("SELECT pg_try_advisory_lock(684927314) AS acquired");
-  if (!lock.rows[0].acquired) throw new Error("Another Neural Relics indexer owns the database lock.");
+  if (!lock.rows[0].acquired) throw new Error("Another Bittensor Relics indexer owns the database lock.");
 
   await pool.query(
     `INSERT INTO protocol_config (chain_genesis, activation_block)

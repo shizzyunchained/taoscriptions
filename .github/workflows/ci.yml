@@ -1,4 +1,4 @@
-name: Neural Relics CI
+name: Bittensor Relics CI
 
 on:
   pull_request:

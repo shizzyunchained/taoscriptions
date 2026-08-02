@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "product": "Neural Relics",
+  "product": "Bittensor Relics",
   "network": "Bittensor testnet",
   "release": {
     "commitSha": "REPLACE_WITH_40_CHARACTER_GIT_SHA",

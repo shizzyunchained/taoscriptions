@@ -21,7 +21,7 @@ export function RelicListings({ initialListings, ownerAccountHex, chainGenesis }
       const [{ web3Accounts, web3Enable, web3FromSource }, { stringToHex }, { normalizeAccount }] = await Promise.all([
         import("@polkadot/extension-dapp"), import("@polkadot/util"), import("@/lib/listing-protocol.mjs"),
       ]);
-      const extensions = await web3Enable("Neural Relics");
+      const extensions = await web3Enable("Bittensor Relics");
       if (!extensions.length) throw new Error("Unlock TAOStats Wallet, then try again.");
       const accounts = await web3Accounts();
       const account = accounts.find((candidate) => {

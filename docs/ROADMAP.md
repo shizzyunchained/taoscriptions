@@ -1,4 +1,4 @@
-# Neural Relics: next ten launch gates
+# Bittensor Relics: next ten launch gates
 
 The product build is substantially complete. These are the next ten gates from
 the protected testnet preview to a controlled production launch. They are
@@ -7,7 +7,7 @@ one.
 
 ## Current position
 
-The Neural Relics brand, non-EVM mint protocol, testnet mint interface,
+The Bittensor Relics brand, non-EVM mint protocol, testnet mint interface,
 finalized-state indexer, wallet collection, canonical transfers, signed listing
 discovery, replay audit, and launch controls are implemented on the feature
 branch. Production remains unchanged. Real-value marketplace settlement is not
@@ -15,7 +15,7 @@ part of this release.
 
 ## 1. Freeze the release candidate
 
-Lock the Neural Relics name and v1 protocol, choose one reviewed commit, and
+Lock the Bittensor Relics name and v1 protocol, choose one reviewed commit, and
 keep all release evidence tied to that exact SHA. Any later code change creates
 a new candidate and reruns the gates.
 

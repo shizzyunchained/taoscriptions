@@ -14,7 +14,7 @@ test("builds the canonical relic identifier from finalized chain position", () =
     transactionFeeRao: "1710598", transactionTipRao: "0", payload: "{}",
     payloadHash: hash("6"), quoteBlock: "7692890", finalizedAt: "2026-08-02T08:00:00.000Z",
   });
-  assert.equal(evidence.artifactId, `nr1:${hash("1")}:7692897:3`);
+  assert.equal(evidence.artifactId, `br1:${hash("1")}:7692897:3`);
   assert.equal(evidence.transactionFeeRao, "1710598");
   assert.equal(evidence.protocolVersion, 1);
   assert.deepEqual(parseMintEvidenceJson(JSON.stringify(evidence)), evidence);

@@ -13,7 +13,7 @@ test("transfer, expiry, and cancellation each invalidate marketplace discovery",
   await pool.query(migration);
   const chain = `0x${"1".repeat(64)}`;
   const owner = `0x${"2".repeat(64)}`;
-  const artifactId = `nr1:${chain}:101:1`;
+  const artifactId = `br1:${chain}:101:1`;
   await pool.query("INSERT INTO protocol_config (chain_genesis, activation_block) VALUES ($1, 100)", [chain]);
   await pool.query("INSERT INTO chain_checkpoints (chain_genesis, block_number, block_hash) VALUES ($1, 110, $2)", [chain, `0x${"3".repeat(64)}`]);
   await pool.query(
@@ -25,7 +25,7 @@ test("transfer, expiry, and cancellation each invalidate marketplace discovery",
       tao_spent_rao, alpha_burned_rao, limit_price_rao, transaction_fee_rao, evidence_json
     ) VALUES ($1,$2,101,$3,1,$4,'0x01',1,1,1,1,$5,$5,$6,'Relic','text/plain','proof',$7::jsonb,'0x02',$8,5000000,5000000,1000000,900000,$9::jsonb)`,
     [artifactId, chain, `0x${"4".repeat(64)}`, `0x${"5".repeat(64)}`, owner,
-      `0x${"6".repeat(64)}`, JSON.stringify({ p: "neural-relics" }), `0x${"7".repeat(64)}`, JSON.stringify({ events: [] })],
+      `0x${"6".repeat(64)}`, JSON.stringify({ p: "bittensor-relics" }), `0x${"7".repeat(64)}`, JSON.stringify({ events: [] })],
   );
   await pool.query(
     `INSERT INTO listings (

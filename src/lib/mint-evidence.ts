@@ -1,5 +1,5 @@
 export type MintEvidence = {
-  protocol: "neural-relics";
+  protocol: "bittensor-relics";
   protocolVersion: 1;
   network: "testnet";
   artifactId: string;
@@ -41,7 +41,7 @@ export function createMintEvidence(input: MintEvidenceInput): MintEvidence {
     throw new Error("INVALID_CHAIN_POSITION");
   }
   return {
-    protocol: "neural-relics",
+    protocol: "bittensor-relics",
     protocolVersion: 1,
     network: "testnet",
     ...input,
@@ -49,7 +49,7 @@ export function createMintEvidence(input: MintEvidenceInput): MintEvidence {
     blockHash,
     extrinsicHash,
     payloadHash: input.payloadHash.toLowerCase(),
-    artifactId: `nr1:${genesisHash}:${input.blockNumber}:${input.extrinsicIndex}`,
+    artifactId: `br1:${genesisHash}:${input.blockNumber}:${input.extrinsicIndex}`,
   };
 }
 
@@ -68,7 +68,7 @@ export function parseMintEvidenceJson(text: string): MintEvidence {
   const record = parsed as Record<string, unknown>;
   const keys = Object.keys(record).sort();
   if (keys.join("\n") !== [...EVIDENCE_KEYS].sort().join("\n")) throw new Error("INVALID_EVIDENCE_FIELDS");
-  if (record.protocol !== "neural-relics" || record.protocolVersion !== 1 || record.network !== "testnet") {
+  if (record.protocol !== "bittensor-relics" || record.protocolVersion !== 1 || record.network !== "testnet") {
     throw new Error("INVALID_EVIDENCE_PROTOCOL");
   }
   const decimalFields = [

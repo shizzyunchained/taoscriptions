@@ -11,7 +11,7 @@ const pool = new pg.Pool({ connectionString: databaseUrl, ssl: databaseUrl.inclu
 
 try {
   await pool.query(sql);
-  console.log("Neural Relics indexer schema is ready.");
+  console.log("Bittensor Relics indexer schema is ready.");
 } finally {
   await pool.end();
 }

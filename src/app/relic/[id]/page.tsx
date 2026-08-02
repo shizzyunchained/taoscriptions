@@ -13,12 +13,12 @@ type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  return { title: `${compactHex(id, 18, 8)} — Neural Relics` };
+  return { title: `${compactHex(id, 18, 8)} — Bittensor Relics` };
 }
 
 export default async function RelicPage({ params }: Props) {
   const { id } = await params;
-  if (!/^nr1:0x[0-9a-f]{64}:\d+:\d+$/.test(id)) notFound();
+  if (!/^br1:0x[0-9a-f]{64}:\d+:\d+$/.test(id)) notFound();
   let artifact: Awaited<ReturnType<typeof getArtifact>> = null;
   let transfers: Awaited<ReturnType<typeof listArtifactTransfers>> = [];
   let listings: Awaited<ReturnType<typeof listActiveListings>> = [];

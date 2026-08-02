@@ -1,4 +1,4 @@
-# Neural Relics launch checklist
+# Bittensor Relics launch checklist
 
 This is the promotion contract from a protected testnet preview to production.
 No single green build overrides a missing chain, indexer, or wallet gate.
@@ -6,7 +6,7 @@ No single green build overrides a missing chain, indexer, or wallet gate.
 ## 1. Source and review evidence
 
 - [ ] Release commit is on a reviewed pull request from a feature branch.
-- [ ] `Neural Relics CI / Build and protocol verification` passes on that exact
+- [ ] `Bittensor Relics CI / Build and protocol verification` passes on that exact
       commit.
 - [ ] No unresolved high-severity review or security findings remain.
 - [ ] Production dependency audit reports no high or critical vulnerabilities.

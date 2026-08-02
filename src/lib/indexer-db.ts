@@ -6,7 +6,7 @@ const DEFAULT_LIMIT = 24;
 const MAX_LIMIT = 100;
 
 export class IndexerUnavailableError extends Error {
-  constructor(message = "The Neural Relics indexer is not configured.") {
+  constructor(message = "The Bittensor Relics indexer is not configured.") {
     super(message);
     this.name = "IndexerUnavailableError";
   }
@@ -65,7 +65,7 @@ type ArtifactRow = {
 };
 
 declare global {
-  var neuralRelicsPool: pg.Pool | undefined;
+  var bittensorRelicsPool: pg.Pool | undefined;
 }
 
 function databaseUrl() {
@@ -75,9 +75,9 @@ function databaseUrl() {
 }
 
 function pool() {
-  if (!globalThis.neuralRelicsPool) {
+  if (!globalThis.bittensorRelicsPool) {
     const connectionString = databaseUrl();
-    globalThis.neuralRelicsPool = new pg.Pool({
+    globalThis.bittensorRelicsPool = new pg.Pool({
       connectionString,
       ssl: connectionString.includes("localhost") ? false : { rejectUnauthorized: false },
       max: 3,
@@ -85,7 +85,7 @@ function pool() {
       idleTimeoutMillis: 20_000,
     });
   }
-  return globalThis.neuralRelicsPool;
+  return globalThis.bittensorRelicsPool;
 }
 
 const configuredGenesis = () => process.env.CHAIN_GENESIS_HASH ?? "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105";
@@ -248,7 +248,7 @@ export async function getRejection(blockNumber: string, extrinsicIndex: number) 
 }
 
 export async function getOperation(blockNumber: string, extrinsicIndex: number) {
-  const artifactId = `nr1:${process.env.CHAIN_GENESIS_HASH ?? "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105"}:${blockNumber}:${extrinsicIndex}`;
+  const artifactId = `br1:${process.env.CHAIN_GENESIS_HASH ?? "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105"}:${blockNumber}:${extrinsicIndex}`;
   const [accepted, rejected] = await Promise.all([
     getArtifact(artifactId),
     getRejection(blockNumber, extrinsicIndex),

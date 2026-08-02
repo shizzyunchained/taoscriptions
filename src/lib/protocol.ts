@@ -1,4 +1,4 @@
-export const PROTOCOL_ID = "neural-relics";
+export const PROTOCOL_ID = "bittensor-relics";
 export const PROTOCOL_VERSION = 1;
 export const MAX_REMARK_BYTES = 2_048;
 export const DEFAULT_SLIPPAGE_BPS = 200n;
@@ -66,7 +66,7 @@ export function createTransferPayload(input: {
   destinationAccountHex: string;
   ownershipNonce: number;
 }) {
-  if (!/^nr1:0x[0-9a-f]{64}:\d+:\d+$/.test(input.artifactId)) {
+  if (!/^br1:0x[0-9a-f]{64}:\d+:\d+$/.test(input.artifactId)) {
     throw new Error("The relic ID is not canonical.");
   }
   if (!/^0x[0-9a-f]{64}$/.test(input.destinationAccountHex)) {

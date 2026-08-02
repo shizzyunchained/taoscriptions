@@ -77,12 +77,8 @@ h1 span { display: block; color: var(--ember-bright); font-style: italic; }
 .relic-preview::after { content: ""; position: absolute; inset: 8px; pointer-events: none; border: 1px solid rgba(255,255,255,.035); }
 .relic-topline { display: flex; justify-content: space-between; color: var(--dim); font: 9px var(--font-geist-mono), monospace; letter-spacing: .1em; text-transform: uppercase; }
 .relic-topline span:last-child { color: var(--ember); }
-.relic-orbit { height: 285px; display: grid; place-items: center; position: relative; }
-.orbit, .orbit-core { position: absolute; border-radius: 50%; }
-.orbit-one { width: 210px; height: 210px; border: 1px solid rgba(255,177,74,.25); box-shadow: inset 0 0 45px rgba(255,177,74,.04); }
-.orbit-two { width: 136px; height: 136px; border: 1px dashed rgba(200,245,107,.24); transform: rotate(18deg); }
-.orbit-two::after { content: ""; width: 7px; height: 7px; position: absolute; top: 19px; right: 17px; border-radius: 50%; background: var(--acid); box-shadow: 0 0 14px var(--acid); }
-.orbit-core { width: 58px; height: 58px; border: 1px solid rgba(255,177,74,.7); background: radial-gradient(circle, rgba(255,177,74,.42), rgba(255,177,74,.03) 58%, transparent 60%); box-shadow: 0 0 45px rgba(255,177,74,.17); }
+.relic-orbit { height: 285px; position: relative; }
+.relic-scarab { object-fit: contain; filter: drop-shadow(0 0 28px rgba(161, 73, 255, .24)); }
 .relic-number { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
 .relic-number span, .receipt-grid span { color: var(--dim); font: 9px var(--font-geist-mono), monospace; text-transform: uppercase; letter-spacing: .08em; }
 .relic-number strong { color: var(--ember-bright); font: 14px var(--font-geist-mono), monospace; }

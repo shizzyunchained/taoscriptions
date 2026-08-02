@@ -1,13 +1,13 @@
-# Neural Relics Protocol v1
+# Bittensor Relics Protocol v1
 
 Status: Draft for testnet implementation  
 Network: Bittensor Subtensor, non-EVM  
 Runtime baseline: spec version 440  
-Protocol identifier: `neural-relics`  
+Protocol identifier: `bittensor-relics`
 
 ## 1. Purpose
 
-Neural Relics is an open protocol for creating numbered digital artifacts from
+Bittensor Relics is an open protocol for creating numbered digital artifacts from
 native Subtensor transactions. A valid v1 mint atomically:
 
 1. spends TAO to buy a selected subnet's alpha;
@@ -19,7 +19,7 @@ collections, and marketplace state are deterministic derived state. Any indexer
 implementing this document against the same finalized chain must produce the
 same result.
 
-Neural Relics is not an EVM NFT contract, a subnet, or a claim that arbitrary
+Bittensor Relics is not an EVM NFT contract, a subnet, or a claim that arbitrary
 metadata is stored inside an individual alpha token.
 
 ## 2. Normative language
@@ -33,7 +33,7 @@ The terms MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY are normative.
 - The indexer is authoritative only as an implementation of these public rules.
 - A Relic is a protocol object derived from chain history; it is not a native
   asset recognized by the Subtensor runtime.
-- A UI MUST describe ownership as Neural Relics protocol ownership and MUST NOT
+- A UI MUST describe ownership as Bittensor Relics protocol ownership and MUST NOT
   imply that Subtensor itself provides an NFT ownership primitive.
 - Only finalized blocks may affect canonical protocol state.
 
@@ -59,7 +59,7 @@ Root, `netuid = 0`, is not eligible for alpha-burn minting.
 The canonical artifact ID is:
 
 ```text
-nr1:<full-genesis-hash>:<finalized-block-number>:<extrinsic-index>
+br1:<full-genesis-hash>:<finalized-block-number>:<extrinsic-index>
 ```
 
 Version 1 permits exactly one mint inscription in the qualifying extrinsic, so
@@ -81,7 +81,7 @@ The remark is UTF-8 JSON with no duplicate keys. A v1 mint has this shape:
 
 ```json
 {
-  "p": "neural-relics",
+  "p": "bittensor-relics",
   "v": 1,
   "op": "mint",
   "netuid": 64,
@@ -97,7 +97,7 @@ For externally stored media, `body` is replaced with both `content_uri` and
 
 ```json
 {
-  "p": "neural-relics",
+  "p": "bittensor-relics",
   "v": 1,
   "op": "mint",
   "netuid": 64,
@@ -220,10 +220,10 @@ nested in a batch or combined with any other call are invalid:
 
 ```json
 {
-  "p": "neural-relics",
+  "p": "bittensor-relics",
   "v": 1,
   "op": "transfer",
-  "artifact": "nr1:<genesis>:<block>:<index>",
+  "artifact": "br1:<genesis>:<block>:<index>",
   "to": "<SS58 address>",
   "nonce": 1
 }
@@ -252,7 +252,7 @@ wallet's raw-byte signing capability. Addresses are normalized to AccountId32
 before constructing the message.
 
 ```text
-NEURAL_RELICS_LISTING_V1
+BITTENSOR_RELICS_LISTING_V1
 chain=<full genesis hash>
 artifact=<canonical artifact id>
 seller=<0x account-id-32>
@@ -273,7 +273,7 @@ later returns to the same account under a newer ownership nonce.
 The seller may cancel a listing with a second raw signature:
 
 ```text
-NEURAL_RELICS_CANCEL_LISTING_V1
+BITTENSOR_RELICS_CANCEL_LISTING_V1
 chain=<full genesis hash>
 listing=<listing id>
 seller=<0x account-id-32>
@@ -292,7 +292,7 @@ Utility.batch_all([
 ```
 
 This makes payment and the purchase remark atomic at the runtime level, but the
-runtime does not know Neural Relics ownership. A seller transfer, cancellation,
+runtime does not know Bittensor Relics ownership. A seller transfer, cancellation,
 or competing purchase ordered before the buyer can cause a deterministic
 indexer rejection after TAO has moved. Therefore the UI MUST NOT enable this
 settlement for real value merely because the two calls are batched.

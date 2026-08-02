@@ -7,7 +7,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    if (!/^nr1:0x[0-9a-f]{64}:\d+:\d+$/.test(id)) {
+    if (!/^br1:0x[0-9a-f]{64}:\d+:\d+$/.test(id)) {
       return apiJson({ error: { code: "INVALID_ARTIFACT_ID", message: "The artifact ID is invalid." } }, { status: 400 });
     }
     const [artifact, transfers] = await Promise.all([getArtifact(id), listArtifactTransfers(id)]);

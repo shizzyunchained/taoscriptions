@@ -5,7 +5,7 @@ import { findProtocolRemark, parseMintPayload, parseTransferPayload, validateMin
 
 const encode = (value) => new TextEncoder().encode(value);
 const inline = (overrides = {}) => ({
-  p: "neural-relics",
+  p: "bittensor-relics",
   v: 1,
   op: "mint",
   netuid: 1,
@@ -35,8 +35,8 @@ test("accepts a content-addressed mint", () => {
 
 test("rejects duplicate keys, floats, unknown fields, and oversized remarks", () => {
   const invalid = [
-    '{"p":"neural-relics","p":"neural-relics","v":1,"op":"mint","netuid":1,"subnet_generation":123,"name":"Test","media_type":"text/plain","body":"hello"}',
-    '{"p":"neural-relics","v":1.0,"op":"mint","netuid":1,"subnet_generation":123,"name":"Test","media_type":"text/plain","body":"hello"}',
+    '{"p":"bittensor-relics","p":"bittensor-relics","v":1,"op":"mint","netuid":1,"subnet_generation":123,"name":"Test","media_type":"text/plain","body":"hello"}',
+    '{"p":"bittensor-relics","v":1.0,"op":"mint","netuid":1,"subnet_generation":123,"name":"Test","media_type":"text/plain","body":"hello"}',
     JSON.stringify(inline({ extra: true })),
     JSON.stringify(inline({ body: "x".repeat(2_100) })),
   ];
@@ -44,7 +44,7 @@ test("rejects duplicate keys, floats, unknown fields, and oversized remarks", ()
 });
 
 test("discovers protocol remarks even when the identifier uses a JSON escape", () => {
-  const text = JSON.stringify(inline()).replace("neural-relics", "neural\\u002drelics");
+  const text = JSON.stringify(inline()).replace("bittensor-relics", "bittensor\\u002drelics");
   const bytes = encode(text);
   const call = {
     section: "system",
@@ -52,16 +52,16 @@ test("discovers protocol remarks even when the identifier uses a JSON escape", (
     args: [{ toU8a: () => bytes }],
   };
   assert.deepEqual(findProtocolRemark(call), bytes);
-  assert.equal(parseMintPayload(bytes).payload.p, "neural-relics");
+  assert.equal(parseMintPayload(bytes).payload.p, "bittensor-relics");
 });
 
 test("accepts canonical transfers and rejects malformed ownership nonces", () => {
   const destination = `0x${"2".repeat(64)}`;
   const transfer = {
-    p: "neural-relics",
+    p: "bittensor-relics",
     v: 1,
     op: "transfer",
-    artifact: `nr1:0x${"1".repeat(64)}:10:2`,
+    artifact: `br1:0x${"1".repeat(64)}:10:2`,
     to: destination,
     nonce: 1,
   };
@@ -114,7 +114,7 @@ test("accepted mints require the finalized fee payer and actual fee", () => {
 test("accepted transfers preserve the finalized actual fee", () => {
   const signer = `0x${"3".repeat(64)}`;
   const destination = `0x${"4".repeat(64)}`;
-  const payload = { p: "neural-relics", v: 1, op: "transfer", artifact: `nr1:0x${"1".repeat(64)}:10:2`, to: destination, nonce: 1 };
+  const payload = { p: "bittensor-relics", v: 1, op: "transfer", artifact: `br1:0x${"1".repeat(64)}:10:2`, to: destination, nonce: 1 };
   const bytes = encode(JSON.stringify(payload));
   const payloadHash = blake2AsHex(bytes, 256);
   const codec = (value, encoded = null) => ({ toString: () => String(value), ...(encoded ? { toHex: () => encoded } : {}) });

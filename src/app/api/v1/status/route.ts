@@ -11,7 +11,7 @@ export async function GET() {
       );
     }
     return apiJson({
-      protocol: "neural-relics",
+      protocol: "bittensor-relics",
       version: 1,
       chainGenesis: process.env.CHAIN_GENESIS_HASH ?? "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105",
       activationBlock: status.activation_block,

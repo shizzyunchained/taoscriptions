@@ -8,7 +8,7 @@ import {
 } from "./listing-protocol.mjs";
 
 const GENESIS = () => process.env.CHAIN_GENESIS_HASH ?? "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105";
-const ARTIFACT = /^nr1:(0x[0-9a-f]{64}):\d+:\d+$/;
+const ARTIFACT = /^br1:(0x[0-9a-f]{64}):\d+:\d+$/;
 const UINT = /^(0|[1-9]\d*)$/;
 const NONCE = /^[0-9a-f]{64}$/;
 const SIGNATURE = /^0x[0-9a-fA-F]{128,132}$/;

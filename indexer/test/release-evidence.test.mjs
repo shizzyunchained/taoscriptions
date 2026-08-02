@@ -7,7 +7,7 @@ const commitSha = "a".repeat(40);
 function completeRecord() {
   return {
     schemaVersion: 1,
-    product: "Neural Relics",
+    product: "Bittensor Relics",
     network: "Bittensor testnet",
     release: {
       commitSha,

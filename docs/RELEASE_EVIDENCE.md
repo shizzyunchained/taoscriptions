@@ -1,4 +1,4 @@
-# Neural Relics release evidence
+# Bittensor Relics release evidence
 
 Every production candidate gets one JSON release record. Copy
 `docs/release-record.template.json`, fill it as gates are completed, and keep

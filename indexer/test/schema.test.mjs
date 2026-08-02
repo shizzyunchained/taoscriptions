@@ -27,10 +27,10 @@ test("artifact numbering and chain positions are unique", async () => {
   await pool.query(migration);
   const genesis = `0x${"1".repeat(64)}`;
   const values = [
-    `nr1:${genesis}:10:2`, genesis, "10", `0x${"2".repeat(64)}`, 2,
+    `br1:${genesis}:10:2`, genesis, "10", `0x${"2".repeat(64)}`, 2,
     `0x${"3".repeat(64)}`, "0x0102", "1", "1", 1, "5",
     `0x${"4".repeat(64)}`, `0x${"5".repeat(64)}`, "Test", "text/plain;charset=utf-8",
-    "hello", null, null, JSON.stringify({ p: "neural-relics" }), "0x7b7d",
+    "hello", null, null, JSON.stringify({ p: "bittensor-relics" }), "0x7b7d",
     `0x${"6".repeat(64)}`, "5000000", "5200000000", "1000000", "1710598", JSON.stringify({ events: [] }),
   ];
   const insert = `INSERT INTO artifacts (
@@ -46,7 +46,7 @@ test("artifact numbering and chain positions are unique", async () => {
   )`;
   await pool.query(insert, values);
   const duplicate = [...values];
-  duplicate[0] = `nr1:${genesis}:11:1`;
+  duplicate[0] = `br1:${genesis}:11:1`;
   duplicate[2] = "11";
   duplicate[4] = 1;
   await assert.rejects(pool.query(insert, duplicate), /unique/i);
@@ -54,7 +54,7 @@ test("artifact numbering and chain positions are unique", async () => {
   const transferValues = [
     `nrt1:${genesis}:12:1`, values[0], genesis, "12", `0x${"7".repeat(64)}`, 1,
     `0x${"8".repeat(64)}`, "0x0304", values[11], `0x${"9".repeat(64)}`, "1",
-    JSON.stringify({ p: "neural-relics", v: 1, op: "transfer" }), "0x7b7d",
+    JSON.stringify({ p: "bittensor-relics", v: 1, op: "transfer" }), "0x7b7d",
     `0x${"a".repeat(64)}`, "900000", JSON.stringify({ events: [] }),
   ];
   const transferInsert = `INSERT INTO transfers (

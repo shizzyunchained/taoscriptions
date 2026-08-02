@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ApiPromise } from "@polkadot/api";
 import { calculateLimitPrice, createInlineMintPayload, DEFAULT_SLIPPAGE_BPS } from "@/lib/protocol";
@@ -8,7 +9,7 @@ import { createMintEvidence, type MintEvidence } from "@/lib/mint-evidence";
 import { assertExpectedGenesis } from "@/lib/chain-guard";
 import { assertMintPreflight } from "@/lib/mint-preflight";
 
-const APP_NAME = "Neural Relics";
+const APP_NAME = "Bittensor Relics";
 const TESTNET_RPC = process.env.NEXT_PUBLIC_SUBTENSOR_RPC ?? "wss://test.chain.opentensor.ai";
 const TESTNET_GENESIS = process.env.NEXT_PUBLIC_CHAIN_GENESIS_HASH ?? "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105";
 const RAO_PER_TAO = 1_000_000_000n;
@@ -464,7 +465,7 @@ export default function Home() {
                 }));
                 setMintState("finalized");
               } catch {
-                setMintError("The finalized chain proof did not exactly match the Neural Relics transaction you signed.");
+                setMintError("The finalized chain proof did not exactly match the Bittensor Relics transaction you signed.");
                 setMintState("error");
               } finally {
                 subscription.unsubscribe?.();
@@ -494,7 +495,7 @@ export default function Home() {
     <main className="site-shell">
       <div className="grain" aria-hidden="true" />
       <nav className="nav" aria-label="Main navigation">
-        <a className="brand" href="#top" aria-label="Neural Relics home"><span className="brand-sigil" aria-hidden="true"><i /></span><span>Neural Relics</span></a>
+        <a className="brand" href="#top" aria-label="Bittensor Relics home"><span className="brand-sigil" aria-hidden="true"><i /></span><span>Bittensor Relics</span></a>
         <div className="nav-links">
           <a href="#forge">Forge</a><a href="/explore">Explore</a><a href="/marketplace">Market</a><a href="/wallet">My Relics</a><a href="#protocol">Protocol</a>
           <span className={`chain-status ${dataState}`}><i aria-hidden="true" />{dataState === "ready" ? `Testnet v${runtimeVersion}` : dataState === "error" ? "RPC unavailable" : "Reading chain"}</span>
@@ -512,7 +513,9 @@ export default function Home() {
 
         <div className="relic-preview" aria-label="Example alpha burn receipt">
           <div className="relic-topline"><span>Relic proof</span><span>Testnet preview</span></div>
-          <div className="relic-orbit" aria-hidden="true"><span className="orbit orbit-one" /><span className="orbit orbit-two" /><span className="orbit-core" /></div>
+          <div className="relic-orbit" aria-hidden="true">
+            <Image className="relic-scarab" src="/relic-scarab.webp" alt="" fill sizes="(max-width: 640px) 255px, 285px" priority />
+          </div>
           <div className="relic-number"><span>Subnet artifact</span><strong>SN{selectedSubnet?.netuid ?? "--"} / #0001</strong></div>
           <div className="receipt-grid"><div><span>TAO committed</span><strong>{taoAmount || "0"} TAO</strong></div><div><span>Alpha destroyed</span><strong>{quote ? formatToken(quote.alphaAmount, 4) : "--"} {selectedSubnet?.symbol}</strong></div></div>
           <p>Burn event + inscription, bound inside one atomic extrinsic.</p>
@@ -586,7 +589,7 @@ export default function Home() {
       </section>
 
       <section className="protocol-section" id="protocol">
-        <div className="section-heading protocol-heading"><div><p className="eyebrow">One signature, three facts</p><h2>The chain proves the sacrifice.</h2></div><p>Neural Relics never pretends metadata lives inside a fungible alpha token. The artifact is derived from public, reproducible chain evidence.</p></div>
+        <div className="section-heading protocol-heading"><div><p className="eyebrow">One signature, three facts</p><h2>The chain proves the sacrifice.</h2></div><p>Bittensor Relics never pretends metadata lives inside a fungible alpha token. The artifact is derived from public, reproducible chain evidence.</p></div>
         <div className="protocol-steps">
           <article><span>01 / Buy</span><h3>TAO enters the selected pool.</h3><p>The native runtime swaps the committed TAO for that subnet&apos;s alpha.</p></article>
           <article><span>02 / Burn</span><h3>The acquired alpha is destroyed.</h3><p>A finalized AlphaBurned event records the exact amount, subnet, and signer.</p></article>
@@ -595,7 +598,7 @@ export default function Home() {
         <div className="protocol-call"><span>Native call path</span><code>batchAll[ addStakeBurn, remarkWithEvent ]</code><em>No EVM. No custody. Finalized testnet only.</em></div>
       </section>
 
-      <footer><a className="brand footer-brand" href="#top"><span className="brand-sigil" aria-hidden="true"><i /></span><span>Neural Relics</span></a><p>Alpha burn artifacts on Subtensor. Testnet research build.</p><a href="https://taostats.io/bittensor-chrome-wallet" target="_blank" rel="noreferrer">TAOStats Wallet -&gt;</a></footer>
+      <footer><a className="brand footer-brand" href="#top"><span className="brand-sigil" aria-hidden="true"><i /></span><span>Bittensor Relics</span></a><p>Alpha burn artifacts on Subtensor. Testnet research build.</p><a href="https://taostats.io/bittensor-chrome-wallet" target="_blank" rel="noreferrer">TAOStats Wallet -&gt;</a></footer>
     </main>
   );
 }

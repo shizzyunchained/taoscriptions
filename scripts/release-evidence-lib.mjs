@@ -23,7 +23,7 @@ export function checkReleaseRecord(record) {
     return { ready: false, completedSteps: 0, totalSteps: 10, errors: ["Record must be a JSON object."] };
   }
   if (record.schemaVersion !== 1) errors.push("schemaVersion must be 1.");
-  if (record.product !== "Neural Relics") errors.push("product must be Neural Relics.");
+  if (record.product !== "Bittensor Relics") errors.push("product must be Bittensor Relics.");
   if (record.network !== "Bittensor testnet") errors.push("network must be Bittensor testnet for v1.");
 
   const release = record.release ?? {};

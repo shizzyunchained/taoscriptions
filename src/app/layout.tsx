@@ -13,13 +13,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://taoscriptions.vercel.app"),
-  title: "Neural Relics — Alpha Burn Artifacts on Bittensor",
+  metadataBase: new URL("https://bittensor-relics.vercel.app"),
+  title: "Bittensor Relics — Alpha Burn Artifacts on Bittensor",
   description:
     "Forge numbered digital artifacts by atomically buying and burning subnet alpha on Bittensor.",
-  applicationName: "Neural Relics",
+  applicationName: "Bittensor Relics",
   openGraph: {
-    title: "Neural Relics",
+    title: "Bittensor Relics",
     description: "Forge permanence from alpha on Bittensor.",
     type: "website",
     images: [
@@ -27,13 +27,13 @@ export const metadata: Metadata = {
         url: "/og-social.png",
         width: 1200,
         height: 630,
-        alt: "Neural Relics — Forge permanence from alpha.",
+        alt: "Bittensor Relics — Forge permanence from alpha.",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Neural Relics",
+    title: "Bittensor Relics",
     description: "Forge permanence from alpha on Bittensor.",
     images: ["/og-social.png"],
   },

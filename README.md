@@ -1,6 +1,6 @@
-# Neural Relics
+# Bittensor Relics
 
-Neural Relics is a non-EVM Bittensor application for forging numbered digital
+Bittensor Relics is a non-EVM Bittensor application for forging numbered digital
 artifacts by atomically buying and burning subnet alpha. The chain proves the
 burn and inscription; a deterministic indexer derives artifact numbers and
 ownership from finalized blocks.
@@ -16,7 +16,7 @@ A v1 mint is one `utility.batchAll` extrinsic containing:
 
 1. `subtensorModule.addStakeBurn` for the selected subnet, with an explicit
    price limit.
-2. `system.remarkWithEvent` containing a canonical Neural Relics inscription.
+2. `system.remarkWithEvent` containing a canonical Bittensor Relics inscription.
 
 If either call fails, both calls roll back. See [the protocol](docs/PROTOCOL.md),
 [indexer rules](docs/INDEXER.md), [security model](docs/SECURITY.md), and

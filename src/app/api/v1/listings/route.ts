@@ -6,7 +6,7 @@ export async function GET(request: Request) {
   try {
     const params = new URL(request.url).searchParams;
     const artifact = params.get("artifact");
-    if (artifact && !/^nr1:0x[0-9a-f]{64}:\d+:\d+$/.test(artifact)) {
+    if (artifact && !/^br1:0x[0-9a-f]{64}:\d+:\d+$/.test(artifact)) {
       return apiJson({ error: { code: "INVALID_ARTIFACT", message: "The artifact filter is invalid." } }, { status: 400 });
     }
     return apiJson({ listings: await listActiveListings(artifact, pageLimit(params.get("limit"))), settlementEnabled: false });

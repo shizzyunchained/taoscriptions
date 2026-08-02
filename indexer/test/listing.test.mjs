@@ -14,7 +14,7 @@ await cryptoWaitReady();
 const pair = sr25519PairFromSeed(new Uint8Array(32).fill(7));
 const seller = normalizeAccount(u8aToHex(pair.publicKey));
 const chain = `0x${"1".repeat(64)}`;
-const artifact = `nr1:${chain}:42:3`;
+const artifact = `br1:${chain}:42:3`;
 
 test("builds and verifies a canonical wallet listing authorization", async () => {
   const message = buildListingMessage({

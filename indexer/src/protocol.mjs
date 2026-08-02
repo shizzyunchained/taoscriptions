@@ -94,7 +94,7 @@ function strictJsonScan(text) {
 export function parseMintPayload(bytes) {
   const { payload, text, payloadHex, payloadHash } = parseProtocolPayload(bytes);
   if (Object.keys(payload).some((key) => !ALLOWED_KEYS.has(key))) throw new Error("UNKNOWN_FIELD");
-  if (payload.p !== "neural-relics" || payload.v !== 1 || payload.op !== "mint") throw new Error("UNSUPPORTED_PROTOCOL");
+  if (payload.p !== "bittensor-relics" || payload.v !== 1 || payload.op !== "mint") throw new Error("UNSUPPORTED_PROTOCOL");
   if (!Number.isInteger(payload.netuid) || payload.netuid <= 0 || payload.netuid > 65_535) throw new Error("INVALID_NETUID");
   if (!Number.isSafeInteger(payload.subnet_generation) || payload.subnet_generation < 0) throw new Error("INVALID_SUBNET_GENERATION");
   if (typeof payload.name !== "string" || Array.from(payload.name.trim()).length < 1 || Array.from(payload.name.trim()).length > 80) throw new Error("INVALID_NAME");
@@ -114,7 +114,7 @@ export function parseProtocolPayload(bytes) {
   strictJsonScan(text);
   const payload = JSON.parse(text);
   if (!payload || Array.isArray(payload) || typeof payload !== "object") throw new Error("PAYLOAD_NOT_OBJECT");
-  if (payload.p !== "neural-relics" || payload.v !== 1 || typeof payload.op !== "string") throw new Error("UNSUPPORTED_PROTOCOL");
+  if (payload.p !== "bittensor-relics" || payload.v !== 1 || typeof payload.op !== "string") throw new Error("UNSUPPORTED_PROTOCOL");
   return { payload, text, payloadHex: u8aToHex(bytes), payloadHash: blake2AsHex(bytes, 256) };
 }
 
@@ -123,7 +123,7 @@ export function parseTransferPayload(bytes) {
   const { payload } = decoded;
   if (Object.keys(payload).some((key) => !TRANSFER_KEYS.has(key))) throw new Error("UNKNOWN_FIELD");
   if (payload.op !== "transfer") throw new Error("UNSUPPORTED_OPERATION");
-  if (typeof payload.artifact !== "string" || !/^nr1:0x[0-9a-f]{64}:\d+:\d+$/.test(payload.artifact)) throw new Error("INVALID_ARTIFACT_ID");
+  if (typeof payload.artifact !== "string" || !/^br1:0x[0-9a-f]{64}:\d+:\d+$/.test(payload.artifact)) throw new Error("INVALID_ARTIFACT_ID");
   if (typeof payload.to !== "string") throw new Error("INVALID_TRANSFER_DESTINATION");
   try { accountHex(payload.to); } catch { throw new Error("INVALID_TRANSFER_DESTINATION"); }
   if (!Number.isSafeInteger(payload.nonce) || payload.nonce < 1) throw new Error("INVALID_OWNERSHIP_NONCE");
@@ -139,8 +139,8 @@ export function findProtocolRemark(call) {
     const bytes = call.args[0].toU8a(true);
     const text = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
     let decodedProtocol = false;
-    try { decodedProtocol = JSON.parse(text)?.p === "neural-relics"; } catch {}
-    return decodedProtocol || text.includes("neural-relics") ? bytes : null;
+    try { decodedProtocol = JSON.parse(text)?.p === "bittensor-relics"; } catch {}
+    return decodedProtocol || text.includes("bittensor-relics") ? bytes : null;
   }
   if (call.section === "utility" && ["batch", "batchAll", "forceBatch"].includes(call.method)) {
     for (const inner of call.args[0]) {

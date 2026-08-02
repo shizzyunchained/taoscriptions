@@ -24,7 +24,7 @@ test("transfer receipts bind success, signer, payload, and actual fee", () => {
 test("transfer evidence derives its canonical ID from finality", () => {
   const hash = (character) => `0x${character.repeat(64)}`;
   const evidence = createTransferEvidence({
-    artifactId: `nr1:${hash("a")}:10:2`, genesisHash: hash("a"), runtimeSpec: "440",
+    artifactId: `br1:${hash("a")}:10:2`, genesisHash: hash("a"), runtimeSpec: "440",
     blockNumber: "20", blockHash: hash("b"), extrinsicIndex: 3, extrinsicHash: hash("c"),
     fromAddress: "5From", fromAccountHex: signer, toAccountHex: hash("d"), ownershipNonce: 1,
     transactionFeeRao: "900000", transactionTipRao: "0", payloadHash, finalizedAt: "2026-08-02T00:00:00.000Z",
