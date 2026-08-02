@@ -38,6 +38,8 @@ balances and quote freshness, apply explicit slippage, and render a complete
 human-readable transaction review before requesting a signature.
 
 **Status:** implemented on the feature branch; live wallet review pending.
+An unsigned live-runtime verifier also constructs, encodes, round-trips, quotes,
+and fee-estimates the exact atomic mint without submitting it.
 
 ## 6. Prove atomic minting on testnet
 

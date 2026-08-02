@@ -58,6 +58,7 @@ Open [http://localhost:3000](http://localhost:3000). The default RPC is
 npm run lint
 npm run build
 npm run verify:runtime
+npm run verify:transaction # constructs and quotes; never signs or submits
 npm run test:indexer
 npm run indexer:audit # requires primary + independent replay databases
 ```

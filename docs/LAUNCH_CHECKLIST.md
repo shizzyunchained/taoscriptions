@@ -20,6 +20,8 @@ No single green build overrides a missing chain, indexer, or wallet gate.
 - [ ] The recorded genesis hashes match the intended mainnet and testnet.
 - [ ] The recorded runtime specs are explicitly supported by the indexer.
 - [ ] Required calls, storage entries, and events all remain present.
+- [ ] `npm run verify:transaction` passed on the release commit and its report
+      says `submitted: false`, with the expected atomic call path.
 
 ## 3. Wallet and testnet transaction evidence
 

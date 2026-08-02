@@ -35,3 +35,6 @@ jobs:
 
       - name: Verify required calls, storage, events, and runtime specs
         run: npm run verify:runtime
+
+      - name: Construct and round-trip an unsigned live testnet mint
+        run: npm run verify:transaction

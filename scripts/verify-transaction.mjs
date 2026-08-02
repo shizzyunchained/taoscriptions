@@ -1,0 +1,92 @@
+import assert from "node:assert/strict";
+import { ApiPromise, WsProvider } from "@polkadot/api";
+import { blake2AsHex, encodeAddress } from "@polkadot/util-crypto";
+import { calculateLimitPrice, createInlineMintPayload, DEFAULT_SLIPPAGE_BPS } from "../src/lib/protocol.ts";
+
+const endpoint = process.env.SUBTENSOR_RPC ?? "wss://test.chain.opentensor.ai";
+const expectedGenesis = process.env.CHAIN_GENESIS_HASH ?? "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105";
+const expectedSpec = Number.parseInt(process.env.SUPPORTED_SPEC_VERSION ?? "440", 10);
+const taoAmountRao = 5_000_000n;
+const signer = encodeAddress(new Uint8Array(32).fill(7), 42);
+
+const api = await ApiPromise.create({ provider: new WsProvider(endpoint), noInitWarn: true });
+try {
+  assert.equal(api.genesisHash.toHex(), expectedGenesis, "GENESIS_HASH_MISMATCH");
+  assert.equal(api.runtimeVersion.specVersion.toNumber(), expectedSpec, "UNSUPPORTED_RUNTIME_SPEC");
+  const entries = await api.query.subtensorModule.networksAdded.entries();
+  const activeNetuids = entries
+    .filter(([, enabled]) => enabled.toString() === "true")
+    .map(([key]) => Number.parseInt(key.args[0].toString(), 10))
+    .filter((netuid) => Number.isSafeInteger(netuid) && netuid > 0)
+    .sort((left, right) => left - right);
+  assert.ok(activeNetuids.length, "NO_ACTIVE_NON_ROOT_SUBNET");
+
+  let selected = null;
+  for (const netuid of activeNetuids) {
+    try {
+      const quote = await api.call.swapRuntimeApi.simSwapTaoForAlpha(netuid, taoAmountRao.toString());
+      const decoded = quote;
+      const alphaAmount = BigInt(decoded.alphaAmount.toString());
+      if (alphaAmount > 0n) { selected = { netuid, quote: decoded, alphaAmount }; break; }
+    } catch { /* Try the next currently registered subnet. */ }
+  }
+  assert.ok(selected, "NO_ACTIVE_SUBNET_WITH_NONZERO_QUOTE");
+
+  const generation = (await api.query.subtensorModule.networkRegisteredAt(selected.netuid)).toString();
+  const quotedTao = BigInt(selected.quote.taoAmount.toString());
+  const limitPrice = calculateLimitPrice(quotedTao, selected.alphaAmount, DEFAULT_SLIPPAGE_BPS);
+  const payload = createInlineMintPayload({
+    netuid: selected.netuid,
+    subnetGeneration: generation,
+    name: "Neural Relics construction proof",
+    body: "Unsigned live-runtime verification. This payload is never submitted.",
+  });
+  const batch = api.tx.utility.batchAll([
+    api.tx.subtensorModule.addStakeBurn(signer, selected.netuid, taoAmountRao.toString(), limitPrice.toString()),
+    api.tx.system.remarkWithEvent(payload.hex),
+  ]);
+
+  assert.equal(batch.method.section, "utility");
+  assert.equal(batch.method.method, "batchAll");
+  const calls = batch.method.args[0];
+  assert.equal(calls.length, 2);
+  assert.equal(calls[0].section, "subtensorModule");
+  assert.equal(calls[0].method, "addStakeBurn");
+  assert.equal(calls[0].args[0].toString(), signer);
+  assert.equal(calls[0].args[1].toString(), selected.netuid.toString());
+  assert.equal(calls[0].args[2].toString(), taoAmountRao.toString());
+  assert.equal(calls[0].args[3].toString(), limitPrice.toString());
+  assert.equal(calls[1].section, "system");
+  assert.equal(calls[1].method, "remarkWithEvent");
+  assert.equal(calls[1].args[0].toHex(), payload.hex);
+
+  const encodedCall = batch.method.toHex();
+  const roundTrip = api.registry.createType("Call", encodedCall);
+  assert.equal(roundTrip.toHex(), encodedCall, "CALL_ROUND_TRIP_MISMATCH");
+  const payment = await batch.paymentInfo(signer);
+
+  console.log(JSON.stringify({
+    checkedAt: new Date().toISOString(),
+    submitted: false,
+    endpoint,
+    genesisHash: api.genesisHash.toHex(),
+    specName: api.runtimeVersion.specName.toString(),
+    specVersion: api.runtimeVersion.specVersion.toNumber(),
+    signer,
+    netuid: selected.netuid,
+    subnetGeneration: generation,
+    taoAmountRao: taoAmountRao.toString(),
+    expectedAlphaRao: selected.alphaAmount.toString(),
+    alphaSlippageRao: selected.quote.alphaSlippage.toString(),
+    taoFeeRao: selected.quote.taoFee.toString(),
+    limitPriceRao: limitPrice.toString(),
+    estimatedExtrinsicFeeRao: payment.partialFee.toString(),
+    payloadBytes: payload.byteLength,
+    payloadHash: blake2AsHex(payload.hex, 256),
+    encodedCallBytes: (encodedCall.length - 2) / 2,
+    encodedCallHash: blake2AsHex(encodedCall, 256),
+    callPath: ["utility.batchAll", "subtensorModule.addStakeBurn", "system.remarkWithEvent"],
+  }, null, 2));
+} finally {
+  await api.disconnect();
+}
