@@ -334,9 +334,23 @@ Before requesting a mint signature, the site MUST display:
 - current network and genesis hash;
 - a plain warning that the spend and burn are irreversible.
 
-The client MUST simulate or quote using the current runtime, recheck immediately
-before signing, and never silently replace a failed limited order with a market
-order.
+The client MUST simulate or quote using the current runtime, pin the generation,
+spot price, quote, and review block to one finalized chain snapshot, recheck
+immediately before signing, and never silently replace a failed limited order
+with a market order.
+
+For a TAO-to-alpha burn, `limit_price` is the maximum acceptable **ending spot
+price** in rao per alpha. It is not an average execution price. The client MUST
+derive it from a fresh `SwapRuntimeApi.current_alpha_price` result and the
+explicit user tolerance. The v1 client uses a 2% cap and rounds upward:
+
+```text
+limit_price = ceil(current_spot_price_rao * 1.02)
+```
+
+Because `add_stake_burn` sets `allow_partial = false`, a swap whose ending pool
+price would cross that cap fails atomically; the client MUST NOT widen the cap
+or retry as a market order without a new user review and signature.
 
 Mainnet minting remains disabled until the testnet implementation, indexer,
 documentation, and security gates are complete.

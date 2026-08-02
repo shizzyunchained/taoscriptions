@@ -39,7 +39,10 @@ human-readable transaction review before requesting a signature.
 
 **Status:** implemented on the feature branch; live wallet review pending.
 An unsigned live-runtime verifier also constructs, encodes, round-trips, quotes,
-and fee-estimates the exact atomic mint without submitting it.
+and fee-estimates the exact atomic mint without submitting it. Cross-layer
+contract tests require the strict indexer to accept the browser's exact mint and
+transfer bytes. The price cap is derived from a freshly queried on-chain spot
+price, matching the runtime's ending-price limit semantics.
 
 ## 6. Prove atomic minting on testnet
 

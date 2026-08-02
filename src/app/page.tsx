@@ -254,10 +254,15 @@ export default function Home() {
     if (!selectedSubnet || selectedNetuid === null) throw new Error("Choose a subnet first.");
     if (!amountRao || amountRao === 0n) throw new Error("Enter a valid TAO amount.");
 
-    const [generationResult, quoteResult, header] = await Promise.all([
-      api.query.subtensorModule.networkRegisteredAt(selectedNetuid),
-      api.call.swapRuntimeApi.simSwapTaoForAlpha(selectedNetuid, amountRao.toString()),
-      api.rpc.chain.getHeader(),
+    const finalizedHash = await api.rpc.chain.getFinalizedHead();
+    const [apiAt, header] = await Promise.all([
+      api.at(finalizedHash),
+      api.rpc.chain.getHeader(finalizedHash),
+    ]);
+    const [generationResult, priceResult, quoteResult] = await Promise.all([
+      apiAt.query.subtensorModule.networkRegisteredAt(selectedNetuid),
+      apiAt.call.swapRuntimeApi.currentAlphaPrice(selectedNetuid),
+      apiAt.call.swapRuntimeApi.simSwapTaoForAlpha(selectedNetuid, amountRao.toString()),
     ]);
     const currentGeneration = generationResult.toString();
     if (currentGeneration !== selectedSubnet.generation) {
@@ -273,7 +278,7 @@ export default function Home() {
     const freshQuote: BurnQuote = {
       alphaAmount: BigInt(decoded.alphaAmount.toString()),
       alphaSlippage: BigInt(decoded.alphaSlippage.toString()),
-      priceRao: quote?.priceRao ?? 0n,
+      priceRao: BigInt(priceResult.toString()),
       taoAmount: BigInt(decoded.taoAmount.toString()),
       taoFee: BigInt(decoded.taoFee.toString()),
     };
@@ -285,11 +290,7 @@ export default function Home() {
       name: relicName,
       body: relicBody,
     });
-    const limitPrice = calculateLimitPrice(
-      freshQuote.taoAmount,
-      freshQuote.alphaAmount,
-      DEFAULT_SLIPPAGE_BPS,
-    );
+    const limitPrice = calculateLimitPrice(freshQuote.priceRao, DEFAULT_SLIPPAGE_BPS);
     const batch = api.tx.utility.batchAll([
       api.tx.subtensorModule.addStakeBurn(
         account.address,
@@ -462,7 +463,7 @@ export default function Home() {
               <div className="transaction-review">
                 <div><span>Network</span><strong>Testnet / {shortAddress(genesisHash)}</strong></div>
                 <div><span>Fresh at block</span><strong>#{mintReview.quoteBlock}</strong></div>
-                <div><span>Maximum price</span><strong>{formatPrice(mintReview.limitPrice)}</strong></div>
+                <div><span>Maximum ending spot price (2%)</span><strong>{formatPrice(mintReview.limitPrice)}</strong></div>
                 <div><span>Estimated chain fee</span><strong>{formatToken(mintReview.estimatedFee, 7)} TAO</strong></div>
                 <div><span>Inscription payload</span><strong>{mintReview.payloadBytes} / 2,048 bytes</strong></div>
               </div>

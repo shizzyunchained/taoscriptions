@@ -13,7 +13,12 @@ const api = await ApiPromise.create({ provider: new WsProvider(endpoint), noInit
 try {
   assert.equal(api.genesisHash.toHex(), expectedGenesis, "GENESIS_HASH_MISMATCH");
   assert.equal(api.runtimeVersion.specVersion.toNumber(), expectedSpec, "UNSUPPORTED_RUNTIME_SPEC");
-  const entries = await api.query.subtensorModule.networksAdded.entries();
+  const finalizedHash = await api.rpc.chain.getFinalizedHead();
+  const [apiAt, finalizedHeader] = await Promise.all([
+    api.at(finalizedHash),
+    api.rpc.chain.getHeader(finalizedHash),
+  ]);
+  const entries = await apiAt.query.subtensorModule.networksAdded.entries();
   const activeNetuids = entries
     .filter(([, enabled]) => enabled.toString() === "true")
     .map(([key]) => Number.parseInt(key.args[0].toString(), 10))
@@ -24,7 +29,7 @@ try {
   let selected = null;
   for (const netuid of activeNetuids) {
     try {
-      const quote = await api.call.swapRuntimeApi.simSwapTaoForAlpha(netuid, taoAmountRao.toString());
+      const quote = await apiAt.call.swapRuntimeApi.simSwapTaoForAlpha(netuid, taoAmountRao.toString());
       const decoded = quote;
       const alphaAmount = BigInt(decoded.alphaAmount.toString());
       if (alphaAmount > 0n) { selected = { netuid, quote: decoded, alphaAmount }; break; }
@@ -32,9 +37,9 @@ try {
   }
   assert.ok(selected, "NO_ACTIVE_SUBNET_WITH_NONZERO_QUOTE");
 
-  const generation = (await api.query.subtensorModule.networkRegisteredAt(selected.netuid)).toString();
-  const quotedTao = BigInt(selected.quote.taoAmount.toString());
-  const limitPrice = calculateLimitPrice(quotedTao, selected.alphaAmount, DEFAULT_SLIPPAGE_BPS);
+  const generation = (await apiAt.query.subtensorModule.networkRegisteredAt(selected.netuid)).toString();
+  const currentSpotPrice = BigInt((await apiAt.call.swapRuntimeApi.currentAlphaPrice(selected.netuid)).toString());
+  const limitPrice = calculateLimitPrice(currentSpotPrice, DEFAULT_SLIPPAGE_BPS);
   const payload = createInlineMintPayload({
     netuid: selected.netuid,
     subnetGeneration: generation,
@@ -69,6 +74,8 @@ try {
     checkedAt: new Date().toISOString(),
     submitted: false,
     endpoint,
+    quoteBlockNumber: finalizedHeader.number.toString(),
+    quoteBlockHash: finalizedHash.toHex(),
     genesisHash: api.genesisHash.toHex(),
     specName: api.runtimeVersion.specName.toString(),
     specVersion: api.runtimeVersion.specVersion.toNumber(),
@@ -79,6 +86,7 @@ try {
     expectedAlphaRao: selected.alphaAmount.toString(),
     alphaSlippageRao: selected.quote.alphaSlippage.toString(),
     taoFeeRao: selected.quote.taoFee.toString(),
+    currentSpotPriceRao: currentSpotPrice.toString(),
     limitPriceRao: limitPrice.toString(),
     estimatedExtrinsicFeeRao: payment.partialFee.toString(),
     payloadBytes: payload.byteLength,

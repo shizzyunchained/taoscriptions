@@ -3,7 +3,6 @@ export const PROTOCOL_VERSION = 1;
 export const MAX_REMARK_BYTES = 2_048;
 export const DEFAULT_SLIPPAGE_BPS = 200n;
 const BPS_DENOMINATOR = 10_000n;
-const ALPHA_UNITS = 1_000_000_000n;
 
 type InlineMintInput = {
   netuid: number;
@@ -49,19 +48,17 @@ export function createInlineMintPayload(input: InlineMintInput) {
 }
 
 export function calculateLimitPrice(
-  taoPaidRao: bigint,
-  expectedAlphaRao: bigint,
+  currentSpotPriceRao: bigint,
   slippageBps = DEFAULT_SLIPPAGE_BPS,
 ) {
-  if (taoPaidRao <= 0n || expectedAlphaRao <= 0n) {
-    throw new Error("A fresh nonzero quote is required.");
+  if (currentSpotPriceRao <= 0n) {
+    throw new Error("A fresh nonzero spot price is required.");
   }
   if (slippageBps < 0n || slippageBps > 1_000n) {
     throw new Error("Slippage tolerance must be between 0% and 10%.");
   }
 
-  const quotedPrice = (taoPaidRao * ALPHA_UNITS + expectedAlphaRao - 1n) / expectedAlphaRao;
-  return (quotedPrice * (BPS_DENOMINATOR + slippageBps) + BPS_DENOMINATOR - 1n) / BPS_DENOMINATOR;
+  return (currentSpotPriceRao * (BPS_DENOMINATOR + slippageBps) + BPS_DENOMINATOR - 1n) / BPS_DENOMINATOR;
 }
 
 export function createTransferPayload(input: {
