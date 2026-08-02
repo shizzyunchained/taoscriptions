@@ -6,8 +6,9 @@ burn and inscription; a deterministic indexer derives artifact numbers and
 ownership from finalized blocks.
 
 The current branch is deliberately testnet-first. It reads live subnet
-identities and alpha quotes, connects to an injected SS58 wallet, and keeps the
-transaction action locked until the complete atomic mint path is verified.
+identities and alpha quotes, connects to an injected SS58 wallet, builds atomic
+mint transactions, exposes finalized collections and proof pages, and provides
+wallet-native ownership transfers plus signed marketplace discovery.
 
 ## What makes a relic
 
@@ -30,6 +31,13 @@ in [the API reference](docs/API.md).
 - Finalized blocks only
 - Marketplace settlement remains disabled until payment and derived ownership
   can be made loss-safe
+- Listings are discovery authorizations only and cannot move funds or ownership
+
+The `/wallet` workspace reads the connected account's finalized collection.
+Transfer review refreshes ownership without CDN caching, validates the next
+nonce and destination, estimates the testnet fee, and asks TAOStats Wallet to
+sign the exact standalone `remarkWithEvent` call. Relic pages also let the
+signing owner cancel an active listing without an on-chain transaction.
 
 ## Local development
 

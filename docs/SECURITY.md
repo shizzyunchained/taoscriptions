@@ -48,5 +48,12 @@ message text. A transfer, expiry, or signed cancellation removes the listing
 from active discovery. The database caps active listings per ownership version;
 deployment should add edge rate limits before opening public writes.
 
+Before a transfer signature, the wallet UI bypasses public API caching and
+rechecks the finalized owner and ownership nonce. It validates the destination
+as AccountId32, estimates the fee, preserves the existential deposit, and
+requires a finalized success event whose `System.Remarked` signer and payload
+hash match the reviewed call. This reduces stale-state fee loss; the indexer
+remains the authority that accepts or rejects protocol ownership.
+
 Each item requires an automated test or an explicit documented launch-time
 mitigation before mainnet activation.

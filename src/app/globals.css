@@ -3,6 +3,7 @@
 :root {
   --background: #080a09;
   --panel: rgba(16, 19, 17, 0.92);
+  --field: #111411;
   --ink: #f0f1e9;
   --muted: #8e958c;
   --dim: #5f665f;
@@ -310,10 +311,14 @@ footer > a:last-child:hover { color: var(--ink); }
 .active-offers h2, .listing-panel h2 { color: var(--ink); font-size: 22px; font-weight: 560; }
 .active-offers > div span, .listing-panel > div > span { color: var(--dim); font: 8px var(--font-geist-mono), monospace; text-transform: uppercase; }
 .active-offers > p { margin-top: 18px; color: var(--dim); font-size: 11px; }
-.active-offers article { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr 150px; align-items: center; gap: 18px; }
+.active-offers article { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr minmax(150px, 230px); align-items: center; gap: 18px; }
 .active-offers article strong { color: var(--acid); font-size: 14px; }
 .active-offers article span { color: var(--dim); font: 8px var(--font-geist-mono), monospace; }
 .active-offers article button { margin-top: 0; }
+.active-offers article > div { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.active-offers .cancel-listing { border-color: rgba(255,141,120,.32); color: var(--danger); cursor: pointer; }
+.active-offers .cancel-listing:disabled { cursor: default; opacity: .5; }
+.active-offers .listing-action-message { color: var(--muted); }
 .listing-panel { display: grid; grid-template-columns: 1fr minmax(180px, 240px) minmax(170px, 210px); gap: 28px; align-items: end; }
 .listing-panel > div > p { max-width: 470px; margin-top: 10px; color: var(--dim); font-size: 10px; line-height: 1.55; }
 .listing-panel label > span { display: block; margin-bottom: 8px; color: var(--dim); font-size: 8px; text-transform: uppercase; }
@@ -326,11 +331,56 @@ footer > a:last-child:hover { color: var(--ink); }
 .listing-panel .listing-success, .listing-panel .error-message { grid-column: 1 / -1; margin: 0; }
 .listing-success { color: var(--acid); font-size: 10px; }
 
+/* Wallet-owned collection */
+.wallet-hero { padding-bottom: 48px; }
+.wallet-workspace { margin-bottom: 90px; border: 1px solid var(--line); background: var(--panel); position: relative; z-index: 1; }
+.wallet-gate { min-height: 390px; padding: clamp(34px, 7vw, 82px); display: flex; flex-direction: column; align-items: flex-start; justify-content: center; }
+.wallet-gate > span, .owned-list > div span, .transfer-console > span, .transfer-empty > span { color: var(--ember); font: 8px var(--font-geist-mono), monospace; text-transform: uppercase; letter-spacing: .12em; }
+.wallet-gate h2, .transfer-console h2, .transfer-empty h2 { margin-top: 15px; color: var(--ink); font-size: clamp(30px, 4vw, 50px); font-weight: 570; line-height: 1; letter-spacing: -.05em; }
+.wallet-gate > p, .transfer-console > p, .transfer-empty p { max-width: 580px; margin-top: 18px; color: var(--dim); font-size: 11px; line-height: 1.7; }
+.wallet-gate > button { min-height: 48px; margin-top: 28px; padding: 0 22px; border: 0; background: var(--acid); color: #11150d; font-size: 10px; font-weight: 750; cursor: pointer; }
+.wallet-gate > button:disabled { opacity: .55; cursor: default; }
+.wallet-workspace > header { min-height: 94px; padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; border-bottom: 1px solid var(--line); }
+.wallet-workspace > header span { color: var(--dim); font-size: 8px; text-transform: uppercase; }
+.wallet-workspace > header select { min-width: min(420px, 60vw); margin-top: 5px; padding: 7px 26px 7px 9px; border: 1px solid var(--line); background: var(--field); color: var(--ink); font-size: 12px; }
+.wallet-workspace > header p { margin-top: 5px; color: var(--dim); font: 8px var(--font-geist-mono), monospace; }
+.wallet-workspace > header button { padding: 9px 13px; border: 1px solid var(--line); background: transparent; color: var(--muted); font-size: 9px; cursor: pointer; }
+.wallet-workspace > header button:disabled { opacity: .45; cursor: default; }
+.wallet-notice { min-height: 300px; padding: clamp(32px, 6vw, 70px); }
+.wallet-notice strong { color: var(--ember); font-size: 11px; text-transform: uppercase; }
+.wallet-notice p { max-width: 600px; margin: 18px 0 25px; color: var(--dim); font-size: 12px; line-height: 1.7; }
+.wallet-notice a { color: var(--acid); font-size: 10px; text-decoration: none; }
+.owned-layout { display: grid; grid-template-columns: minmax(280px, .72fr) minmax(0, 1.28fr); min-height: 530px; }
+.owned-list { border-right: 1px solid var(--line); }
+.owned-list > div { padding: 19px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
+.owned-list > div strong { color: var(--dim); font: 8px var(--font-geist-mono), monospace; text-transform: uppercase; }
+.owned-list > button { width: 100%; padding: 18px 20px; display: flex; flex-direction: column; align-items: flex-start; gap: 7px; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: inherit; text-align: left; cursor: pointer; }
+.owned-list > button:hover, .owned-list > button.active { background: rgba(200,245,107,.05); box-shadow: inset 2px 0 0 var(--acid); }
+.owned-list > button span, .owned-list > button small { color: var(--dim); font: 8px var(--font-geist-mono), monospace; }
+.owned-list > button strong { color: #d3d7cf; font-size: 13px; }
+.transfer-console { padding: clamp(26px, 5vw, 54px); }
+.transfer-console label { display: block; margin-top: 30px; }
+.transfer-console label > span { display: block; margin-bottom: 9px; color: var(--dim); font-size: 8px; text-transform: uppercase; }
+.transfer-console input { width: 100%; padding: 15px; border: 1px solid var(--line-strong); outline: 0; background: var(--field); color: var(--ink); font: 11px var(--font-geist-mono), monospace; }
+.transfer-review { margin-top: 18px; padding: 13px 16px; border: 1px solid var(--line); background: rgba(255,255,255,.015); }
+.transfer-review div { padding: 8px 0; display: flex; justify-content: space-between; gap: 20px; border-bottom: 1px solid var(--line); }
+.transfer-review div:last-child { border-bottom: 0; }
+.transfer-review span { color: var(--dim); font-size: 8px; }
+.transfer-review strong { color: #bfc5ba; font: 8px var(--font-geist-mono), monospace; text-align: right; }
+.transfer-button { width: 100%; min-height: 50px; margin-top: 22px; border: 0; background: var(--acid); color: #11150d; font-size: 10px; font-weight: 750; cursor: pointer; }
+.transfer-button.danger { background: var(--danger); }
+.transfer-button:disabled { background: #252a26; color: var(--dim); cursor: default; }
+.transfer-console > a { display: inline-block; margin-top: 18px; color: var(--acid); font-size: 9px; text-decoration: none; }
+.transfer-console > .error-message, .transfer-console > .listing-success { margin-top: 18px; }
+.transfer-empty { min-height: 390px; display: flex; flex-direction: column; justify-content: center; }
+
 @media (max-width: 900px) {
   .artifact-grid { grid-template-columns: repeat(2, 1fr); }
   .listing-grid { grid-template-columns: repeat(2, 1fr); }
   .listing-panel { grid-template-columns: 1fr 1fr; }
   .listing-panel > div { grid-column: 1 / -1; }
+  .owned-layout { grid-template-columns: 1fr; }
+  .owned-list { border-right: 0; border-bottom: 1px solid var(--line); max-height: 360px; overflow: auto; }
   .relic-detail > header { grid-template-columns: 1fr; gap: 42px; }
   .detail-orbit { width: 190px; height: 190px; }
   .proof-grid { grid-template-columns: repeat(2, 1fr); }
@@ -344,6 +394,9 @@ footer > a:last-child:hover { color: var(--ink); }
   .listing-panel { grid-template-columns: 1fr; }
   .listing-panel > div { grid-column: auto; }
   .active-offers article { grid-template-columns: 1fr; }
+  .wallet-workspace > header { align-items: flex-start; }
+  .transfer-review div { align-items: flex-start; flex-direction: column; gap: 5px; }
+  .transfer-review strong { text-align: left; overflow-wrap: anywhere; }
   .relic-detail { padding-top: 42px; }
   .relic-detail > header { padding: 28px 21px; }
   .proof-grid { grid-template-columns: 1fr; }

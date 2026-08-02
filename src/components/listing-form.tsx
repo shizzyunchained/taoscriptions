@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { stringToHex } from "@polkadot/util";
-import { buildListingMessage, normalizeAccount } from "@/lib/listing-protocol.mjs";
+import { buildListingMessage } from "@/lib/listing-message.mjs";
 
 const APP_NAME = "Neural Relics";
 const RAO_PER_TAO = 1_000_000_000n;
@@ -29,8 +28,10 @@ export function ListingForm({ artifactId, ownerAccountHex, ownershipNonce, chain
     try {
       const priceRao = taoToRao(price);
       if (!priceRao || priceRao === "0") throw new Error("Enter a price greater than zero.");
-      const [{ web3Accounts, web3Enable, web3FromSource }, statusResponse] = await Promise.all([
+      const [{ web3Accounts, web3Enable, web3FromSource }, { stringToHex }, { normalizeAccount }, statusResponse] = await Promise.all([
         import("@polkadot/extension-dapp"),
+        import("@polkadot/util"),
+        import("@/lib/listing-protocol.mjs"),
         fetch("/api/v1/status", { cache: "no-store" }),
       ]);
       if (!statusResponse.ok) throw new Error("The finalized indexer must be online before a listing can be signed.");

@@ -63,3 +63,34 @@ export function calculateLimitPrice(
   const quotedPrice = (taoPaidRao * ALPHA_UNITS + expectedAlphaRao - 1n) / expectedAlphaRao;
   return (quotedPrice * (BPS_DENOMINATOR + slippageBps) + BPS_DENOMINATOR - 1n) / BPS_DENOMINATOR;
 }
+
+export function createTransferPayload(input: {
+  artifactId: string;
+  destinationAccountHex: string;
+  ownershipNonce: number;
+}) {
+  if (!/^nr1:0x[0-9a-f]{64}:\d+:\d+$/.test(input.artifactId)) {
+    throw new Error("The relic ID is not canonical.");
+  }
+  if (!/^0x[0-9a-f]{64}$/.test(input.destinationAccountHex)) {
+    throw new Error("The destination must be a valid AccountId32.");
+  }
+  if (!Number.isSafeInteger(input.ownershipNonce) || input.ownershipNonce < 1) {
+    throw new Error("The next ownership nonce is invalid.");
+  }
+  const json = JSON.stringify({
+    p: PROTOCOL_ID,
+    v: PROTOCOL_VERSION,
+    op: "transfer",
+    artifact: input.artifactId,
+    to: input.destinationAccountHex,
+    nonce: input.ownershipNonce,
+  });
+  const bytes = new TextEncoder().encode(json);
+  if (bytes.length > MAX_REMARK_BYTES) throw new Error("The transfer payload exceeds the protocol limit.");
+  return {
+    json,
+    hex: `0x${Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("")}`,
+    byteLength: bytes.length,
+  };
+}

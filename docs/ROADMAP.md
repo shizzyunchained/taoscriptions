@@ -64,8 +64,9 @@ and canonical transfer inscriptions. Every UI claim must link back to its block
 and extrinsic.
 
 **Status:** finalized read API, Explore collection, proof detail pages, canonical
-transfer processing, and ownership history are implemented; live indexed data
-remain pending.
+transfer processing, ownership history, wallet-owned collection, transfer
+review/signing flow, and fresh-state signing checks are implemented; live
+indexed data and one real transfer test remain pending.
 
 ## 9. Add marketplace discovery safely
 
@@ -74,9 +75,9 @@ settlement until the protocol can guarantee that TAO payment and derived relic
 ownership cannot diverge.
 
 **Status:** signed listing and cancellation protocol, signature verification,
-discovery API, owner listing flow, and locked marketplace view are implemented.
-Live database testing and a chain-enforced settlement design remain pending;
-there is deliberately no purchase endpoint.
+discovery API, owner listing and cancellation flows, and locked marketplace
+view are implemented. Live database testing and a chain-enforced settlement
+design remain pending; there is deliberately no purchase endpoint.
 
 ## 10. Audit, document, and launch progressively
 

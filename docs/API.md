@@ -38,6 +38,11 @@ Artifact detail includes up to 100 accepted transfers in nonce order. The
 transfer-specific endpoint returns the same provenance plus the current owner
 and ownership nonce.
 
+Wallet review may add `fresh=1` to artifact detail or owner collection requests.
+Successful responses then use `Cache-Control: no-store` so a signing decision is
+checked against the newest indexed ownership state rather than the public
+ten-second read cache.
+
 ## Marketplace discovery
 
 `GET /api/v1/listings` returns active signed listings. An optional `artifact`

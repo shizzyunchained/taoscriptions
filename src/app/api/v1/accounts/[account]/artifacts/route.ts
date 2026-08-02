@@ -21,7 +21,10 @@ export async function GET(
       limit: pageLimit(search.get("limit")),
       cursor: pageCursor(search.get("cursor")),
     });
-    return apiJson({ ownerAccountHex, ...result });
+    return apiJson(
+      { ownerAccountHex, ...result },
+      search.get("fresh") === "1" ? { headers: { "cache-control": "no-store" } } : {},
+    );
   } catch (error) {
     return apiError(error);
   }
