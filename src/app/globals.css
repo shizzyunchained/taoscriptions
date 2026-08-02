@@ -276,6 +276,16 @@ footer > a:last-child:hover { color: var(--ink); }
 .chain-proof dl div { display: grid; grid-template-columns: 150px 1fr; gap: 20px; padding: 12px 0; border-top: 1px solid var(--line); }
 .chain-proof dt { color: var(--dim); font-size: 9px; }
 .chain-proof dd { color: #aeb4aa; font: 9px var(--font-geist-mono), monospace; overflow-wrap: anywhere; }
+.ownership-history { padding: clamp(28px, 5vw, 52px); border: 1px solid var(--line); border-top: 0; }
+.ownership-history > div { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; }
+.ownership-history h2 { color: var(--ink); font-size: 22px; font-weight: 560; }
+.ownership-history > div span { color: var(--dim); font: 8px var(--font-geist-mono), monospace; text-transform: uppercase; }
+.ownership-history > p { margin-top: 20px; color: var(--dim); font-size: 11px; }
+.ownership-history ol { margin-top: 22px; list-style: none; }
+.ownership-history li { display: grid; grid-template-columns: 90px 1fr auto; gap: 18px; padding: 14px 0; border-top: 1px solid var(--line); align-items: center; }
+.ownership-history li span, .ownership-history li small { color: var(--dim); font: 8px var(--font-geist-mono), monospace; }
+.ownership-history li strong { color: #bfc5ba; font: 9px var(--font-geist-mono), monospace; overflow-wrap: anywhere; }
+.ownership-history li i { color: var(--ember); font-style: normal; }
 .detail-actions { display: flex; justify-content: space-between; gap: 20px; padding: 24px 0; color: var(--dim); font: 9px var(--font-geist-mono), monospace; }
 .detail-actions a { color: var(--acid); text-decoration: none; }
 .relic-unavailable { margin: 80px 0; }
@@ -294,6 +304,7 @@ footer > a:last-child:hover { color: var(--ink); }
   .relic-detail > header { padding: 28px 21px; }
   .proof-grid { grid-template-columns: 1fr; }
   .chain-proof dl div { grid-template-columns: 1fr; gap: 7px; }
+  .ownership-history li { grid-template-columns: 1fr; gap: 7px; }
   .detail-actions { flex-direction: column; }
 }
 

@@ -12,7 +12,7 @@ export async function GET(
     }
     const [artifact, transfers] = await Promise.all([getArtifact(id), listArtifactTransfers(id)]);
     return artifact
-      ? apiJson({ artifact, transfers })
+      ? apiJson({ artifactId: id, ownerAccountHex: artifact.ownerAccountHex, ownershipNonce: artifact.ownershipNonce, transfers })
       : apiJson({ error: { code: "NOT_FOUND", message: "No finalized artifact has this ID." } }, { status: 404 });
   } catch (error) {
     return apiError(error);

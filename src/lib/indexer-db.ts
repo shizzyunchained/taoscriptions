@@ -249,3 +249,46 @@ export async function getOperation(blockNumber: string, extrinsicIndex: number) 
   if (rejected) return { status: "rejected" as const, rejection: rejected };
   return null;
 }
+
+export type ArtifactTransfer = {
+  transferId: string;
+  blockNumber: string;
+  blockHash: string;
+  extrinsicIndex: number;
+  extrinsicHash: string;
+  fromAccountHex: string;
+  toAccountHex: string;
+  ownershipNonce: string;
+  payloadHash: string;
+};
+
+export async function listArtifactTransfers(artifactId: string, limit = 100) {
+  const result = await pool().query<{
+    transfer_id: string;
+    block_number: string;
+    block_hash: string;
+    extrinsic_index: number;
+    extrinsic_hash: string;
+    from_account_hex: string;
+    to_account_hex: string;
+    ownership_nonce: string;
+    payload_hash: string;
+  }>(
+    `SELECT transfer_id, block_number, block_hash, extrinsic_index, extrinsic_hash,
+      from_account_hex, to_account_hex, ownership_nonce, payload_hash
+     FROM transfers WHERE artifact_id = $1
+     ORDER BY ownership_nonce ASC LIMIT $2`,
+    [artifactId, Math.min(Math.max(limit, 1), 100)],
+  );
+  return result.rows.map((row) => ({
+    transferId: row.transfer_id,
+    blockNumber: row.block_number,
+    blockHash: row.block_hash,
+    extrinsicIndex: row.extrinsic_index,
+    extrinsicHash: row.extrinsic_hash,
+    fromAccountHex: row.from_account_hex,
+    toAccountHex: row.to_account_hex,
+    ownershipNonce: row.ownership_nonce,
+    payloadHash: row.payload_hash,
+  } satisfies ArtifactTransfer));
+}

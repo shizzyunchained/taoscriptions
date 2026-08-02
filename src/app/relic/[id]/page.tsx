@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteMark } from "@/components/site-mark";
 import { compactHex, formatRao } from "@/lib/format";
-import { getArtifact, IndexerUnavailableError } from "@/lib/indexer-db";
+import { getArtifact, IndexerUnavailableError, listArtifactTransfers } from "@/lib/indexer-db";
 
 export const dynamic = "force-dynamic";
 
@@ -18,9 +18,10 @@ export default async function RelicPage({ params }: Props) {
   const { id } = await params;
   if (!/^nr1:0x[0-9a-f]{64}:\d+:\d+$/.test(id)) notFound();
   let artifact: Awaited<ReturnType<typeof getArtifact>> = null;
+  let transfers: Awaited<ReturnType<typeof listArtifactTransfers>> = [];
   let unavailable = false;
   try {
-    artifact = await getArtifact(id);
+    [artifact, transfers] = await Promise.all([getArtifact(id), listArtifactTransfers(id)]);
   } catch (error) {
     if (error instanceof IndexerUnavailableError) unavailable = true;
     else throw error;
@@ -44,6 +45,7 @@ export default async function RelicPage({ params }: Props) {
             <div><span>Limit price</span><strong>{formatRao(artifact.limitPriceRao)} TAO / alpha</strong></div>
           </section>
           <section className="chain-proof"><h2>Chain proof</h2><dl><div><dt>Artifact ID</dt><dd>{artifact.artifactId}</dd></div><div><dt>Block</dt><dd>#{artifact.blockNumber} · extrinsic {artifact.extrinsicIndex}</dd></div><div><dt>Extrinsic hash</dt><dd>{artifact.extrinsicHash}</dd></div><div><dt>Payload hash</dt><dd>{artifact.payloadHash}</dd></div><div><dt>Creator</dt><dd>{artifact.creatorAccountHex}</dd></div><div><dt>Protocol owner</dt><dd>{artifact.ownerAccountHex}</dd></div></dl></section>
+          <section className="ownership-history"><div><h2>Ownership history</h2><span>{transfers.length} finalized transfer{transfers.length === 1 ? "" : "s"}</span></div>{transfers.length ? <ol>{transfers.map((transfer) => <li key={transfer.transferId}><span>Nonce {transfer.ownershipNonce}</span><strong>{compactHex(transfer.fromAccountHex)} <i aria-hidden="true">-&gt;</i> {compactHex(transfer.toAccountHex)}</strong><small>Block #{transfer.blockNumber} · extrinsic {transfer.extrinsicIndex}</small></li>)}</ol> : <p>The creator remains the current protocol owner.</p>}</section>
           <div className="detail-actions"><Link href="/explore">&lt;- All relics</Link><span>Ownership nonce {artifact.ownershipNonce}</span></div>
         </article>
       ) : null}

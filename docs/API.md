@@ -28,11 +28,15 @@ time, and accepted artifact count.
 ```text
 GET /api/v1/artifacts?limit=24&cursor=120
 GET /api/v1/artifacts/:artifactId
+GET /api/v1/artifacts/:artifactId/transfers
 ```
 
 Lists artifacts newest-first. `limit` is capped at 100. `cursor` is the last
 global artifact number from the previous response. The detail endpoint requires
 the canonical `nr1:<genesis>:<block>:<extrinsic>` identifier.
+Artifact detail includes up to 100 accepted transfers in nonce order. The
+transfer-specific endpoint returns the same provenance plus the current owner
+and ownership nonce.
 
 ## Owner collection
 

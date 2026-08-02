@@ -6,6 +6,7 @@ const ALLOWED_KEYS = new Set([
   "p", "v", "op", "netuid", "subnet_generation", "name", "media_type",
   "body", "content_uri", "content_hash",
 ]);
+const TRANSFER_KEYS = new Set(["p", "v", "op", "artifact", "to", "nonce"]);
 
 function strictJsonScan(text) {
   let cursor = 0;
@@ -91,11 +92,7 @@ function strictJsonScan(text) {
 }
 
 export function parseMintPayload(bytes) {
-  if (bytes.length > 2_048) throw new Error("PAYLOAD_TOO_LARGE");
-  const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-  strictJsonScan(text);
-  const payload = JSON.parse(text);
-  if (!payload || Array.isArray(payload) || typeof payload !== "object") throw new Error("PAYLOAD_NOT_OBJECT");
+  const { payload, text, payloadHex, payloadHash } = parseProtocolPayload(bytes);
   if (Object.keys(payload).some((key) => !ALLOWED_KEYS.has(key))) throw new Error("UNKNOWN_FIELD");
   if (payload.p !== "neural-relics" || payload.v !== 1 || payload.op !== "mint") throw new Error("UNSUPPORTED_PROTOCOL");
   if (!Number.isInteger(payload.netuid) || payload.netuid <= 0 || payload.netuid > 65_535) throw new Error("INVALID_NETUID");
@@ -108,7 +105,29 @@ export function parseMintPayload(bytes) {
   if (inline && (Array.from(payload.body.trim()).length < 1 || Array.from(payload.body.trim()).length > 1_024)) throw new Error("INVALID_BODY");
   if (external && !/^sha256:[0-9a-f]{64}$/.test(payload.content_hash)) throw new Error("INVALID_CONTENT_HASH");
   if (external && !/^ipfs:\/\/[a-zA-Z0-9]+(?:\/.*)?$/.test(payload.content_uri)) throw new Error("INVALID_CONTENT_URI");
+  return { payload, text, payloadHex, payloadHash };
+}
+
+export function parseProtocolPayload(bytes) {
+  if (bytes.length > 2_048) throw new Error("PAYLOAD_TOO_LARGE");
+  const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  strictJsonScan(text);
+  const payload = JSON.parse(text);
+  if (!payload || Array.isArray(payload) || typeof payload !== "object") throw new Error("PAYLOAD_NOT_OBJECT");
+  if (payload.p !== "neural-relics" || payload.v !== 1 || typeof payload.op !== "string") throw new Error("UNSUPPORTED_PROTOCOL");
   return { payload, text, payloadHex: u8aToHex(bytes), payloadHash: blake2AsHex(bytes, 256) };
+}
+
+export function parseTransferPayload(bytes) {
+  const decoded = parseProtocolPayload(bytes);
+  const { payload } = decoded;
+  if (Object.keys(payload).some((key) => !TRANSFER_KEYS.has(key))) throw new Error("UNKNOWN_FIELD");
+  if (payload.op !== "transfer") throw new Error("UNSUPPORTED_OPERATION");
+  if (typeof payload.artifact !== "string" || !/^nr1:0x[0-9a-f]{64}:\d+:\d+$/.test(payload.artifact)) throw new Error("INVALID_ARTIFACT_ID");
+  if (typeof payload.to !== "string") throw new Error("INVALID_TRANSFER_DESTINATION");
+  try { accountHex(payload.to); } catch { throw new Error("INVALID_TRANSFER_DESTINATION"); }
+  if (!Number.isSafeInteger(payload.nonce) || payload.nonce < 1) throw new Error("INVALID_OWNERSHIP_NONCE");
+  return decoded;
 }
 
 export function accountHex(value) {
@@ -176,4 +195,25 @@ export function validateMint({ api, extrinsic, eventRecords, subnetGeneration })
   if (!remarked || accountHex(remarked.event.data[0]) !== signer || remarked.event.data[1].toHex() !== remarkHash) throw new Error("REMARK_EVENT_MISMATCH");
 
   return { ...decoded, netuid, taoSpentRao, alphaBurnedRao, limitPriceRao, creatorHex: signer, hotkeyHex };
+}
+
+export function validateTransfer({ api, extrinsic, eventRecords }) {
+  if (!extrinsic.isSigned) throw new Error("UNSIGNED_EXTRINSIC");
+  const call = extrinsic.method;
+  if (call.section !== "system" || call.method !== "remarkWithEvent") throw new Error("INVALID_TRANSFER_CALL");
+  const bytes = call.args[0].toU8a(true);
+  const decoded = parseTransferPayload(bytes);
+  const signerHex = accountHex(extrinsic.signer);
+  const destinationHex = accountHex(decoded.payload.to);
+  if (signerHex === destinationHex) throw new Error("TRANSFER_TO_CURRENT_OWNER");
+  if (!eventRecords.some(({ event }) => api.events.system.ExtrinsicSuccess.is(event))) throw new Error("TRANSFER_EXTRINSIC_FAILED");
+  const remarked = eventRecords.find(({ event }) => api.events.system.Remarked.is(event));
+  if (!remarked || accountHex(remarked.event.data[0]) !== signerHex || remarked.event.data[1].toHex() !== decoded.payloadHash) throw new Error("REMARK_EVENT_MISMATCH");
+  return {
+    ...decoded,
+    artifactId: decoded.payload.artifact,
+    nonce: decoded.payload.nonce,
+    signerHex,
+    destinationHex,
+  };
 }

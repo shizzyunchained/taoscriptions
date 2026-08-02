@@ -198,7 +198,9 @@ must use the actual `AlphaBurned` event, never the requested amount.
 
 ## 10. Transfers
 
-The transfer operation is a successful, finalized, signer-authenticated remark:
+The transfer operation is a successful, finalized, signer-authenticated
+`System.remark_with_event` extrinsic. It MUST be the exact outer call; transfers
+nested in a batch or combined with any other call are invalid:
 
 ```json
 {

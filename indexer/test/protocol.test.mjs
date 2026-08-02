@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { findProtocolRemark, parseMintPayload } from "../src/protocol.mjs";
+import { findProtocolRemark, parseMintPayload, parseTransferPayload } from "../src/protocol.mjs";
 
 const encode = (value) => new TextEncoder().encode(value);
 const inline = (overrides = {}) => ({
@@ -52,4 +52,19 @@ test("discovers protocol remarks even when the identifier uses a JSON escape", (
   };
   assert.deepEqual(findProtocolRemark(call), bytes);
   assert.equal(parseMintPayload(bytes).payload.p, "neural-relics");
+});
+
+test("accepts canonical transfers and rejects malformed ownership nonces", () => {
+  const destination = `0x${"2".repeat(64)}`;
+  const transfer = {
+    p: "neural-relics",
+    v: 1,
+    op: "transfer",
+    artifact: `nr1:0x${"1".repeat(64)}:10:2`,
+    to: destination,
+    nonce: 1,
+  };
+  assert.equal(parseTransferPayload(encode(JSON.stringify(transfer))).payload.to, destination);
+  assert.throws(() => parseTransferPayload(encode(JSON.stringify({ ...transfer, nonce: 0 }))));
+  assert.throws(() => parseTransferPayload(encode(JSON.stringify({ ...transfer, extra: true }))));
 });

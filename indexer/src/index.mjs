@@ -6,7 +6,9 @@ import {
   findProtocolRemark,
   INDEXER_VERSION,
   parseMintPayload,
+  parseProtocolPayload,
   validateMint,
+  validateTransfer,
 } from "./protocol.mjs";
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -97,6 +99,44 @@ async function insertArtifact(client, context, mint) {
   console.log(JSON.stringify({ event: "artifact_indexed", artifactId }));
 }
 
+async function insertTransfer(client, context, transfer) {
+  const current = await client.query(
+    `SELECT owner_account_hex, ownership_nonce
+     FROM artifacts WHERE artifact_id = $1 FOR UPDATE`,
+    [transfer.artifactId],
+  );
+  if (!current.rowCount) throw new Error("ARTIFACT_NOT_FOUND");
+  if (current.rows[0].owner_account_hex !== transfer.signerHex) throw new Error("SIGNER_IS_NOT_CURRENT_OWNER");
+  const nextNonce = BigInt(current.rows[0].ownership_nonce) + 1n;
+  if (BigInt(transfer.nonce) !== nextNonce) throw new Error("OWNERSHIP_NONCE_MISMATCH");
+  const transferId = `nrt1:${expectedGenesis}:${context.blockNumber}:${context.extrinsicIndex}`;
+  await client.query(
+    `INSERT INTO transfers (
+      transfer_id, artifact_id, chain_genesis, block_number, block_hash,
+      extrinsic_index, extrinsic_hash, extrinsic_hex,
+      from_account_hex, to_account_hex, ownership_nonce,
+      payload_json, payload_hex, payload_hash, evidence_json
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb,$13,$14,$15::jsonb)`,
+    [transferId, transfer.artifactId, expectedGenesis, context.blockNumber, context.blockHash,
+      context.extrinsicIndex, context.extrinsic.hash.toHex(), context.extrinsic.toHex(),
+      transfer.signerHex, transfer.destinationHex, transfer.nonce,
+      JSON.stringify(transfer.payload), transfer.payloadHex, transfer.payloadHash,
+      JSON.stringify({
+        events: context.events.map(({ event }) => ({
+          section: event.section,
+          method: event.method,
+          data: event.data.toJSON(),
+        })),
+      })],
+  );
+  await client.query(
+    `UPDATE artifacts SET owner_account_hex = $1, ownership_nonce = $2
+     WHERE artifact_id = $3`,
+    [transfer.destinationHex, transfer.nonce, transfer.artifactId],
+  );
+  console.log(JSON.stringify({ event: "artifact_transferred", transferId, artifactId: transfer.artifactId }));
+}
+
 async function processBlock(api, blockNumber) {
   const blockHash = (await api.rpc.chain.getBlockHash(blockNumber)).toHex();
   const [signedBlock, allEvents, runtimeVersion] = await Promise.all([
@@ -139,21 +179,33 @@ async function processBlock(api, blockNumber) {
         events: candidate.events,
       };
       try {
-        const preview = parseMintPayload(candidate.bytes);
-        const [generationAtParent, generationAtBlock] = await Promise.all([
-          api.query.subtensorModule.networkRegisteredAt.at(parentHash, preview.payload.netuid),
-          api.query.subtensorModule.networkRegisteredAt.at(blockHash, preview.payload.netuid),
-        ]);
-        if (generationAtParent.toString() !== generationAtBlock.toString()) {
-          throw new Error("SUBNET_GENERATION_CHANGED_IN_BLOCK");
+        const operation = parseProtocolPayload(candidate.bytes);
+        if (operation.payload.op === "mint") {
+          const preview = parseMintPayload(candidate.bytes);
+          const [generationAtParent, generationAtBlock] = await Promise.all([
+            api.query.subtensorModule.networkRegisteredAt.at(parentHash, preview.payload.netuid),
+            api.query.subtensorModule.networkRegisteredAt.at(blockHash, preview.payload.netuid),
+          ]);
+          if (generationAtParent.toString() !== generationAtBlock.toString()) {
+            throw new Error("SUBNET_GENERATION_CHANGED_IN_BLOCK");
+          }
+          const mint = validateMint({
+            api,
+            extrinsic: candidate.extrinsic,
+            eventRecords: candidate.events,
+            subnetGeneration: generationAtBlock.toString(),
+          });
+          await insertArtifact(client, context, mint);
+        } else if (operation.payload.op === "transfer") {
+          const transfer = validateTransfer({
+            api,
+            extrinsic: candidate.extrinsic,
+            eventRecords: candidate.events,
+          });
+          await insertTransfer(client, context, transfer);
+        } else {
+          throw new Error("UNSUPPORTED_OPERATION");
         }
-        const mint = validateMint({
-          api,
-          extrinsic: candidate.extrinsic,
-          eventRecords: candidate.events,
-          subnetGeneration: generationAtBlock.toString(),
-        });
-        await insertArtifact(client, context, mint);
       } catch (error) {
         await reject(client, context, error, candidate.bytes);
       }

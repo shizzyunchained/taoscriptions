@@ -59,6 +59,32 @@ CREATE INDEX IF NOT EXISTS artifacts_subnet_idx
 CREATE INDEX IF NOT EXISTS artifacts_payload_hash_idx
   ON artifacts (chain_genesis, payload_hash);
 
+CREATE TABLE IF NOT EXISTS transfers (
+  transfer_id TEXT PRIMARY KEY,
+  artifact_id TEXT NOT NULL REFERENCES artifacts(artifact_id),
+  chain_genesis TEXT NOT NULL,
+  block_number BIGINT NOT NULL,
+  block_hash TEXT NOT NULL,
+  extrinsic_index INTEGER NOT NULL,
+  extrinsic_hash TEXT NOT NULL,
+  extrinsic_hex TEXT NOT NULL,
+  from_account_hex TEXT NOT NULL,
+  to_account_hex TEXT NOT NULL,
+  ownership_nonce BIGINT NOT NULL,
+  payload_json JSONB NOT NULL,
+  payload_hex TEXT NOT NULL,
+  payload_hash TEXT NOT NULL,
+  evidence_json JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (chain_genesis, block_number, extrinsic_index),
+  UNIQUE (artifact_id, ownership_nonce)
+);
+
+CREATE INDEX IF NOT EXISTS transfers_artifact_idx
+  ON transfers (artifact_id, ownership_nonce);
+CREATE INDEX IF NOT EXISTS transfers_destination_idx
+  ON transfers (chain_genesis, to_account_hex, block_number DESC);
+
 CREATE TABLE IF NOT EXISTS rejected_operations (
   chain_genesis TEXT NOT NULL,
   block_number BIGINT NOT NULL,

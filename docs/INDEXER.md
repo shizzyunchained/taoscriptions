@@ -37,6 +37,11 @@ For every accepted mint:
 - media manifest and content verification status;
 - full creation chain position.
 
+For every accepted transfer, the index stores the exact extrinsic, original
+payload bytes, from/to AccountId32 values, sequential ownership nonce, event
+evidence, and chain position. Artifact ownership and transfer history update in
+the same serializable block transaction.
+
 ## Suggested database constraints
 
 - unique `(genesis_hash, block_number)`;
