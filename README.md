@@ -3,7 +3,9 @@
 Bittensor Relics is a non-EVM Bittensor application for forging numbered digital
 artifacts by atomically buying and burning subnet alpha. The chain proves the
 burn and inscription; a deterministic indexer derives artifact numbers and
-ownership from finalized blocks.
+ownership from finalized blocks. The dapp is the first product; the planned
+destination is a miner-served, validator-verified Bittensor subnet for relic
+indexing and proofs.
 
 The current branch is deliberately testnet-first. It reads live subnet
 identities and alpha quotes, connects to an injected SS58 wallet, builds atomic
@@ -29,7 +31,7 @@ the [launch checklist](docs/LAUNCH_CHECKLIST.md) and a machine-checked
 
 - Testnet before mainnet
 - No seed phrases or private keys handled by the website
-- No EVM and no subnet
+- No EVM; the current dapp does not require a subnet to work
 - Finalized blocks only
 - Marketplace settlement remains disabled until payment and derived ownership
   can be made loss-safe
@@ -53,7 +55,10 @@ Open [http://localhost:3000](http://localhost:3000). The default RPC is
 `wss://test.chain.opentensor.ai`; override it with
 `NEXT_PUBLIC_SUBTENSOR_RPC`. The browser also pins
 `NEXT_PUBLIC_CHAIN_GENESIS_HASH` and fails closed if that endpoint serves a
-different chain.
+different chain. Public subnet lists and quotes are read through the server-side
+HTTPS endpoint configured by `SUBTENSOR_HTTP_RPC`, so a browser WebSocket outage
+cannot leave the forge selector blank. The WebSocket remains isolated to wallet
+transaction construction, signing, submission, and finality.
 
 ## Verification
 

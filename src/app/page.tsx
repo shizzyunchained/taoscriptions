@@ -44,17 +44,6 @@ function shortAddress(address: string) {
   return `${address.slice(0, 8)}...${address.slice(-7)}`;
 }
 
-function decodeHexText(hex: string) {
-  if (!hex.startsWith("0x") || hex.length <= 2) return "";
-  try {
-    const pairs = hex.slice(2).match(/.{1,2}/g) ?? [];
-    const bytes = new Uint8Array(pairs.map((pair) => Number.parseInt(pair, 16)));
-    return new TextDecoder().decode(bytes).replace(/\0/g, "").trim();
-  } catch {
-    return "";
-  }
-}
-
 function taoToRao(value: string) {
   const normalized = value.trim();
   if (!/^\d+(\.\d{0,9})?$/.test(normalized)) return null;
@@ -121,7 +110,11 @@ async function prepareOnChainImage(file: File): Promise<OnChainImage> {
 
 export default function Home() {
   const apiRef = useRef<ApiPromise | null>(null);
+  const apiPromiseRef = useRef<Promise<ApiPromise> | null>(null);
   const [dataState, setDataState] = useState<DataState>("connecting");
+  const [dataError, setDataError] = useState("");
+  const [dataRetry, setDataRetry] = useState(0);
+  const [signerReady, setSignerReady] = useState(false);
   const [runtimeVersion, setRuntimeVersion] = useState("--");
   const [genesisHash, setGenesisHash] = useState("--");
   const [subnets, setSubnets] = useState<Subnet[]>([]);
@@ -174,96 +167,104 @@ export default function Home() {
     setMintState("idle");
   }
 
+  async function getSigningApi() {
+    if (apiRef.current) return apiRef.current;
+    if (!apiPromiseRef.current) {
+      apiPromiseRef.current = (async () => {
+        const { ApiPromise, WsProvider } = await import("@polkadot/api");
+        const api = await ApiPromise.create({ provider: new WsProvider(TESTNET_RPC, 3_000), noInitWarn: true });
+        assertExpectedGenesis(api.genesisHash.toHex(), TESTNET_GENESIS);
+        apiRef.current = api;
+        setSignerReady(true);
+        return api;
+      })().catch((error) => {
+        apiPromiseRef.current = null;
+        setSignerReady(false);
+        throw error;
+      });
+    }
+    return apiPromiseRef.current;
+  }
+
   useEffect(() => {
     let cancelled = false;
-    let activeApi: ApiPromise | null = null;
 
     async function loadSubnets() {
+      setDataState("connecting");
+      setDataError("");
       try {
-        const { ApiPromise, WsProvider } = await import("@polkadot/api");
-        const api = await ApiPromise.create({ provider: new WsProvider(TESTNET_RPC), noInitWarn: true });
-        activeApi = api;
-        assertExpectedGenesis(api.genesisHash.toHex(), TESTNET_GENESIS);
-        if (cancelled) {
-          await api.disconnect();
-          return;
-        }
-        apiRef.current = api;
-        setRuntimeVersion(api.runtimeVersion.specVersion.toString());
-        setGenesisHash(api.genesisHash.toHex());
-
-        const entries = await api.query.subtensorModule.networksAdded.entries();
-        const netuids = entries
-          .filter(([, enabled]) => enabled.toString() === "true")
-          .map(([key]) => Number.parseInt(key.args[0].toString(), 10))
-          .filter((netuid) => netuid > 0)
-          .sort((left, right) => left - right);
-        const [identities, symbols, generations, ownerHotkeys] = await Promise.all([
-          api.query.subtensorModule.subnetIdentitiesV3.multi(netuids),
-          api.query.subtensorModule.tokenSymbol.multi(netuids),
-          api.query.subtensorModule.networkRegisteredAt.multi(netuids),
-          api.query.subtensorModule.subnetOwnerHotkey.multi(netuids),
-        ]);
-
-        const nextSubnets = netuids.map((netuid, index) => {
-          const identity = identities[index].toHuman() as { subnetName?: string } | null;
-          const symbol = decodeHexText(symbols[index].toHex());
-          return {
-            netuid,
-            generation: generations[index].toString(),
-            name: identity?.subnetName || `Subnet ${netuid}`,
-            symbol: symbol || `alpha-${netuid}`,
-            ownerHotkey: ownerHotkeys[index].toString(),
-          };
-        });
+        const response = await fetch("/api/v1/chain/subnets", { cache: "no-store" });
+        const body = await response.json() as {
+          genesisHash?: string;
+          runtimeVersion?: string;
+          subnets?: Subnet[];
+          error?: { message?: string };
+        };
+        if (!response.ok) throw new Error(body.error?.message || "Finalized testnet data is unavailable.");
+        assertExpectedGenesis(body.genesisHash ?? "", TESTNET_GENESIS);
+        const nextSubnets = body.subnets ?? [];
+        if (nextSubnets.length === 0) throw new Error("No active testnet subnets were returned.");
 
         if (!cancelled) {
+          setRuntimeVersion(body.runtimeVersion ?? "--");
+          setGenesisHash(body.genesisHash ?? "--");
           setSubnets(nextSubnets);
-          setSelectedNetuid(nextSubnets[0]?.netuid ?? null);
+          setSelectedNetuid((current) => nextSubnets.some((subnet) => subnet.netuid === current)
+            ? current
+            : nextSubnets[0]?.netuid ?? null);
           setDataState("ready");
         }
-      } catch {
-        if (!cancelled) setDataState("error");
+      } catch (cause) {
+        if (!cancelled) {
+          setDataState("error");
+          setDataError(cause instanceof Error ? cause.message : "Finalized testnet data is unavailable.");
+        }
       }
     }
 
     void loadSubnets();
     return () => {
       cancelled = true;
+    };
+  }, [dataRetry]);
+
+  useEffect(() => {
+    void getSigningApi().catch(() => undefined);
+    return () => {
+      const api = apiRef.current;
       apiRef.current = null;
-      if (activeApi) void activeApi.disconnect();
+      apiPromiseRef.current = null;
+      if (api) void api.disconnect();
     };
   }, []);
 
   useEffect(() => {
-    const api = apiRef.current;
     const amountRao = taoToRao(taoAmount);
-    if (!api || selectedNetuid === null || !amountRao || amountRao === 0n) {
-      setQuote(null);
-      return;
-    }
-
     let cancelled = false;
     const timeout = window.setTimeout(async () => {
+      if (dataState !== "ready" || selectedNetuid === null || !amountRao || amountRao === 0n) {
+        setQuote(null);
+        return;
+      }
       setQuoteLoading(true);
       setQuoteError("");
       try {
-        const [priceResult, quoteResult] = await Promise.all([
-          api.call.swapRuntimeApi.currentAlphaPrice(selectedNetuid),
-          api.call.swapRuntimeApi.simSwapTaoForAlpha(selectedNetuid, amountRao.toString()),
-        ]);
-        const decoded = quoteResult as unknown as {
-          alphaAmount: { toString(): string };
-          alphaSlippage: { toString(): string };
-          taoAmount: { toString(): string };
-          taoFee: { toString(): string };
+        const response = await fetch(`/api/v1/chain/quote?netuid=${selectedNetuid}&taoRao=${amountRao}`, { cache: "no-store" });
+        const decoded = await response.json() as {
+          alphaAmountRao?: string;
+          alphaSlippageRao?: string;
+          priceRao?: string;
+          taoAmountRao?: string;
+          taoFeeRao?: string;
+          error?: { message?: string };
         };
+        if (!response.ok) throw new Error(decoded.error?.message || "The burn quote is temporarily unavailable.");
         const nextQuote = {
-          alphaAmount: BigInt(decoded.alphaAmount.toString()),
-          alphaSlippage: BigInt(decoded.alphaSlippage.toString()),
-          priceRao: BigInt(priceResult.toString()),
-          taoAmount: BigInt(decoded.taoAmount.toString()),
-          taoFee: BigInt(decoded.taoFee.toString()),
+          alphaAmount: BigInt(decoded.alphaAmountRao ?? "0"),
+          alphaSlippage: BigInt(decoded.alphaSlippageRao ?? "0"),
+          priceRao: BigInt(decoded.priceRao ?? "0"),
+          taoAmount: BigInt(decoded.taoAmountRao ?? "0"),
+          taoFee: BigInt(decoded.taoFeeRao ?? "0"),
         };
         if (nextQuote.alphaAmount === 0n) throw new Error("This amount cannot be quoted on the selected subnet.");
         if (!cancelled) {
@@ -306,19 +307,18 @@ export default function Home() {
       };
 
       let api = apiRef.current;
-      let disconnectAfterRead = false;
       if (!api) {
-        const { ApiPromise, WsProvider } = await import("@polkadot/api");
-        api = await ApiPromise.create({ provider: new WsProvider(TESTNET_RPC), noInitWarn: true });
-        disconnectAfterRead = true;
+        try {
+          api = await getSigningApi();
+        } catch {
+          api = null;
+        }
       }
-      try {
+      if (api) {
         assertExpectedGenesis(api.genesisHash.toHex(), TESTNET_GENESIS);
         const accountInfo = await api.query.system.account(nextAccount.address);
         const raw = BigInt((accountInfo as unknown as { data: { free: { toString(): string } } }).data.free.toString());
         setBalance(raw);
-      } finally {
-        if (disconnectAfterRead) await api.disconnect();
       }
 
       setAccount(nextAccount);
@@ -337,9 +337,16 @@ export default function Home() {
   }
 
   async function assembleMint() {
-    const api = apiRef.current;
+    let api = apiRef.current;
     const amountRao = taoToRao(taoAmount);
-    if (!api || dataState !== "ready") throw new Error("The testnet connection is not ready.");
+    if (dataState !== "ready") throw new Error("Finalized testnet data is not ready.");
+    if (!api) {
+      try {
+        api = await getSigningApi();
+      } catch {
+        throw new Error("The wallet signing connection is temporarily unavailable. Chain data is safe; retry review in a moment.");
+      }
+    }
     assertExpectedGenesis(api.genesisHash.toHex(), TESTNET_GENESIS);
     if (!account) throw new Error("Connect the signing wallet first.");
     if (!selectedSubnet || selectedNetuid === null) throw new Error("Choose a subnet first.");
@@ -583,15 +590,15 @@ export default function Home() {
         <a className="brand" href="#top" aria-label="Bittensor Relics home"><span className="brand-sigil" aria-hidden="true"><i /></span><span>Bittensor Relics</span></a>
         <div className="nav-links">
           <a href="#forge">Forge</a><a href="/explore">Explore</a><a href="/marketplace">Market</a><a href="/wallet">My Relics</a><a href="#protocol">Protocol</a>
-          <span className={`chain-status ${dataState}`}><i aria-hidden="true" />{dataState === "ready" ? `Testnet v${runtimeVersion}` : dataState === "error" ? "RPC unavailable" : "Reading chain"}</span>
+          <span className={`chain-status ${dataState}`}><i aria-hidden="true" />{dataState === "ready" ? `Testnet v${runtimeVersion}` : dataState === "error" ? "Chain read paused" : "Reading chain"}</span>
         </div>
       </nav>
 
       <section className="hero" id="top">
         <div className="hero-copy">
-          <p className="eyebrow">Native alpha burn artifacts</p>
+          <p className="eyebrow">A decentralized relic proof network</p>
           <h1>Forge permanence<span>from alpha.</span></h1>
-          <p className="intro">Choose a Bittensor subnet. Buy and permanently burn its alpha. Receive a numbered digital relic proven by one finalized Subtensor transaction.</p>
+          <p className="intro">Forge a numbered relic from one finalized alpha burn today. The protocol is being engineered to become a Bittensor subnet where miners serve the index and validators independently prove every result.</p>
           <div className="hero-actions"><a className="primary-link" href="#forge">Preview a forge <span aria-hidden="true">-&gt;</span></a><a className="text-link" href="#protocol">How the proof works</a></div>
           <dl className="hero-facts"><div><dt>Execution</dt><dd>Native SS58</dd></div><div><dt>Settlement</dt><dd>Finalized blocks</dd></div><div><dt>Contracts</dt><dd>No EVM</dd></div></dl>
         </div>
@@ -612,7 +619,9 @@ export default function Home() {
         <div className="forge-layout">
           <div className="forge-card">
             <div className="step-label"><span>01</span>Select a subnet</div>
-            <label className="field"><span>Alpha economy</span><select value={selectedNetuid ?? ""} onChange={(event) => setSelectedNetuid(Number.parseInt(event.target.value, 10))} disabled={dataState !== "ready"}>{subnets.map((subnet) => <option key={`${subnet.netuid}-${subnet.generation}`} value={subnet.netuid}>SN{subnet.netuid} - {subnet.name} ({subnet.symbol})</option>)}</select></label>
+            <label className="field"><span>Alpha economy</span><select value={selectedNetuid ?? ""} onChange={(event) => setSelectedNetuid(Number.parseInt(event.target.value, 10))} disabled={dataState !== "ready"}>{dataState === "connecting" && <option value="">Reading finalized testnet...</option>}{dataState === "error" && <option value="">Testnet data unavailable</option>}{subnets.map((subnet) => <option key={`${subnet.netuid}-${subnet.generation}`} value={subnet.netuid}>SN{subnet.netuid} - {subnet.name} ({subnet.symbol})</option>)}</select></label>
+            {dataError && <div className="chain-read-error" role="alert"><span>{dataError}</span><button type="button" onClick={() => setDataRetry((value) => value + 1)}>Retry chain read</button></div>}
+            {dataState === "ready" && <p className={`signer-readiness ${signerReady ? "ready" : "waiting"}`}><i aria-hidden="true" />Finalized data loaded{signerReady ? " · wallet signer ready" : " · signer connects when you review"}</p>}
             <div className="subnet-meta"><div><span>Subnet generation</span><strong>{selectedSubnet?.generation ?? "--"}</strong></div><div><span>Canonical identity</span><strong>{selectedSubnet ? `SN${selectedSubnet.netuid}:${selectedSubnet.generation}` : "--"}</strong></div></div>
 
             <div className="step-label amount-step"><span>02</span>Choose a burn amount</div>
@@ -690,6 +699,10 @@ export default function Home() {
           <article><span>03 / Inscribe</span><h3>The Relic is permanently identified.</h3><p>The matching remark and burn share one atomic transaction and one canonical number.</p></article>
         </div>
         <div className="protocol-call"><span>Native call path</span><code>batchAll[ addStakeBurn, remarkWithEvent ]</code><em>No EVM. No custody. Finalized testnet only.</em></div>
+        <div className="subnet-vision">
+          <div><span>Planned subnet commodity</span><h3>Proof-serving, not database trust.</h3><p>Relics can work before its own subnet. The destination is stronger: independent miners replay finalized history and serve indexed answers with checkpoint proofs.</p></div>
+          <ol><li><span>Miners</span><strong>Index burns, images, numbering, transfers, and ownership.</strong></li><li><span>Validators</span><strong>Challenge random chain positions and score exact correctness.</strong></li><li><span>Dapp</span><strong>Accepts threshold agreement instead of trusting one server.</strong></li></ol>
+        </div>
       </section>
 
       <footer><a className="brand footer-brand" href="#top"><span className="brand-sigil" aria-hidden="true"><i /></span><span>Bittensor Relics</span></a><p>Alpha burn artifacts on Subtensor. Testnet research build.</p><a href="https://taostats.io/bittensor-chrome-wallet" target="_blank" rel="noreferrer">TAOStats Wallet -&gt;</a></footer>

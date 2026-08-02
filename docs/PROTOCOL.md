@@ -19,7 +19,8 @@ collections, and marketplace state are deterministic derived state. Any indexer
 implementing this document against the same finalized chain must produce the
 same result.
 
-Bittensor Relics is not an EVM NFT contract, a subnet, or a claim that arbitrary
+Bittensor Relics v1 is not an EVM NFT contract and does not require its planned
+indexing subnet for protocol validity. It also does not claim that arbitrary
 metadata is stored inside an individual alpha token.
 
 ## 2. Normative language

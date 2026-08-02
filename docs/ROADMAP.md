@@ -13,6 +13,11 @@ discovery, replay audit, and launch controls are implemented on the feature
 branch. Production remains unchanged. Real-value marketplace settlement is not
 part of this release.
 
+In parallel, the reference indexer will become the conformance implementation
+for a planned miner-served, validator-verified Relics subnet. See
+[`SUBNET_VISION.md`](SUBNET_VISION.md). Subnet registration is a later gate,
+not a prerequisite for proving the dapp on testnet.
+
 ## 1. Freeze the release candidate
 
 Lock the Bittensor Relics name and v1 protocol, choose one reviewed commit, and

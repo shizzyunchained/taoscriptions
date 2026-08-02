@@ -130,6 +130,13 @@ h1 span { display: block; color: var(--ember-bright); font-style: italic; }
 .subnet-meta div { padding: 11px 12px; background: rgba(255,255,255,.025); }
 .subnet-meta span { display: block; color: var(--dim); font-size: 8px; text-transform: uppercase; letter-spacing: .08em; }
 .subnet-meta strong { display: block; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; color: #aeb4aa; font: 9px var(--font-geist-mono), monospace; white-space: nowrap; }
+.chain-read-error { margin-top: 10px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 14px; border: 1px solid rgba(255,141,120,.28); background: rgba(255,141,120,.04); }
+.chain-read-error span { color: var(--danger); font-size: 9px; line-height: 1.45; }
+.chain-read-error button { flex: 0 0 auto; padding: 7px 9px; border: 1px solid rgba(255,177,74,.38); background: transparent; color: var(--ember-bright); font: 8px var(--font-geist-mono), monospace; cursor: pointer; }
+.signer-readiness { margin: 10px 0 0; display: flex; align-items: center; gap: 7px; color: var(--dim); font: 8px var(--font-geist-mono), monospace; }
+.signer-readiness i { width: 5px; height: 5px; border-radius: 50%; background: var(--ember); }
+.signer-readiness.ready { color: var(--acid); }
+.signer-readiness.ready i { background: var(--acid); box-shadow: 0 0 8px rgba(200,245,107,.45); }
 .amount-options { margin-top: 10px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
 .amount-options button { min-height: 34px; border: 1px solid var(--line); border-radius: 2px; background: transparent; color: var(--muted); font-size: 9px; cursor: pointer; }
 .amount-options button:hover, .amount-options button.active { border-color: rgba(255,177,74,.5); background: rgba(255,177,74,.06); color: var(--ember-bright); }
@@ -198,6 +205,14 @@ h1 span { display: block; color: var(--ember-bright); font-style: italic; }
 .protocol-call > span { color: var(--dim); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; }
 .protocol-call code { color: var(--acid); font: 11px var(--font-geist-mono), monospace; }
 .protocol-call em { color: var(--dim); font-size: 9px; font-style: normal; }
+.subnet-vision { margin-top: 18px; padding: clamp(24px, 4vw, 40px); display: grid; grid-template-columns: .85fr 1.15fr; gap: clamp(30px, 6vw, 80px); border: 1px solid rgba(255,177,74,.28); background: linear-gradient(135deg, rgba(255,177,74,.055), rgba(200,245,107,.018)); }
+.subnet-vision > div > span, .subnet-vision li span { color: var(--ember); font: 8px var(--font-geist-mono), monospace; letter-spacing: .12em; text-transform: uppercase; }
+.subnet-vision h3 { margin: 12px 0 0; color: var(--ink); font: 400 clamp(25px, 3vw, 39px)/1.02 Georgia, serif; letter-spacing: -.04em; }
+.subnet-vision p { margin: 16px 0 0; color: var(--muted); font-size: 11px; line-height: 1.65; }
+.subnet-vision ol { margin: 0; padding: 0; list-style: none; }
+.subnet-vision li { padding: 13px 0; display: grid; grid-template-columns: 82px 1fr; gap: 18px; border-top: 1px solid var(--line); }
+.subnet-vision li:last-child { border-bottom: 1px solid var(--line); }
+.subnet-vision li strong { color: #b9bdb6; font-size: 10px; font-weight: 520; line-height: 1.5; }
 
 footer { width: min(1240px, 100%); min-height: 92px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-top: 1px solid var(--line); position: relative; z-index: 1; }
 .footer-brand { font-size: 12px; }
@@ -216,6 +231,7 @@ footer > a:last-child:hover { color: var(--ink); }
   .forge-layout { grid-template-columns: 1fr; }
   .quote-card { border-left: 0; border-top: 1px solid var(--line-strong); }
   .protocol-call { grid-template-columns: 1fr; padding: 20px; gap: 8px; }
+  .subnet-vision { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
