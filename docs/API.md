@@ -38,6 +38,25 @@ Artifact detail includes up to 100 accepted transfers in nonce order. The
 transfer-specific endpoint returns the same provenance plus the current owner
 and ownership nonce.
 
+## Marketplace discovery
+
+`GET /api/v1/listings` returns active signed listings. An optional `artifact`
+query parameter filters to one relic. Listings are active only while their
+seller and ownership nonce match finalized indexed state and their expiry is
+after the finalized checkpoint.
+
+`POST /api/v1/listings` accepts the exact signed fields defined in the protocol:
+`chain`, `artifact`, `seller`, `ownershipNonce`, `priceRao`, `expiryBlock`,
+`nonce`, `buyer`, and `signature`. Integer fields are canonical decimal strings.
+The server reconstructs the message and verifies the raw wallet signature; it
+does not accept caller-supplied message text or listing IDs.
+
+`DELETE /api/v1/listings/:id` accepts `seller` and `signature` for the canonical
+cancellation message. This only removes the listing from discovery.
+
+Marketplace settlement is intentionally unavailable. Listing responses include
+`settlementEnabled: false`; there is no purchase endpoint.
+
 ## Owner collection
 
 ```text

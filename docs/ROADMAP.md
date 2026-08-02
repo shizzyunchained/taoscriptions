@@ -63,8 +63,9 @@ Expose relic detail pages, owner collections, subnet collections, provenance,
 and canonical transfer inscriptions. Every UI claim must link back to its block
 and extrinsic.
 
-**Status:** finalized read API, Explore collection, and proof detail pages are
-implemented; accepted transfer processing and live indexed data remain pending.
+**Status:** finalized read API, Explore collection, proof detail pages, canonical
+transfer processing, and ownership history are implemented; live indexed data
+remain pending.
 
 ## 9. Add marketplace discovery safely
 
@@ -72,7 +73,10 @@ Start with signed listings, offers, and discovery. Do not enable real-value
 settlement until the protocol can guarantee that TAO payment and derived relic
 ownership cannot diverge.
 
-**Status:** design-only safety gate.
+**Status:** signed listing and cancellation protocol, signature verification,
+discovery API, owner listing flow, and locked marketplace view are implemented.
+Live database testing and a chain-enforced settlement design remain pending;
+there is deliberately no purchase endpoint.
 
 ## 10. Audit, document, and launch progressively
 

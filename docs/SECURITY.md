@@ -20,6 +20,8 @@
 6. Mainnet remains disabled until testnet replay and adversarial tests pass.
 7. Marketplace payment remains disabled until payment and protocol ownership
    transfer are chain-enforced as one no-loss outcome.
+8. A listing signature authorizes discovery only. It never authorizes a TAO
+   transfer, relic transfer, wallet transaction, or custodial action.
 
 ## Initial threat checklist
 
@@ -38,6 +40,13 @@
 - unknown runtime call/event layout after an upgrade;
 - seller cancellation, double sale, or ownership race during marketplace
   settlement.
+
+Signed listings bind the protocol domain, full genesis hash, artifact ID,
+normalized seller, current ownership nonce, price, expiry, random nonce, and
+optional buyer. The API reconstructs this message instead of trusting submitted
+message text. A transfer, expiry, or signed cancellation removes the listing
+from active discovery. The database caps active listings per ownership version;
+deployment should add edge rate limits before opening public writes.
 
 Each item requires an automated test or an explicit documented launch-time
 mitigation before mainnet activation.

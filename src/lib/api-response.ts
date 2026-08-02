@@ -1,4 +1,4 @@
-import { IndexerUnavailableError } from "./indexer-db";
+import { IndexerUnavailableError, MarketplaceStateError } from "./indexer-db";
 
 export function apiJson(data: unknown, init: ResponseInit = {}) {
   const cacheControl = (init.status ?? 200) >= 400
@@ -15,6 +15,9 @@ export function apiJson(data: unknown, init: ResponseInit = {}) {
 }
 
 export function apiError(error: unknown) {
+  if (error instanceof MarketplaceStateError) {
+    return apiJson({ error: { code: error.code, message: error.message } }, { status: 409 });
+  }
   if (error instanceof IndexerUnavailableError) {
     return apiJson({ error: { code: "INDEXER_UNAVAILABLE", message: error.message } }, { status: 503 });
   }

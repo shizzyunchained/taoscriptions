@@ -15,7 +15,7 @@ test("migration creates the finalized-state schema", async () => {
   );
   assert.deepEqual(
     tables.rows.map((row) => row.table_name),
-    ["artifacts", "chain_checkpoints", "indexed_blocks", "rejected_operations", "transfers"],
+    ["artifacts", "chain_checkpoints", "indexed_blocks", "listings", "rejected_operations", "transfers"],
   );
   await pool.end();
 });

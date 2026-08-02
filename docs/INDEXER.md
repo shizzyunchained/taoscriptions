@@ -90,11 +90,19 @@ GET /health
 GET /v1/status
 GET /v1/artifacts
 GET /v1/artifacts/:id
+GET /v1/artifacts/:id/transfers
 GET /v1/subnets/:netuid/:generation/artifacts
 GET /v1/accounts/:account/artifacts
 GET /v1/operations/:block/:extrinsic
 GET /v1/rejections/:block/:extrinsic
+GET /v1/listings
+POST /v1/listings
+DELETE /v1/listings/:id
 ```
+
+The listing write endpoints store portable wallet authorizations for discovery
+only. They cannot alter finalized artifact ownership, and no purchase or payment
+endpoint exists in v1.
 
 ## Recovery
 

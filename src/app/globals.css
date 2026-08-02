@@ -290,8 +290,47 @@ footer > a:last-child:hover { color: var(--ink); }
 .detail-actions a { color: var(--acid); text-decoration: none; }
 .relic-unavailable { margin: 80px 0; }
 
+/* Signed listing discovery */
+.market-hero { padding-bottom: 42px; }
+.settlement-lock { margin-bottom: 36px; padding: 20px 24px; border: 1px solid rgba(255,159,67,.42); background: rgba(255,159,67,.055); display: flex; align-items: center; gap: 28px; }
+.settlement-lock strong { flex: 0 0 auto; color: var(--ember); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.settlement-lock p { max-width: 720px; color: var(--dim); font-size: 10px; line-height: 1.6; }
+.listing-grid { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.listing-grid article { padding: 26px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--panel); }
+.listing-grid article > span { color: var(--ember); font: 8px var(--font-geist-mono), monospace; text-transform: uppercase; }
+.listing-grid h2 { margin-top: 24px; color: var(--ink); font-size: 28px; }
+.listing-grid article > p { height: 42px; margin-top: 10px; color: var(--dim); font: 8px var(--font-geist-mono), monospace; overflow: hidden; overflow-wrap: anywhere; }
+.listing-grid dl { margin: 20px 0; padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.listing-grid dl div { display: flex; justify-content: space-between; gap: 14px; padding: 4px 0; }
+.listing-grid dt, .listing-grid dd { color: var(--dim); font-size: 8px; }
+.listing-grid article > a { color: var(--acid); font-size: 9px; text-decoration: none; }
+.listing-grid button, .active-offers button { width: 100%; margin-top: 18px; padding: 12px; border: 1px solid var(--line); background: transparent; color: var(--dim); font-size: 9px; }
+.active-offers, .listing-panel { padding: clamp(28px, 5vw, 52px); border: 1px solid var(--line); border-top: 0; }
+.active-offers > div { display: flex; justify-content: space-between; align-items: baseline; }
+.active-offers h2, .listing-panel h2 { color: var(--ink); font-size: 22px; font-weight: 560; }
+.active-offers > div span, .listing-panel > div > span { color: var(--dim); font: 8px var(--font-geist-mono), monospace; text-transform: uppercase; }
+.active-offers > p { margin-top: 18px; color: var(--dim); font-size: 11px; }
+.active-offers article { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr 150px; align-items: center; gap: 18px; }
+.active-offers article strong { color: var(--acid); font-size: 14px; }
+.active-offers article span { color: var(--dim); font: 8px var(--font-geist-mono), monospace; }
+.active-offers article button { margin-top: 0; }
+.listing-panel { display: grid; grid-template-columns: 1fr minmax(180px, 240px) minmax(170px, 210px); gap: 28px; align-items: end; }
+.listing-panel > div > p { max-width: 470px; margin-top: 10px; color: var(--dim); font-size: 10px; line-height: 1.55; }
+.listing-panel label > span { display: block; margin-bottom: 8px; color: var(--dim); font-size: 8px; text-transform: uppercase; }
+.listing-panel label > div { display: flex; align-items: center; border: 1px solid var(--line-strong); background: var(--field); }
+.listing-panel input { width: 100%; padding: 13px; border: 0; outline: 0; background: transparent; color: var(--ink); font: 13px var(--font-geist-mono), monospace; }
+.listing-panel em { padding-right: 12px; color: var(--dim); font-size: 9px; font-style: normal; }
+.listing-panel > button { min-height: 44px; border: 0; background: var(--acid); color: #11150d; font-size: 10px; font-weight: 700; cursor: pointer; }
+.listing-panel > button:disabled { cursor: default; opacity: .55; }
+.listing-panel > small { grid-column: 1 / -1; color: var(--ember); font-size: 8px; line-height: 1.5; }
+.listing-panel .listing-success, .listing-panel .error-message { grid-column: 1 / -1; margin: 0; }
+.listing-success { color: var(--acid); font-size: 10px; }
+
 @media (max-width: 900px) {
   .artifact-grid { grid-template-columns: repeat(2, 1fr); }
+  .listing-grid { grid-template-columns: repeat(2, 1fr); }
+  .listing-panel { grid-template-columns: 1fr 1fr; }
+  .listing-panel > div { grid-column: 1 / -1; }
   .relic-detail > header { grid-template-columns: 1fr; gap: 42px; }
   .detail-orbit { width: 190px; height: 190px; }
   .proof-grid { grid-template-columns: repeat(2, 1fr); }
@@ -300,6 +339,11 @@ footer > a:last-child:hover { color: var(--ink); }
 @media (max-width: 600px) {
   .collection-hero { padding: 62px 0 45px; }
   .artifact-grid { grid-template-columns: 1fr; }
+  .listing-grid { grid-template-columns: 1fr; }
+  .settlement-lock { align-items: flex-start; flex-direction: column; gap: 10px; }
+  .listing-panel { grid-template-columns: 1fr; }
+  .listing-panel > div { grid-column: auto; }
+  .active-offers article { grid-template-columns: 1fr; }
   .relic-detail { padding-top: 42px; }
   .relic-detail > header { padding: 28px 21px; }
   .proof-grid { grid-template-columns: 1fr; }

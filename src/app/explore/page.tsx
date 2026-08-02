@@ -25,7 +25,7 @@ export default async function ExplorePage({
       <div className="grain" aria-hidden="true" />
       <nav className="nav" aria-label="Main navigation">
         <SiteMark />
-        <div className="nav-links"><Link href="/#forge">Forge</Link><Link href="/explore">Explore</Link><span className="chain-status ready"><i aria-hidden="true" />Finalized only</span></div>
+        <div className="nav-links"><Link href="/#forge">Forge</Link><Link href="/explore">Explore</Link><Link href="/marketplace">Market</Link><span className="chain-status ready"><i aria-hidden="true" />Finalized only</span></div>
       </nav>
       <section className="collection-hero">
         <p className="eyebrow">Canonical collection</p>

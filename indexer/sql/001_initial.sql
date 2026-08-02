@@ -85,6 +85,32 @@ CREATE INDEX IF NOT EXISTS transfers_artifact_idx
 CREATE INDEX IF NOT EXISTS transfers_destination_idx
   ON transfers (chain_genesis, to_account_hex, block_number DESC);
 
+CREATE TABLE IF NOT EXISTS listings (
+  listing_id TEXT PRIMARY KEY,
+  artifact_id TEXT NOT NULL REFERENCES artifacts(artifact_id),
+  chain_genesis TEXT NOT NULL,
+  seller_account_hex TEXT NOT NULL,
+  ownership_nonce BIGINT NOT NULL,
+  price_rao NUMERIC(39, 0) NOT NULL CHECK (price_rao > 0),
+  expiry_block BIGINT NOT NULL,
+  nonce TEXT NOT NULL,
+  buyer_account_hex TEXT,
+  message_text TEXT NOT NULL,
+  signature TEXT NOT NULL,
+  cancellation_message TEXT,
+  cancellation_signature TEXT,
+  cancelled_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (artifact_id, ownership_nonce, nonce),
+  CHECK (buyer_account_hex IS NULL OR buyer_account_hex <> seller_account_hex)
+);
+
+CREATE INDEX IF NOT EXISTS listings_active_idx
+  ON listings (chain_genesis, expiry_block DESC, created_at DESC)
+  WHERE cancelled_at IS NULL;
+CREATE INDEX IF NOT EXISTS listings_artifact_idx
+  ON listings (artifact_id, ownership_nonce, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS rejected_operations (
   chain_genesis TEXT NOT NULL,
   block_number BIGINT NOT NULL,

@@ -240,6 +240,7 @@ NEURAL_RELICS_LISTING_V1
 chain=<full genesis hash>
 artifact=<canonical artifact id>
 seller=<0x account-id-32>
+ownership_nonce=<current unsigned ownership nonce>
 price_rao=<unsigned decimal integer>
 expiry_block=<unsigned decimal integer>
 nonce=<64 lowercase hex characters>
@@ -248,7 +249,22 @@ buyer=<* or 0x account-id-32>
 
 The message ends with one newline. `listing_id` is BLAKE2-256 of these exact
 UTF-8 bytes. The seller signature, canonical message, and listing ID form the
-portable listing; an API may relay it but cannot alter it.
+portable listing; an API may relay it but cannot alter it. A listing is active
+only while the indexed owner and ownership nonce still exactly match the
+authorization. Any accepted transfer invalidates it, including if the relic
+later returns to the same account under a newer ownership nonce.
+
+The seller may cancel a listing with a second raw signature:
+
+```text
+NEURAL_RELICS_CANCEL_LISTING_V1
+chain=<full genesis hash>
+listing=<listing id>
+seller=<0x account-id-32>
+```
+
+This message also ends with one newline. Cancellation changes marketplace
+discovery state only; it is not an on-chain ownership operation.
 
 A proposed buyer settlement is:
 

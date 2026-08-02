@@ -404,7 +404,7 @@ export default function Home() {
       <nav className="nav" aria-label="Main navigation">
         <a className="brand" href="#top" aria-label="Neural Relics home"><span className="brand-sigil" aria-hidden="true"><i /></span><span>Neural Relics</span></a>
         <div className="nav-links">
-          <a href="#forge">Forge</a><a href="/explore">Explore</a><a href="#protocol">Protocol</a>
+          <a href="#forge">Forge</a><a href="/explore">Explore</a><a href="/marketplace">Market</a><a href="#protocol">Protocol</a>
           <span className={`chain-status ${dataState}`}><i aria-hidden="true" />{dataState === "ready" ? `Testnet v${runtimeVersion}` : dataState === "error" ? "RPC unavailable" : "Reading chain"}</span>
         </div>
       </nav>

@@ -85,6 +85,8 @@ function pool() {
   return globalThis.neuralRelicsPool;
 }
 
+const configuredGenesis = () => process.env.CHAIN_GENESIS_HASH ?? "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105";
+
 function artifact(row: ArtifactRow): Artifact {
   return {
     artifactId: row.artifact_id,
@@ -291,4 +293,165 @@ export async function listArtifactTransfers(artifactId: string, limit = 100) {
     ownershipNonce: row.ownership_nonce,
     payloadHash: row.payload_hash,
   } satisfies ArtifactTransfer));
+}
+
+export class MarketplaceStateError extends Error {
+  constructor(public code: string, message: string) {
+    super(message);
+    this.name = "MarketplaceStateError";
+  }
+}
+
+export type Listing = {
+  listingId: string;
+  artifactId: string;
+  sellerAccountHex: string;
+  ownershipNonce: string;
+  priceRao: string;
+  expiryBlock: string;
+  nonce: string;
+  buyerAccountHex: string | null;
+  message: string;
+  signature: string;
+  createdAt: string;
+};
+
+type ListingRow = {
+  listing_id: string;
+  artifact_id: string;
+  seller_account_hex: string;
+  ownership_nonce: string;
+  price_rao: string;
+  expiry_block: string;
+  nonce: string;
+  buyer_account_hex: string | null;
+  message_text: string;
+  signature: string;
+  created_at: Date;
+};
+
+function listing(row: ListingRow): Listing {
+  return {
+    listingId: row.listing_id,
+    artifactId: row.artifact_id,
+    sellerAccountHex: row.seller_account_hex,
+    ownershipNonce: row.ownership_nonce,
+    priceRao: row.price_rao,
+    expiryBlock: row.expiry_block,
+    nonce: row.nonce,
+    buyerAccountHex: row.buyer_account_hex,
+    message: row.message_text,
+    signature: row.signature,
+    createdAt: row.created_at.toISOString(),
+  };
+}
+
+export async function listActiveListings(artifactId: string | null, limit = DEFAULT_LIMIT) {
+  const values: Array<string | number> = [configuredGenesis()];
+  const artifactFilter = artifactId ? `AND l.artifact_id = $${values.push(artifactId)}` : "";
+  values.push(Math.min(Math.max(limit, 1), MAX_LIMIT));
+  const result = await pool().query<ListingRow>(
+    `SELECT l.listing_id, l.artifact_id, l.seller_account_hex, l.ownership_nonce,
+      l.price_rao, l.expiry_block, l.nonce, l.buyer_account_hex,
+      l.message_text, l.signature, l.created_at
+     FROM listings l
+     JOIN artifacts a ON a.artifact_id = l.artifact_id
+     JOIN chain_checkpoints c ON c.chain_genesis = l.chain_genesis
+     WHERE l.chain_genesis = $1 AND l.cancelled_at IS NULL
+       AND l.seller_account_hex = a.owner_account_hex
+       AND l.ownership_nonce = a.ownership_nonce
+       AND l.expiry_block > c.block_number
+       ${artifactFilter}
+     ORDER BY l.created_at DESC, l.listing_id DESC
+     LIMIT $${values.length}`,
+    values,
+  );
+  return result.rows.map(listing);
+}
+
+type NewListing = Omit<Listing, "createdAt"> & { chainGenesis: string };
+
+export async function createListingAuthorization(input: NewListing) {
+  const client = await pool().connect();
+  try {
+    await client.query("BEGIN ISOLATION LEVEL SERIALIZABLE");
+    const state = await client.query<{
+      owner_account_hex: string;
+      ownership_nonce: string;
+      block_number: string;
+    }>(
+      `SELECT a.owner_account_hex, a.ownership_nonce, c.block_number
+       FROM artifacts a
+       JOIN chain_checkpoints c ON c.chain_genesis = a.chain_genesis
+       WHERE a.artifact_id = $1 AND a.chain_genesis = $2
+       FOR UPDATE OF a`,
+      [input.artifactId, input.chainGenesis],
+    );
+    if (!state.rowCount) throw new MarketplaceStateError("ARTIFACT_NOT_FOUND", "The relic is not in finalized indexed state.");
+    const current = state.rows[0];
+    if (current.owner_account_hex !== input.sellerAccountHex || current.ownership_nonce !== input.ownershipNonce) {
+      throw new MarketplaceStateError("STALE_OWNERSHIP", "The signed seller or ownership version is no longer current.");
+    }
+    const expiry = BigInt(input.expiryBlock);
+    const checkpoint = BigInt(current.block_number);
+    if (expiry <= checkpoint) throw new MarketplaceStateError("LISTING_EXPIRED", "The listing expiry must be after the finalized checkpoint.");
+    if (expiry > checkpoint + 1_000_000n) throw new MarketplaceStateError("EXPIRY_TOO_FAR", "The listing expiry is too far in the future.");
+    const active = await client.query<{ count: string }>(
+      `SELECT COUNT(*) AS count FROM listings
+       WHERE artifact_id = $1 AND ownership_nonce = $2
+         AND cancelled_at IS NULL AND expiry_block > $3`,
+      [input.artifactId, input.ownershipNonce, current.block_number],
+    );
+    if (Number(active.rows[0].count) >= 20) throw new MarketplaceStateError("LISTING_LIMIT", "This relic already has too many active listings.");
+    await client.query(
+      `INSERT INTO listings (
+        listing_id, artifact_id, chain_genesis, seller_account_hex,
+        ownership_nonce, price_rao, expiry_block, nonce, buyer_account_hex,
+        message_text, signature
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+      ON CONFLICT (listing_id) DO NOTHING`,
+      [input.listingId, input.artifactId, input.chainGenesis, input.sellerAccountHex,
+        input.ownershipNonce, input.priceRao, input.expiryBlock, input.nonce,
+        input.buyerAccountHex, input.message, input.signature],
+    );
+    const saved = await client.query<ListingRow>(
+      `SELECT listing_id, artifact_id, seller_account_hex, ownership_nonce,
+        price_rao, expiry_block, nonce, buyer_account_hex, message_text,
+        signature, created_at FROM listings WHERE listing_id = $1`,
+      [input.listingId],
+    );
+    await client.query("COMMIT");
+    return listing(saved.rows[0]);
+  } catch (error) {
+    await client.query("ROLLBACK");
+    const databaseCode = error && typeof error === "object" && "code" in error ? String(error.code) : "";
+    if (databaseCode === "23505") throw new MarketplaceStateError("DUPLICATE_LISTING", "This signed listing nonce has already been used.");
+    if (databaseCode === "40001") throw new MarketplaceStateError("STATE_CHANGED", "Finalized ownership changed while the listing was saved. Try again.");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function getListing(listingId: string) {
+  const result = await pool().query<ListingRow & { chain_genesis: string; cancelled_at: Date | null }>(
+    `SELECT listing_id, artifact_id, chain_genesis, seller_account_hex,
+      ownership_nonce, price_rao, expiry_block, nonce, buyer_account_hex,
+      message_text, signature, created_at, cancelled_at
+     FROM listings WHERE listing_id = $1`,
+    [listingId],
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function cancelListingAuthorization(listingId: string, seller: string, message: string, signature: string) {
+  const result = await pool().query(
+    `UPDATE listings SET cancellation_message = $1, cancellation_signature = $2,
+      cancelled_at = COALESCE(cancelled_at, NOW())
+     WHERE listing_id = $3 AND seller_account_hex = $4
+     RETURNING listing_id`,
+    [message, signature, listingId, seller],
+  );
+  if (!result.rowCount) throw new MarketplaceStateError("LISTING_NOT_FOUND", "The listing was not found for this seller.");
+  return { listingId, cancelled: true };
 }

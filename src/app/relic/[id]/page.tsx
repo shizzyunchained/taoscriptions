@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteMark } from "@/components/site-mark";
+import { ListingForm } from "@/components/listing-form";
 import { compactHex, formatRao } from "@/lib/format";
-import { getArtifact, IndexerUnavailableError, listArtifactTransfers } from "@/lib/indexer-db";
+import { getArtifact, IndexerUnavailableError, listActiveListings, listArtifactTransfers } from "@/lib/indexer-db";
 
 export const dynamic = "force-dynamic";
 
@@ -19,9 +20,10 @@ export default async function RelicPage({ params }: Props) {
   if (!/^nr1:0x[0-9a-f]{64}:\d+:\d+$/.test(id)) notFound();
   let artifact: Awaited<ReturnType<typeof getArtifact>> = null;
   let transfers: Awaited<ReturnType<typeof listArtifactTransfers>> = [];
+  let listings: Awaited<ReturnType<typeof listActiveListings>> = [];
   let unavailable = false;
   try {
-    [artifact, transfers] = await Promise.all([getArtifact(id), listArtifactTransfers(id)]);
+    [artifact, transfers, listings] = await Promise.all([getArtifact(id), listArtifactTransfers(id), listActiveListings(id, 20)]);
   } catch (error) {
     if (error instanceof IndexerUnavailableError) unavailable = true;
     else throw error;
@@ -31,7 +33,7 @@ export default async function RelicPage({ params }: Props) {
   return (
     <main className="site-shell inner-site">
       <div className="grain" aria-hidden="true" />
-      <nav className="nav" aria-label="Main navigation"><SiteMark /><div className="nav-links"><Link href="/#forge">Forge</Link><Link href="/explore">Explore</Link></div></nav>
+      <nav className="nav" aria-label="Main navigation"><SiteMark /><div className="nav-links"><Link href="/#forge">Forge</Link><Link href="/explore">Explore</Link><Link href="/marketplace">Market</Link></div></nav>
       {unavailable ? (
         <section className="indexer-empty relic-unavailable"><span>Proof unavailable</span><h1>The finalized indexer is offline.</h1><p>This page will not render an unverified artifact from URL data alone.</p><Link href="/explore">Return to collection</Link></section>
       ) : artifact ? (
@@ -46,6 +48,8 @@ export default async function RelicPage({ params }: Props) {
           </section>
           <section className="chain-proof"><h2>Chain proof</h2><dl><div><dt>Artifact ID</dt><dd>{artifact.artifactId}</dd></div><div><dt>Block</dt><dd>#{artifact.blockNumber} · extrinsic {artifact.extrinsicIndex}</dd></div><div><dt>Extrinsic hash</dt><dd>{artifact.extrinsicHash}</dd></div><div><dt>Payload hash</dt><dd>{artifact.payloadHash}</dd></div><div><dt>Creator</dt><dd>{artifact.creatorAccountHex}</dd></div><div><dt>Protocol owner</dt><dd>{artifact.ownerAccountHex}</dd></div></dl></section>
           <section className="ownership-history"><div><h2>Ownership history</h2><span>{transfers.length} finalized transfer{transfers.length === 1 ? "" : "s"}</span></div>{transfers.length ? <ol>{transfers.map((transfer) => <li key={transfer.transferId}><span>Nonce {transfer.ownershipNonce}</span><strong>{compactHex(transfer.fromAccountHex)} <i aria-hidden="true">-&gt;</i> {compactHex(transfer.toAccountHex)}</strong><small>Block #{transfer.blockNumber} · extrinsic {transfer.extrinsicIndex}</small></li>)}</ol> : <p>The creator remains the current protocol owner.</p>}</section>
+          <section className="active-offers"><div><h2>Signed offers</h2><span>{listings.length} active</span></div>{listings.length ? listings.map((listing) => <article key={listing.listingId}><strong>{formatRao(listing.priceRao)} TAO</strong><span>Expires block #{listing.expiryBlock}</span><button disabled>Purchase locked</button></article>) : <p>This relic has no active owner-signed listing.</p>}</section>
+          <ListingForm artifactId={artifact.artifactId} ownerAccountHex={artifact.ownerAccountHex} ownershipNonce={artifact.ownershipNonce} chainGenesis={artifact.artifactId.split(":").slice(1, 2)[0]} />
           <div className="detail-actions"><Link href="/explore">&lt;- All relics</Link><span>Ownership nonce {artifact.ownershipNonce}</span></div>
         </article>
       ) : null}
