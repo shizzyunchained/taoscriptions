@@ -98,11 +98,13 @@ h1 span { display: block; color: var(--ember-bright); font-style: italic; }
 .quote-card { border-left: 1px solid var(--line-strong); background: var(--panel); }
 .step-label { display: flex; align-items: center; gap: 11px; color: #bfc4ba; font-size: 12px; font-weight: 650; }
 .step-label > span { width: 25px; height: 25px; display: grid; place-items: center; border: 1px solid rgba(255,177,74,.3); border-radius: 50%; color: var(--ember); font: 8px var(--font-geist-mono), monospace; }
-.amount-step, .wallet-step { margin-top: 34px; padding-top: 28px; border-top: 1px solid var(--line); }
+.amount-step, .content-step, .wallet-step { margin-top: 34px; padding-top: 28px; border-top: 1px solid var(--line); }
 .field { margin-top: 15px; display: block; }
 .field > span { display: block; margin-bottom: 8px; color: var(--dim); font: 9px var(--font-geist-mono), monospace; text-transform: uppercase; letter-spacing: .08em; }
-.field select, .field input { width: 100%; min-height: 52px; padding: 0 15px; border: 1px solid var(--line-strong); border-radius: 2px; outline: 0; background: #111411; color: var(--ink); font-size: 12px; }
-.field select:focus, .field input:focus { border-color: var(--ember); }
+.field select, .field input, .field textarea { width: 100%; min-height: 52px; padding: 0 15px; border: 1px solid var(--line-strong); border-radius: 2px; outline: 0; background: #111411; color: var(--ink); font-size: 12px; }
+.field select:focus, .field input:focus, .field textarea:focus { border-color: var(--ember); }
+.field textarea { min-height: 116px; padding-top: 14px; resize: vertical; font-family: inherit; line-height: 1.6; }
+.inscription-field small { text-align: right; }
 .field select:disabled { color: var(--dim); cursor: wait; }
 .amount-field > div { position: relative; }
 .amount-field input { padding-right: 62px; font: 16px var(--font-geist-mono), monospace; }
@@ -150,6 +152,19 @@ h1 span { display: block; color: var(--ember-bright); font-style: italic; }
 .burn-warning p { margin: 0; color: #8f8b80; font-size: 9px; line-height: 1.55; }
 .forge-button { width: 100%; min-height: 54px; margin-top: 13px; border: 1px solid var(--line); background: rgba(255,255,255,.025); color: #686d66; cursor: not-allowed; font-size: 11px; font-weight: 700; }
 .forge-button span { margin-left: 8px; color: #4d524d; font-size: 8px; font-weight: 400; }
+.forge-button:not(:disabled) { border-color: rgba(200,245,107,.5); background: var(--acid); color: #11150d; cursor: pointer; }
+.forge-button:not(:disabled):hover { filter: brightness(1.06); }
+.forge-button:not(:disabled) span { color: rgba(17,21,13,.65); }
+.forge-button.danger { border-color: var(--ember); background: var(--ember); }
+.transaction-review { margin-top: 14px; padding: 14px; border: 1px solid var(--line); background: rgba(255,255,255,.02); }
+.transaction-review div { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 7px 0; }
+.transaction-review span { color: var(--dim); font-size: 9px; }
+.transaction-review strong { color: #c5cac0; font: 8px var(--font-geist-mono), monospace; text-align: right; }
+.mint-success { margin-top: 14px; padding: 16px; border: 1px solid rgba(200,245,107,.4); background: rgba(200,245,107,.06); }
+.mint-success strong, .mint-success span { display: block; }
+.mint-success strong { color: var(--acid); font-size: 12px; }
+.mint-success span { margin-top: 6px; color: #b5bbb1; font: 9px var(--font-geist-mono), monospace; }
+.mint-success p { margin-top: 10px; color: var(--dim); font-size: 10px; line-height: 1.5; }
 
 .protocol-section { padding-bottom: 90px; }
 .protocol-steps { margin-top: 50px; display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); }

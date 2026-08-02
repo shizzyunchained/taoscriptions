@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ApiPromise } from "@polkadot/api";
+import { calculateLimitPrice, createInlineMintPayload, DEFAULT_SLIPPAGE_BPS } from "@/lib/protocol";
 
 const APP_NAME = "Neural Relics";
 const TESTNET_RPC = process.env.NEXT_PUBLIC_SUBTENSOR_RPC ?? "wss://test.chain.opentensor.ai";
@@ -9,9 +10,17 @@ const RAO_PER_TAO = 1_000_000_000n;
 
 type WalletAccount = { address: string; name: string; source: string };
 type Subnet = { netuid: number; generation: string; name: string; symbol: string; ownerHotkey: string };
-type BurnQuote = { alphaAmount: bigint; alphaSlippage: bigint; priceRao: bigint; taoFee: bigint };
+type BurnQuote = { alphaAmount: bigint; alphaSlippage: bigint; priceRao: bigint; taoAmount: bigint; taoFee: bigint };
+type MintReview = {
+  payload: string;
+  payloadBytes: number;
+  limitPrice: bigint;
+  estimatedFee: bigint;
+  quoteBlock: string;
+};
 type ConnectionState = "idle" | "connecting" | "connected" | "error";
 type DataState = "connecting" | "ready" | "error";
+type MintState = "idle" | "review" | "signing" | "submitted" | "finalized" | "error";
 
 function shortAddress(address: string) {
   if (address.length < 18) return address;
@@ -59,6 +68,7 @@ export default function Home() {
   const apiRef = useRef<ApiPromise | null>(null);
   const [dataState, setDataState] = useState<DataState>("connecting");
   const [runtimeVersion, setRuntimeVersion] = useState("--");
+  const [genesisHash, setGenesisHash] = useState("--");
   const [subnets, setSubnets] = useState<Subnet[]>([]);
   const [selectedNetuid, setSelectedNetuid] = useState<number | null>(null);
   const [taoAmount, setTaoAmount] = useState("0.005");
@@ -69,6 +79,12 @@ export default function Home() {
   const [account, setAccount] = useState<WalletAccount | null>(null);
   const [balance, setBalance] = useState<bigint | null>(null);
   const [walletError, setWalletError] = useState("");
+  const [relicName, setRelicName] = useState("");
+  const [relicBody, setRelicBody] = useState("");
+  const [mintState, setMintState] = useState<MintState>("idle");
+  const [mintReview, setMintReview] = useState<MintReview | null>(null);
+  const [mintError, setMintError] = useState("");
+  const [transactionHash, setTransactionHash] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -85,6 +101,7 @@ export default function Home() {
         }
         apiRef.current = api;
         setRuntimeVersion(api.runtimeVersion.specVersion.toString());
+        setGenesisHash(api.genesisHash.toHex());
 
         const entries = await api.query.subtensorModule.networksAdded.entries();
         const netuids = entries
@@ -149,16 +166,22 @@ export default function Home() {
         const decoded = quoteResult as unknown as {
           alphaAmount: { toString(): string };
           alphaSlippage: { toString(): string };
+          taoAmount: { toString(): string };
           taoFee: { toString(): string };
         };
         const nextQuote = {
           alphaAmount: BigInt(decoded.alphaAmount.toString()),
           alphaSlippage: BigInt(decoded.alphaSlippage.toString()),
           priceRao: BigInt(priceResult.toString()),
+          taoAmount: BigInt(decoded.taoAmount.toString()),
           taoFee: BigInt(decoded.taoFee.toString()),
         };
         if (nextQuote.alphaAmount === 0n) throw new Error("This amount cannot be quoted on the selected subnet.");
-        if (!cancelled) setQuote(nextQuote);
+        if (!cancelled) {
+          setQuote(nextQuote);
+          setMintReview(null);
+          setMintState("idle");
+        }
       } catch (cause) {
         if (!cancelled) {
           setQuote(null);
@@ -223,6 +246,158 @@ export default function Home() {
     setWalletState("idle");
   }
 
+  async function assembleMint() {
+    const api = apiRef.current;
+    const amountRao = taoToRao(taoAmount);
+    if (!api || dataState !== "ready") throw new Error("The testnet connection is not ready.");
+    if (!account) throw new Error("Connect the signing wallet first.");
+    if (!selectedSubnet || selectedNetuid === null) throw new Error("Choose a subnet first.");
+    if (!amountRao || amountRao === 0n) throw new Error("Enter a valid TAO amount.");
+
+    const [generationResult, quoteResult, header] = await Promise.all([
+      api.query.subtensorModule.networkRegisteredAt(selectedNetuid),
+      api.call.swapRuntimeApi.simSwapTaoForAlpha(selectedNetuid, amountRao.toString()),
+      api.rpc.chain.getHeader(),
+    ]);
+    const currentGeneration = generationResult.toString();
+    if (currentGeneration !== selectedSubnet.generation) {
+      throw new Error("This subnet was re-registered. Refresh its identity before minting.");
+    }
+
+    const decoded = quoteResult as unknown as {
+      alphaAmount: { toString(): string };
+      alphaSlippage: { toString(): string };
+      taoAmount: { toString(): string };
+      taoFee: { toString(): string };
+    };
+    const freshQuote: BurnQuote = {
+      alphaAmount: BigInt(decoded.alphaAmount.toString()),
+      alphaSlippage: BigInt(decoded.alphaSlippage.toString()),
+      priceRao: quote?.priceRao ?? 0n,
+      taoAmount: BigInt(decoded.taoAmount.toString()),
+      taoFee: BigInt(decoded.taoFee.toString()),
+    };
+    if (freshQuote.alphaAmount === 0n) throw new Error("The selected burn no longer returns alpha.");
+
+    const payload = createInlineMintPayload({
+      netuid: selectedNetuid,
+      subnetGeneration: currentGeneration,
+      name: relicName,
+      body: relicBody,
+    });
+    const limitPrice = calculateLimitPrice(
+      freshQuote.taoAmount,
+      freshQuote.alphaAmount,
+      DEFAULT_SLIPPAGE_BPS,
+    );
+    const batch = api.tx.utility.batchAll([
+      api.tx.subtensorModule.addStakeBurn(
+        account.address,
+        selectedNetuid,
+        amountRao.toString(),
+        limitPrice.toString(),
+      ),
+      api.tx.system.remarkWithEvent(payload.hex),
+    ]);
+    const payment = await batch.paymentInfo(account.address);
+    const estimatedFee = BigInt(payment.partialFee.toString());
+    const accountInfo = await api.query.system.account(account.address);
+    const available = BigInt(
+      (accountInfo as unknown as { data: { free: { toString(): string } } }).data.free.toString(),
+    );
+    const existentialDeposit = BigInt(api.consts.balances.existentialDeposit.toString());
+    if (available < amountRao + estimatedFee + existentialDeposit) {
+      throw new Error("The test wallet does not have enough free TAO for the burn and network fee.");
+    }
+
+    return {
+      api,
+      batch,
+      freshQuote,
+      review: {
+        payload: payload.json,
+        payloadBytes: payload.byteLength,
+        limitPrice,
+        estimatedFee,
+        quoteBlock: header.number.toString(),
+      } satisfies MintReview,
+    };
+  }
+
+  async function reviewMint() {
+    setMintError("");
+    setTransactionHash("");
+    try {
+      const assembled = await assembleMint();
+      setQuote(assembled.freshQuote);
+      setMintReview(assembled.review);
+      setMintState("review");
+    } catch (cause) {
+      setMintReview(null);
+      setMintState("error");
+      setMintError(cause instanceof Error ? cause.message : "The transaction review could not be prepared.");
+    }
+  }
+
+  async function signMint() {
+    if (!account) return;
+    setMintError("");
+    setMintState("signing");
+    try {
+      const assembled = await assembleMint();
+      setMintReview(assembled.review);
+      setQuote(assembled.freshQuote);
+      const { web3FromSource } = await import("@polkadot/extension-dapp");
+      const injector = await web3FromSource(account.source);
+      const subscription = { unsubscribe: undefined as (() => void) | undefined };
+      subscription.unsubscribe = await assembled.batch.signAndSend(
+        account.address,
+        { signer: injector.signer },
+        (result) => {
+          setTransactionHash(result.txHash.toHex());
+          if (result.dispatchError) {
+            const error = result.dispatchError;
+            const message = error.isModule
+              ? (() => {
+                  const decoded = assembled.api.registry.findMetaError(error.asModule);
+                  return `${decoded.section}.${decoded.name}: ${decoded.docs.join(" ")}`;
+                })()
+              : error.toString();
+            setMintError(message);
+            setMintState("error");
+            subscription.unsubscribe?.();
+            return;
+          }
+          if (result.status.isInBlock) setMintState("submitted");
+          if (result.status.isFinalized) {
+            const hasBatch = result.events.some(({ event }) =>
+              assembled.api.events.utility.BatchCompleted.is(event),
+            );
+            const hasBurn = result.events.some(({ event }) =>
+              assembled.api.events.subtensorModule.AlphaBurned.is(event),
+            );
+            const hasStakeBurn = result.events.some(({ event }) =>
+              assembled.api.events.subtensorModule.AddStakeBurn.is(event),
+            );
+            const hasRemark = result.events.some(({ event }) =>
+              assembled.api.events.system.Remarked.is(event),
+            );
+            if (hasBatch && hasBurn && hasStakeBurn && hasRemark) {
+              setMintState("finalized");
+            } else {
+              setMintError("The transaction finalized without every event required by the Neural Relics protocol.");
+              setMintState("error");
+            }
+            subscription.unsubscribe?.();
+          }
+        },
+      );
+    } catch (cause) {
+      setMintError(cause instanceof Error ? cause.message : "The wallet did not complete the testnet mint.");
+      setMintState("error");
+    }
+  }
+
   return (
     <main className="site-shell">
       <div className="grain" aria-hidden="true" />
@@ -253,7 +428,7 @@ export default function Home() {
       </section>
 
       <section className="forge-section" id="forge">
-        <div className="section-heading"><div><p className="eyebrow">Forge preview</p><h2>See exactly what the mint would burn.</h2></div><p>This stage only reads testnet. The transaction button stays locked until the quote, wallet checks, and atomic mint pass verification.</p></div>
+        <div className="section-heading"><div><p className="eyebrow">Testnet forge</p><h2>See exactly what the mint will burn.</h2></div><p>Reviewing re-quotes at the current block, checks the subnet generation and balance, then shows every limit before the wallet can sign.</p></div>
         <div className="forge-layout">
           <div className="forge-card">
             <div className="step-label"><span>01</span>Select a subnet</div>
@@ -264,7 +439,11 @@ export default function Home() {
             <label className="field amount-field"><span>TAO permanently committed</span><div><input inputMode="decimal" value={taoAmount} onChange={(event) => setTaoAmount(event.target.value)} aria-describedby="amount-help" /><em>TAO</em></div><small id="amount-help">Testnet TAO only. Nothing is submitted yet.</small></label>
             <div className="amount-options" aria-label="Preset test amounts">{["0.005", "0.05", "0.5"].map((amount) => <button key={amount} type="button" className={taoAmount === amount ? "active" : ""} onClick={() => setTaoAmount(amount)}>{amount} TAO</button>)}</div>
 
-            <div className="step-label wallet-step"><span>03</span>Connect the signer</div>
+            <div className="step-label content-step"><span>03</span>Write the relic</div>
+            <label className="field"><span>Name</span><input maxLength={80} value={relicName} onChange={(event) => { setRelicName(event.target.value); setMintReview(null); setMintState("idle"); }} placeholder="A name that survives the moment" /></label>
+            <label className="field inscription-field"><span>Inscription</span><textarea maxLength={1024} value={relicBody} onChange={(event) => { setRelicBody(event.target.value); setMintReview(null); setMintState("idle"); }} placeholder="The text permanently bound to this alpha burn" /><small>{Array.from(relicBody).length}/1,024 characters</small></label>
+
+            <div className="step-label wallet-step"><span>04</span>Connect the signer</div>
             {account ? (
               <div className="connected-wallet"><div className="account-avatar" aria-hidden="true">N</div><div><strong>{account.name}</strong><span>{shortAddress(account.address)}</span></div><div className="account-balance"><span>Test balance</span><strong>{balance === null ? "--" : `${formatToken(balance, 4)} TAO`}</strong></div><button type="button" onClick={disconnectWallet}>Disconnect</button></div>
             ) : (
@@ -274,12 +453,31 @@ export default function Home() {
           </div>
 
           <aside className="quote-card" aria-live="polite">
-            <div className="quote-header"><div><span>Live chain quote</span><strong>{selectedSubnet?.name ?? "Select a subnet"}</strong></div><span className="read-only">Read only</span></div>
+            <div className="quote-header"><div><span>Live chain quote</span><strong>{selectedSubnet?.name ?? "Select a subnet"}</strong></div><span className="read-only">Testnet</span></div>
             <div className="burn-output"><span>Estimated alpha destroyed</span><strong className={quoteLoading ? "loading" : ""}>{quote ? formatToken(quote.alphaAmount, 6) : "--"}</strong><em>{selectedSubnet?.symbol ?? "alpha"}</em></div>
             <dl className="quote-details"><div><dt>Spot price</dt><dd>{quote ? formatPrice(quote.priceRao) : "--"}</dd></div><div><dt>Pool fee</dt><dd>{quote ? `${formatToken(quote.taoFee, 7)} TAO` : "--"}</dd></div><div><dt>Price impact</dt><dd>{quote ? formatBps(quoteImpactBps(quote)) : "--"}</dd></div><div><dt>Execution</dt><dd>Atomic batch</dd></div></dl>
             {quoteError && <p className="quote-error">{quoteError}</p>}
             <div className="burn-warning"><span aria-hidden="true">!</span><p>The finished mint will permanently spend the TAO and burn the purchased alpha. It cannot be reversed.</p></div>
-            <button className="forge-button" type="button" disabled>Forge transaction locked <span>Testnet verification next</span></button>
+            {mintReview && (
+              <div className="transaction-review">
+                <div><span>Network</span><strong>Testnet / {shortAddress(genesisHash)}</strong></div>
+                <div><span>Fresh at block</span><strong>#{mintReview.quoteBlock}</strong></div>
+                <div><span>Maximum price</span><strong>{formatPrice(mintReview.limitPrice)}</strong></div>
+                <div><span>Estimated chain fee</span><strong>{formatToken(mintReview.estimatedFee, 7)} TAO</strong></div>
+                <div><span>Inscription payload</span><strong>{mintReview.payloadBytes} / 2,048 bytes</strong></div>
+              </div>
+            )}
+            {mintError && <p className="error-message" role="alert">{mintError}</p>}
+            {mintState === "finalized" ? (
+              <div className="mint-success"><strong>Relic mint finalized</strong><span>{shortAddress(transactionHash)}</span><p>The indexer will assign its canonical number from finalized block order.</p></div>
+            ) : mintState === "review" ? (
+              <button className="forge-button danger" type="button" onClick={signMint}>Sign and forge on testnet <span>Irreversible test burn</span></button>
+            ) : (
+              <button className="forge-button" type="button" onClick={reviewMint} disabled={!account || !quote || quoteLoading || mintState === "signing" || mintState === "submitted"}>
+                {mintState === "signing" ? "Confirm in TAOStats Wallet" : mintState === "submitted" ? "Waiting for finality" : account ? "Review testnet forge" : "Connect wallet to continue"}
+                <span>{mintState === "submitted" ? shortAddress(transactionHash) : "No mainnet funds"}</span>
+              </button>
+            )}
           </aside>
         </div>
       </section>

@@ -37,7 +37,7 @@ Require an injected SS58 wallet, show the signing account and network, validate
 balances and quote freshness, apply explicit slippage, and render a complete
 human-readable transaction review before requesting a signature.
 
-**Status:** next.
+**Status:** implemented on the feature branch; live wallet review pending.
 
 ## 6. Prove atomic minting on testnet
 
@@ -45,7 +45,8 @@ Submit `batchAll(addStakeBurn, remarkWithEvent)`, follow it to finalization, and
 verify the expected burn, remark, and batch-complete events before showing a
 receipt. Test rejection, rollback, stale quote, and disconnect paths.
 
-**Status:** pending step 5.
+**Status:** transaction construction and finalized-event checks implemented;
+one funded-wallet testnet mint is still required before this gate is complete.
 
 ## 7. Run a reorg-safe indexer
 
