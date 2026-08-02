@@ -54,7 +54,8 @@ Use a long-running service and Postgres to process finalized blocks, retain a
 checkpoint, enforce unique event coordinates, and deterministically assign relic
 numbers. Rebuild from genesis data and compare outputs before trusting it.
 
-**Status:** specified; implementation pending.
+**Status:** worker, schema, strict parser, finalized checkpoints, and Render
+blueprint implemented; database deployment and independent replay still pending.
 
 ## 8. Add collection and transfer views
 

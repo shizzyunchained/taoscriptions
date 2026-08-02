@@ -48,7 +48,11 @@ Open [http://localhost:3000](http://localhost:3000). The default RPC is
 npm run lint
 npm run build
 npm run verify:runtime
+npm run test:indexer
 ```
+
+The finalized-block worker lives in `indexer/`. It requires an explicit
+`DATABASE_URL` and `START_BLOCK`; see `docs/INDEXER.md` before deploying it.
 
 ## Deployment
 

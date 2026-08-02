@@ -51,11 +51,26 @@ For every accepted mint:
 Numbers are allocated inside the same serializable database transaction that
 accepts the mint. Replaying a block returns the previously stored result.
 
+## Reference implementation status
+
+`indexer/src` implements the finalized-head worker, strict payload parser,
+Postgres migration, atomic block checkpointing, evidence retention, rejection
+records, and deterministic mint numbering. The checked-in `render.yaml` defines
+a Render background worker but disables automatic deploys. It is intentionally
+not launched until a database is selected and `START_BLOCK` is frozen at or
+before the first protocol mint.
+
+The initial worker supports one tested runtime spec per deployment. It reads the
+spec version at every block and stops before committing an unsupported version.
+A rebuild beginning before the configured spec boundary requires a decoder that
+installs the historical metadata for each block; v0.1 does not pretend current
+metadata can safely decode an older runtime.
+
 ## Runtime upgrades
 
-Metadata is selected by block hash. The indexer maintains an allowlist of tested
-spec versions. At an unknown version it records the boundary, stops advancing,
-and alerts operators. It never guesses a new call or event layout.
+The indexer maintains an allowlist of tested spec versions. At an unknown
+version it stops advancing and reports the boundary through logs and health
+state. It never guesses a new call or event layout.
 
 ## API boundary
 
@@ -82,3 +97,20 @@ A complete rebuild from genesis or a documented checkpoint must reproduce all
 artifact IDs, numbers, ownership states, and payload hashes. A release is not
 production-ready until this reproducibility test passes against a second empty
 database.
+
+## Render deployment gate
+
+Render background workers do not expose incoming network traffic, so the local
+health endpoint is diagnostic rather than a Render HTTP health check. Deployment
+requires a paid worker plan, a Postgres `DATABASE_URL`, and an explicit
+`START_BLOCK`; none of those are created automatically by this repository.
+
+The intended first deployment sequence is:
+
+1. record the finalized block immediately before the first accepted test mint;
+2. create a dedicated Postgres database;
+3. set `DATABASE_URL` and `START_BLOCK` in Render;
+4. run the pre-deploy migration;
+5. start one worker and confirm its checkpoint reaches the current finalized
+   head; and
+6. rebuild the same range into an empty second database and compare artifacts.
