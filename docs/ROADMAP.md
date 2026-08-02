@@ -63,7 +63,8 @@ Expose relic detail pages, owner collections, subnet collections, provenance,
 and canonical transfer inscriptions. Every UI claim must link back to its block
 and extrinsic.
 
-**Status:** pending indexer.
+**Status:** finalized read API, Explore collection, and proof detail pages are
+implemented; accepted transfer processing and live indexed data remain pending.
 
 ## 9. Add marketplace discovery safely
 

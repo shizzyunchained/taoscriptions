@@ -19,7 +19,8 @@ A v1 mint is one `utility.batchAll` extrinsic containing:
 
 If either call fails, both calls roll back. See [the protocol](docs/PROTOCOL.md),
 [indexer rules](docs/INDEXER.md), [security model](docs/SECURITY.md), and
-[delivery roadmap](docs/ROADMAP.md).
+[delivery roadmap](docs/ROADMAP.md). The finalized-state endpoints are described
+in [the API reference](docs/API.md).
 
 ## Safety boundary
 
