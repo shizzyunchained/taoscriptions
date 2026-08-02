@@ -60,6 +60,13 @@ function buildInscriptionPayload(title: string, content: string) {
   });
 }
 
+function utf8ToHex(value: string) {
+  const bytes = new TextEncoder().encode(value);
+  return `0x${Array.from(bytes, (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("")}`;
+}
+
 function transactionErrorMessage(
   api: Pick<ApiPromise, "registry">,
   dispatchError: DispatchError,
@@ -201,9 +208,7 @@ export default function Home() {
           );
         }
 
-        const transaction = api.tx.system.remarkWithEvent(
-          new TextEncoder().encode(payload),
-        );
+        const transaction = api.tx.system.remarkWithEvent(utf8ToHex(payload));
 
         setMintState("awaiting-signature");
 
