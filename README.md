@@ -1,13 +1,15 @@
 # TAOscriptions
 
-The native inscription experience for Subtensor. This first milestone connects
-to an injected Bittensor wallet, displays the selected SS58 account, and reads
-its testnet TAO balance.
+The native inscription experience for Subtensor. This milestone connects to an
+injected Bittensor wallet, displays the selected SS58 account, reads its testnet
+TAO balance, and lets the user mint a small text inscription with a signed
+`system.remarkWithEvent` transaction.
 
 ## Safety
 
 - Testnet only
-- No minting or transfer calls
+- Text inscription minting through `system.remarkWithEvent`
+- No transfers, marketplace ownership rules, or image storage
 - No seed phrases or private keys handled by the application
 - No EVM and no subnet
 
