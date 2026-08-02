@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ApiPromise } from "@polkadot/api";
 import { calculateLimitPrice, createInlineMintPayload, DEFAULT_SLIPPAGE_BPS } from "@/lib/protocol";
+import { verifyFinalizedMintReceipt, type MintReceiptExpectation } from "@/lib/mint-receipt";
 
 const APP_NAME = "Neural Relics";
 const TESTNET_RPC = process.env.NEXT_PUBLIC_SUBTENSOR_RPC ?? "wss://test.chain.opentensor.ai";
@@ -17,6 +18,7 @@ type MintReview = {
   limitPrice: bigint;
   estimatedFee: bigint;
   quoteBlock: string;
+  routeHotkey: string;
 };
 type ConnectionState = "idle" | "connecting" | "connected" | "error";
 type DataState = "connecting" | "ready" | "error";
@@ -259,12 +261,14 @@ export default function Home() {
       api.at(finalizedHash),
       api.rpc.chain.getHeader(finalizedHash),
     ]);
-    const [generationResult, priceResult, quoteResult] = await Promise.all([
+    const [generationResult, routeHotkeyResult, priceResult, quoteResult] = await Promise.all([
       apiAt.query.subtensorModule.networkRegisteredAt(selectedNetuid),
+      apiAt.query.subtensorModule.subnetOwnerHotkey(selectedNetuid),
       apiAt.call.swapRuntimeApi.currentAlphaPrice(selectedNetuid),
       apiAt.call.swapRuntimeApi.simSwapTaoForAlpha(selectedNetuid, amountRao.toString()),
     ]);
     const currentGeneration = generationResult.toString();
+    const routeHotkey = routeHotkeyResult.toString();
     if (currentGeneration !== selectedSubnet.generation) {
       throw new Error("This subnet was re-registered. Refresh its identity before minting.");
     }
@@ -290,10 +294,24 @@ export default function Home() {
       name: relicName,
       body: relicBody,
     });
+    const signerAccountHex = api.registry.createType("AccountId32", account.address).toHex().toLowerCase();
+    const routeHotkeyHex = api.registry.createType("AccountId32", routeHotkey).toHex().toLowerCase();
+    if (routeHotkeyHex === `0x${"0".repeat(64)}`) throw new Error("The subnet does not expose a registered owner hotkey.");
+    const routeOwner = await apiAt.query.subtensorModule.owner(routeHotkey);
+    const routeOwnerHex = api.registry.createType("AccountId32", routeOwner.toString()).toHex().toLowerCase();
+    if (routeOwnerHex === `0x${"0".repeat(64)}`) throw new Error("The subnet owner hotkey is not registered for staking.");
+    const { blake2AsHex } = await import("@polkadot/util-crypto");
+    const receiptExpectation: MintReceiptExpectation = {
+      signerAccountHex,
+      routeHotkeyHex,
+      netuid: selectedNetuid,
+      taoAmountRao: amountRao,
+      remarkHash: blake2AsHex(payload.hex, 256).toLowerCase(),
+    };
     const limitPrice = calculateLimitPrice(freshQuote.priceRao, DEFAULT_SLIPPAGE_BPS);
     const batch = api.tx.utility.batchAll([
       api.tx.subtensorModule.addStakeBurn(
-        account.address,
+        routeHotkey,
         selectedNetuid,
         amountRao.toString(),
         limitPrice.toString(),
@@ -315,12 +333,14 @@ export default function Home() {
       api,
       batch,
       freshQuote,
+      receiptExpectation,
       review: {
         payload: payload.json,
         payloadBytes: payload.byteLength,
         limitPrice,
         estimatedFee,
         quoteBlock: header.number.toString(),
+        routeHotkey,
       } satisfies MintReview,
     };
   }
@@ -371,22 +391,14 @@ export default function Home() {
           }
           if (result.status.isInBlock) setMintState("submitted");
           if (result.status.isFinalized) {
-            const hasBatch = result.events.some(({ event }) =>
-              assembled.api.events.utility.BatchCompleted.is(event),
-            );
-            const hasBurn = result.events.some(({ event }) =>
-              assembled.api.events.subtensorModule.AlphaBurned.is(event),
-            );
-            const hasStakeBurn = result.events.some(({ event }) =>
-              assembled.api.events.subtensorModule.AddStakeBurn.is(event),
-            );
-            const hasRemark = result.events.some(({ event }) =>
-              assembled.api.events.system.Remarked.is(event),
-            );
-            if (hasBatch && hasBurn && hasStakeBurn && hasRemark) {
+            try {
+              verifyFinalizedMintReceipt({
+                eventRecords: result.events,
+                expected: assembled.receiptExpectation,
+              });
               setMintState("finalized");
-            } else {
-              setMintError("The transaction finalized without every event required by the Neural Relics protocol.");
+            } catch {
+              setMintError("The finalized events did not exactly match the Neural Relics transaction you signed.");
               setMintState("error");
             }
             subscription.unsubscribe?.();
@@ -463,6 +475,7 @@ export default function Home() {
               <div className="transaction-review">
                 <div><span>Network</span><strong>Testnet / {shortAddress(genesisHash)}</strong></div>
                 <div><span>Fresh at block</span><strong>#{mintReview.quoteBlock}</strong></div>
+                <div><span>Registered burn hotkey</span><strong>{shortAddress(mintReview.routeHotkey)}</strong></div>
                 <div><span>Maximum ending spot price (2%)</span><strong>{formatPrice(mintReview.limitPrice)}</strong></div>
                 <div><span>Estimated chain fee</span><strong>{formatToken(mintReview.estimatedFee, 7)} TAO</strong></div>
                 <div><span>Inscription payload</span><strong>{mintReview.payloadBytes} / 2,048 bytes</strong></div>

@@ -38,6 +38,10 @@ try {
   assert.ok(selected, "NO_ACTIVE_SUBNET_WITH_NONZERO_QUOTE");
 
   const generation = (await apiAt.query.subtensorModule.networkRegisteredAt(selected.netuid)).toString();
+  const routeHotkey = (await apiAt.query.subtensorModule.subnetOwnerHotkey(selected.netuid)).toString();
+  assert.notEqual(api.registry.createType("AccountId32", routeHotkey).toHex(), `0x${"0".repeat(64)}`, "MISSING_SUBNET_OWNER_HOTKEY");
+  const routeHotkeyOwner = (await apiAt.query.subtensorModule.owner(routeHotkey)).toString();
+  assert.notEqual(api.registry.createType("AccountId32", routeHotkeyOwner).toHex(), `0x${"0".repeat(64)}`, "UNREGISTERED_ROUTE_HOTKEY");
   const currentSpotPrice = BigInt((await apiAt.call.swapRuntimeApi.currentAlphaPrice(selected.netuid)).toString());
   const limitPrice = calculateLimitPrice(currentSpotPrice, DEFAULT_SLIPPAGE_BPS);
   const payload = createInlineMintPayload({
@@ -47,7 +51,7 @@ try {
     body: "Unsigned live-runtime verification. This payload is never submitted.",
   });
   const batch = api.tx.utility.batchAll([
-    api.tx.subtensorModule.addStakeBurn(signer, selected.netuid, taoAmountRao.toString(), limitPrice.toString()),
+    api.tx.subtensorModule.addStakeBurn(routeHotkey, selected.netuid, taoAmountRao.toString(), limitPrice.toString()),
     api.tx.system.remarkWithEvent(payload.hex),
   ]);
 
@@ -57,7 +61,7 @@ try {
   assert.equal(calls.length, 2);
   assert.equal(calls[0].section, "subtensorModule");
   assert.equal(calls[0].method, "addStakeBurn");
-  assert.equal(calls[0].args[0].toString(), signer);
+  assert.equal(calls[0].args[0].toString(), routeHotkey);
   assert.equal(calls[0].args[1].toString(), selected.netuid.toString());
   assert.equal(calls[0].args[2].toString(), taoAmountRao.toString());
   assert.equal(calls[0].args[3].toString(), limitPrice.toString());
@@ -80,6 +84,8 @@ try {
     specName: api.runtimeVersion.specName.toString(),
     specVersion: api.runtimeVersion.specVersion.toNumber(),
     signer,
+    routeHotkey,
+    routeHotkeyOwner,
     netuid: selected.netuid,
     subnetGeneration: generation,
     taoAmountRao: taoAmountRao.toString(),

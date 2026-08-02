@@ -139,6 +139,13 @@ Utility.batch_all([
 
 The order is mandatory. Additional inner calls invalidate a v1 mint.
 
+The reference client routes the temporary stake through the selected subnet's
+registered `SubnetOwnerHotkey` read from the same finalized snapshot as the
+quote. This lets a coldkey-only TAOStats user mint without owning or registering
+a hotkey. The purchased alpha is burned inside the same atomic call; no stake is
+left with the route hotkey. The chosen hotkey remains part of the permanent
+event evidence and MUST be shown in the signing review.
+
 The indexer MUST verify all of the following:
 
 1. The containing block is finalized.
