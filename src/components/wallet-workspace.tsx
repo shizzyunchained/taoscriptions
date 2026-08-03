@@ -6,7 +6,7 @@ import Image from "next/image";
 import { ListingForm } from "@/components/listing-form";
 import type { ApiPromise } from "@polkadot/api";
 import { createTransferPayload } from "@/lib/protocol";
-import { formatRao } from "@/lib/format";
+import { compactHex, formatRao } from "@/lib/format";
 import { assertExpectedGenesis } from "@/lib/chain-guard";
 import {
   createTransferEvidence,
@@ -32,15 +32,28 @@ type WalletAccount = {
 };
 type OwnedRelic = {
   artifactId: string;
+  blockNumber: string;
+  blockHash: string;
+  extrinsicIndex: number;
+  extrinsicHash: string;
   globalNumber: string;
   subnetNumber: string;
   netuid: number;
+  subnetGeneration: string;
+  creatorAccountHex: string;
   name: string;
+  purpose: string;
   body: string | null;
   mediaType: string;
+  mediaByteLength: number | null;
+  contentHash: string | null;
+  payloadHash: string;
   ownershipNonce: string;
   ownerAccountHex: string;
+  taoSpentRao: string;
   alphaBurnedRao: string;
+  limitPriceRao: string;
+  transactionFeeRao: string | null;
 };
 type TransferReview = {
   artifact: OwnedRelic;
@@ -54,15 +67,28 @@ type TransferReview = {
 
 const FOUNDING_RELIC: OwnedRelic = {
   artifactId: FOUNDING_ARTIFACT_ID,
+  blockNumber: "7698721",
+  blockHash: "0x383312c407b16b5c3dfa934a0ae1094e777f8acb46e2ddfc3a14bd1f8f72dc80",
+  extrinsicIndex: 6,
+  extrinsicHash: "0xc465ceb52de83326e277066ad1212132f7f53e5e2d2fd69176896c229cafdf97",
   globalNumber: "1",
   subnetNumber: "1",
   netuid: 1,
+  subnetGeneration: "3536",
+  creatorAccountHex: FOUNDING_OWNER_HEX,
   name: "Shizzy",
+  purpose: "personal",
   body: null,
   mediaType: "image/webp",
+  mediaByteLength: 8698,
+  contentHash: "sha256:e0c79e82fff74be7e1586ff85aace31e256391492bb9c81c109f52c841782282",
+  payloadHash: "0x25a7c55955475408e3763117dda387d71cab36c073678401444f34f27bda7e6a",
   ownershipNonce: "0",
   ownerAccountHex: FOUNDING_OWNER_HEX,
+  taoSpentRao: "1000000000",
   alphaBurnedRao: "1035580333229",
+  limitPriceRao: "979824",
+  transactionFeeRao: "1743874",
 };
 
 function compact(value: string) {
@@ -129,7 +155,9 @@ export function WalletWorkspace() {
             "The finalized collection could not be loaded.",
         );
       }
-      setRelics(body.artifacts ?? []);
+      const collection = body.artifacts ?? [];
+      setRelics(collection);
+      setSelected(collection[0] ?? null);
       setProofMode(false);
       setState("ready");
     } catch (error) {
@@ -534,11 +562,37 @@ export function WalletWorkspace() {
                       if (!proofMode) setMessage("");
                     }}
                   >
-                    <span>
-                      Relic #{relic.globalNumber} · SN{relic.netuid}
-                    </span>
-                    <strong>{relic.name}</strong>
-                    <small>Ownership nonce {relic.ownershipNonce}</small>
+                    <div className="owned-card-media">
+                      <Image
+                        src={
+                          proofMode
+                            ? "/founding-relic.webp"
+                            : `/api/v1/artifacts/${encodeURIComponent(relic.artifactId)}/media`
+                        }
+                        alt=""
+                        width={520}
+                        height={520}
+                        unoptimized={!proofMode}
+                      />
+                      <strong>#{relic.globalNumber.padStart(4, "0")}</strong>
+                    </div>
+                    <div className="owned-card-copy">
+                      <span>
+                        Relic #{relic.globalNumber} · SN{relic.netuid} / #{relic.subnetNumber}
+                      </span>
+                      <h3>{relic.name}</h3>
+                      <p>{relic.body ?? "Image-only Relic · no separate inscription"}</p>
+                      <dl>
+                        <div>
+                          <dt>Alpha burned</dt>
+                          <dd>{formatRao(relic.alphaBurnedRao)}</dd>
+                        </div>
+                        <div>
+                          <dt>TAO spent</dt>
+                          <dd>{formatRao(relic.taoSpentRao)}</dd>
+                        </div>
+                      </dl>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -548,7 +602,7 @@ export function WalletWorkspace() {
                     <span>
                       {proofMode
                         ? "Finalized founding proof"
-                        : "Canonical transfer"}
+                        : `Selected Relic #${selected.globalNumber.padStart(4, "0")}`}
                     </span>
                     {selected.mediaType === "image/webp" && (
                       <div className="owned-relic-media">
@@ -566,11 +620,33 @@ export function WalletWorkspace() {
                       </div>
                     )}
                     <h2>{selected.name}</h2>
-                    <p>
-                      {proofMode
-                        ? "Ownership is verified from the founding finalized receipt. Transfers stay locked until the canonical index can refresh ownership immediately before signing."
-                        : "This changes Bittensor Relics protocol ownership after finalization. It does not move TAO or alpha."}
-                    </p>
+                    {selected.body ? (
+                      <blockquote>“{selected.body}”</blockquote>
+                    ) : (
+                      <p className="no-inscription">No separate inscription text was finalized with this image.</p>
+                    )}
+                    <div className="owned-proof-grid">
+                      <div><span>Relic number</span><strong>#{selected.globalNumber.padStart(4, "0")}</strong></div>
+                      <div><span>Subnet edition</span><strong>SN{selected.netuid} · #{selected.subnetNumber}</strong></div>
+                      <div><span>Alpha burned</span><strong>{formatRao(selected.alphaBurnedRao)} α</strong></div>
+                      <div><span>TAO committed</span><strong>{formatRao(selected.taoSpentRao)} TAO</strong></div>
+                      <div><span>Purpose</span><strong>{selected.purpose}</strong></div>
+                      <div><span>On-chain image</span><strong>{selected.mediaByteLength?.toLocaleString() ?? "—"} bytes</strong></div>
+                    </div>
+                    <div className="owned-chain-receipt">
+                      <div><span>Finalized position</span><strong>Block {Number(selected.blockNumber).toLocaleString()} · extrinsic {selected.extrinsicIndex}</strong></div>
+                      <div><span>Subnet generation</span><strong>SN{selected.netuid}:{selected.subnetGeneration}</strong></div>
+                      <div><span>Transaction fee</span><strong>{selected.transactionFeeRao ? `${formatRao(selected.transactionFeeRao)} TAO` : "Legacy record"}</strong></div>
+                      <div><span>Payload hash</span><strong>{compactHex(selected.payloadHash, 15, 12)}</strong></div>
+                      <div><span>Content hash</span><strong>{compactHex(selected.contentHash ?? "unavailable", 15, 12)}</strong></div>
+                      <div><span>Current owner</span><strong>{compactHex(selected.ownerAccountHex, 15, 12)}</strong></div>
+                    </div>
+                    <div className="owned-primary-actions">
+                      <Link href={`/relic/${encodeURIComponent(selected.artifactId)}`}>Open full proof</Link>
+                      {!proofMode && <a href="#listing">List for sale</a>}
+                      {!proofMode && <a href="#transfer">Transfer ownership</a>}
+                    </div>
+                    {!proofMode && <div className="ownership-divider" id="transfer"><span>Ownership tool</span><h3>Transfer this Relic</h3><p>Changes protocol ownership after finalization. It does not move TAO or alpha.</p></div>}
                     {!proofMode && (
                       <label>
                         <span>Destination SS58 address</span>
@@ -700,12 +776,14 @@ export function WalletWorkspace() {
               </div>
             </div>
             {selected && !proofMode && (
-              <ListingForm
-                artifactId={selected.artifactId}
-                ownerAccountHex={selected.ownerAccountHex}
-                ownershipNonce={selected.ownershipNonce}
-                chainGenesis={TESTNET_GENESIS}
-              />
+              <div id="listing">
+                <ListingForm
+                  artifactId={selected.artifactId}
+                  ownerAccountHex={selected.ownerAccountHex}
+                  ownershipNonce={selected.ownershipNonce}
+                  chainGenesis={TESTNET_GENESIS}
+                />
+              </div>
             )}
             </>
           )}
