@@ -9,6 +9,7 @@ import {
   parseMintPayload,
   parseProtocolPayload,
   validateMint,
+  validatePurchase,
   validateTransfer,
 } from "./protocol.mjs";
 import {
@@ -229,6 +230,15 @@ async function processBlock(api, blockNumber) {
             eventRecords: candidate.events,
           });
           await insertTransfer(client, context, transfer);
+        } else if (operation.payload.op === "purchase") {
+          const purchase = await validatePurchase({
+            api,
+            extrinsic: candidate.extrinsic,
+            eventRecords: candidate.events,
+            chainGenesis: expectedGenesis,
+            blockNumber,
+          });
+          await insertTransfer(client, context, purchase);
         } else {
           throw new Error("UNSUPPORTED_OPERATION");
         }

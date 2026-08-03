@@ -68,8 +68,11 @@ does not accept caller-supplied message text or listing IDs.
 `DELETE /api/v1/listings/:id` accepts `seller` and `signature` for the canonical
 cancellation message. This only removes the listing from discovery.
 
-Marketplace settlement is intentionally unavailable. Listing responses include
-`settlementEnabled: false`; there is no purchase endpoint.
+Listing responses include `settlementEnabled: true`. Purchases do not use a
+custodial API endpoint: the buyer submits one native `Utility.batchAll` containing
+the exact TAO payment and the signed Sale V2 purchase receipt. The finalized
+indexer derives ownership only after validating both calls, their events, the
+seller signature, price, expiry, buyer policy, and ownership nonce.
 
 ## Owner collection
 

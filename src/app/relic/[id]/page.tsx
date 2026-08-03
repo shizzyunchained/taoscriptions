@@ -80,7 +80,14 @@ export default async function RelicPage({ params }: Props) {
               <div className="detail-orbit" aria-hidden="true"><i /></div>
             )}
           </header>
-          <RelicListings initialListings={listings.map(({ listingId, priceRao, expiryBlock }) => ({ listingId, priceRao, expiryBlock }))} ownerAccountHex={artifact.ownerAccountHex} chainGenesis={artifact.artifactId.split(":")[1]} />
+          <RelicListings
+            initialListings={listings.map(({ listingId, priceRao, expiryBlock, sellerAccountHex, ownershipNonce, nonce, buyerAccountHex, signature, message }) => ({
+              listingId, priceRao, expiryBlock, sellerAccountHex, ownershipNonce, nonce, buyerAccountHex, signature, message,
+            }))}
+            artifactId={artifact.artifactId}
+            ownerAccountHex={artifact.ownerAccountHex}
+            chainGenesis={artifact.artifactId.split(":")[1]}
+          />
           <section className="relic-content">
             <span>{artifact.mediaType}{artifact.mediaByteLength ? ` · ${artifact.mediaByteLength.toLocaleString()} bytes fully on-chain` : ""}</span>
             {artifact.body ? (

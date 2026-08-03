@@ -276,16 +276,15 @@ change state.
 
 ## 11. Marketplace foundation
 
-Version 1 may support signed, non-custodial listings for discovery, but real
-value settlement MUST remain disabled until the no-loss invariant below is
-satisfied.
+Testnet supports signed, non-custodial fixed-price sales. Mainnet value
+settlement remains a separate approval gate.
 
 A listing authorization is signed off-chain by the current owner using the
 wallet's raw-byte signing capability. Addresses are normalized to AccountId32
 before constructing the message.
 
 ```text
-BITTENSOR_RELICS_LISTING_V1
+BITTENSOR_RELICS_SALE_V2
 chain=<full genesis hash>
 artifact=<canonical artifact id>
 seller=<0x account-id-32>
@@ -294,6 +293,7 @@ price_rao=<unsigned decimal integer>
 expiry_block=<unsigned decimal integer>
 nonce=<64 lowercase hex characters>
 buyer=<* or 0x account-id-32>
+settlement=atomic_tao_transfer_and_relic_ownership
 ```
 
 The message ends with one newline. `listing_id` is BLAKE2-256 of these exact
@@ -315,7 +315,7 @@ seller=<0x account-id-32>
 This message also ends with one newline. Cancellation changes marketplace
 discovery state only; it is not an on-chain ownership operation.
 
-A proposed buyer settlement is:
+The testnet buyer settlement is:
 
 ```text
 Utility.batch_all([

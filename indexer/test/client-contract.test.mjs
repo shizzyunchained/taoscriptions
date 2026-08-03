@@ -6,10 +6,11 @@ import {
   calculateLimitPrice,
   createInlineMintPayload,
   createOnChainImageMintPayload,
+  createPurchasePayload,
   createTransferPayload,
   DEFAULT_SLIPPAGE_BPS,
 } from "../../src/lib/protocol.ts";
-import { parseMintPayload, parseTransferPayload } from "../src/protocol.mjs";
+import { parseMintPayload, parsePurchasePayload, parseTransferPayload } from "../src/protocol.mjs";
 
 const genesis = `0x${"1".repeat(64)}`;
 const artifactId = `br1:${genesis}:100:2`;
@@ -56,6 +57,26 @@ test("browser transfer bytes satisfy the strict indexer contract", () => {
   assert.equal(parsed.payload.artifact, artifactId);
   assert.equal(parsed.payload.to, destination);
   assert.equal(parsed.payload.nonce, 7);
+});
+
+test("browser purchase bytes satisfy the strict indexer contract", () => {
+  const created = createPurchasePayload({
+    artifactId,
+    listingId: `0x${"3".repeat(64)}`,
+    sellerAccountHex: `0x${"4".repeat(64)}`,
+    buyerAccountHex: `0x${"5".repeat(64)}`,
+    listingBuyerAccountHex: null,
+    listingOwnershipNonce: "6",
+    priceRao: "1000000000",
+    expiryBlock: "12345",
+    listingNonce: "a".repeat(64),
+    listingSignature: `0x${"b".repeat(128)}`,
+  });
+  const parsed = parsePurchasePayload(hexToU8a(created.hex));
+  assert.equal(parsed.text, created.json);
+  assert.equal(parsed.payload.op, "purchase");
+  assert.equal(parsed.payload.nonce, 7);
+  assert.equal(parsed.payload.price_rao, "1000000000");
 });
 
 test("client builders reject ambiguous or unsupported intent", () => {

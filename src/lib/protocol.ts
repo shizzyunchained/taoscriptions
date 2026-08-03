@@ -176,3 +176,53 @@ export function createTransferPayload(input: {
     byteLength: bytes.length,
   };
 }
+
+export function createPurchasePayload(input: {
+  artifactId: string;
+  listingId: string;
+  sellerAccountHex: string;
+  buyerAccountHex: string;
+  listingBuyerAccountHex: string | null;
+  listingOwnershipNonce: string;
+  priceRao: string;
+  expiryBlock: string;
+  listingNonce: string;
+  listingSignature: string;
+}) {
+  if (!/^br1:0x[0-9a-f]{64}:\d+:\d+$/.test(input.artifactId)) throw new Error("The Relic ID is not canonical.");
+  if (!/^0x[0-9a-f]{64}$/.test(input.listingId)) throw new Error("The listing ID is invalid.");
+  if (![input.sellerAccountHex, input.buyerAccountHex].every((value) => /^0x[0-9a-f]{64}$/.test(value))) {
+    throw new Error("The buyer or seller AccountId32 is invalid.");
+  }
+  if (input.sellerAccountHex === input.buyerAccountHex) throw new Error("The owner cannot buy their own Relic.");
+  if (input.listingBuyerAccountHex && input.listingBuyerAccountHex !== input.buyerAccountHex) {
+    throw new Error("This listing is reserved for another buyer.");
+  }
+  if (![input.listingOwnershipNonce, input.priceRao, input.expiryBlock].every((value) => /^(0|[1-9]\d*)$/.test(value))) {
+    throw new Error("The listing contains an invalid integer.");
+  }
+  if (BigInt(input.priceRao) <= 0n) throw new Error("The listing price must be positive.");
+  if (!/^[0-9a-f]{64}$/.test(input.listingNonce)) throw new Error("The listing nonce is invalid.");
+  if (!/^0x[0-9a-fA-F]{128,132}$/.test(input.listingSignature)) throw new Error("The listing signature is invalid.");
+  const nextNonce = BigInt(input.listingOwnershipNonce) + 1n;
+  if (nextNonce > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error("The ownership nonce exceeds the supported range.");
+  const json = JSON.stringify({
+    p: PROTOCOL_ID,
+    v: PROTOCOL_VERSION,
+    op: "purchase",
+    artifact: input.artifactId,
+    listing_id: input.listingId,
+    seller: input.sellerAccountHex,
+    buyer: input.buyerAccountHex,
+    listing_buyer: input.listingBuyerAccountHex ?? "*",
+    listing_ownership_nonce: input.listingOwnershipNonce,
+    price_rao: input.priceRao,
+    expiry_block: input.expiryBlock,
+    listing_nonce: input.listingNonce,
+    listing_signature: input.listingSignature,
+    nonce: Number(nextNonce),
+  });
+  const bytes = new TextEncoder().encode(json);
+  if (bytes.length > MAX_JSON_REMARK_BYTES) throw new Error("The purchase receipt exceeds the protocol limit.");
+  return { json, hex: bytesToHex(bytes), byteLength: bytes.length, nextNonce: Number(nextNonce) };
+}

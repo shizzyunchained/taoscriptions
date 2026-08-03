@@ -29,7 +29,7 @@ const claims = [
   { state: "Correction", tone: "corrected", title: "Buy & Burn does not currently reduce SubnetAlphaOut.", body: "The finalized AlphaBurned event proves the user's economic sacrifice. Current runtime accounting makes this burn supply-neutral, not guaranteed deflation." },
   { state: "Protocol", tone: "protocol", title: "Relics are transferable, but they are not native Subtensor NFTs.", body: "Ownership is deterministic derived state from signed finalized remarks. Subtensor itself does not expose a Relic asset balance." },
   { state: "Prototype", tone: "prototype", title: "Miners and validators can reproduce the index.", body: "The three-miner conformance simulation works, but no Relics subnet is registered and no live miner receives emissions today." },
-  { state: "Not live", tone: "blocked", title: "Paid marketplace settlement remains disabled.", body: "A signed listing is discovery only. Payment cannot launch until a buyer cannot lose TAO without receiving protocol ownership in the same chain-enforced outcome." },
+  { state: "Testnet", tone: "ready", title: "Atomic marketplace settlement is live on testnet.", body: "Sale V2 listings authorize one exact-price purchase. The buyer payment and signed ownership receipt execute together in a finalized batchAll transaction." },
   { state: "Creator claim", tone: "protocol", title: "Collection labels are not verified membership yet.", body: "Version 1 signs a creator-declared label. Authority rules, burn thresholds, mint windows, and supply caps require a future collection declaration." },
   { state: "Boundary", tone: "corrected", title: "Chain authenticity is not artistic or legal authenticity.", body: "The proof establishes bytes, signer, time, chain position, and burn. It cannot prove originality, copyright, identity, or truth of the depicted event." },
 ];
@@ -64,7 +64,7 @@ export default function DocsPage() {
         <aside className="manual-sidebar">
           <div className="manual-sidebar-head"><span>Documentation</span><strong>Field Manual</strong><small>Draft v1 · Testnet</small></div>
           <nav aria-label="Documentation sections"><ol>{navigation.map(([label, id], index) => <li key={id}><a href={`#${id}`}><i>{String(index + 1).padStart(2, "0")}</i>{label}</a></li>)}</ol></nav>
-          <div className="manual-sidebar-foot"><i aria-hidden="true" /><span>Experiment</span><p>Use testnet TAO only. Mainnet and paid settlement are disabled.</p></div>
+          <div className="manual-sidebar-foot"><i aria-hidden="true" /><span>Experiment</span><p>Use testnet TAO only. Atomic purchases are experimental; mainnet remains disabled.</p></div>
         </aside>
 
         <div className="manual-content">
@@ -139,7 +139,7 @@ export default function DocsPage() {
 
           <Section id="ownership" label="06 / Identity & ownership" title="Chain position makes the Relic. Signed history assigns the owner.">
             <div className="manual-id"><span>Canonical artifact ID</span><code>br1:&lt;full-genesis-hash&gt;:&lt;finalized-block&gt;:&lt;extrinsic-index&gt;</code></div>
-            <div className="manual-two-column"><article><span>Numbering</span><p>Accepted mints receive one global number and one number inside <code>(netuid, subnet_generation)</code>. Order follows finalized block number then extrinsic index. Invalid candidates consume no number.</p></article><article><span>Ownership</span><p>The mint signer starts as protocol owner. A valid standalone transfer remark must be signed by the current owner and use the exact next ownership nonce. This prevents replay.</p></article><article><span>Subnet identity</span><p>Netuid alone is insufficient because numbers can be reused after deregistration. Relics binds every mint to <code>NetworkRegisteredAt[netuid]</code>.</p></article><article><span>Marketplace</span><p>Owners may sign discovery listings. Transfers, expiry, or cancellation invalidate them. Listings cannot move funds or ownership, and purchase settlement remains disabled.</p></article></div>
+            <div className="manual-two-column"><article><span>Numbering</span><p>Accepted mints receive one global number and one number inside <code>(netuid, subnet_generation)</code>. Order follows finalized block number then extrinsic index. Invalid candidates consume no number.</p></article><article><span>Ownership</span><p>The mint signer starts as protocol owner. A valid standalone transfer remark must be signed by the current owner and use the exact next ownership nonce. This prevents replay.</p></article><article><span>Subnet identity</span><p>Netuid alone is insufficient because numbers can be reused after deregistration. Relics binds every mint to <code>NetworkRegisteredAt[netuid]</code>.</p></article><article><span>Marketplace</span><p>Sale V2 listings bind the exact seller, ownership nonce, price, expiry, and buyer policy. A purchase is accepted only when the matching TAO payment and ownership receipt succeed together in one finalized atomic batch.</p></article></div>
             <div className="manual-founding"><span>Verified founding testnet Relic</span><div><h3>Shizzy</h3><p>Block 7,698,721 · Extrinsic 6 · 1 test TAO · 1,035.580333229 SN1 alpha burned · 8,698 on-chain image bytes</p></div><a href="/evidence/founding-testnet-relic.json">Evidence JSON →</a></div>
           </Section>
 

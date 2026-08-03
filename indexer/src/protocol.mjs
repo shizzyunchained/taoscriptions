@@ -1,14 +1,19 @@
-import { blake2AsHex, decodeAddress } from "@polkadot/util-crypto";
+import { blake2AsHex, cryptoWaitReady, decodeAddress, signatureVerify } from "@polkadot/util-crypto";
 import { u8aToHex } from "@polkadot/util";
 import { createHash } from "node:crypto";
 
-export const INDEXER_VERSION = "0.2.0";
+export const INDEXER_VERSION = "0.3.0";
 const ALLOWED_KEYS = new Set([
   "p", "v", "op", "netuid", "subnet_generation", "name", "media_type",
   "body", "content_uri", "content_hash", "encoding", "content_length", "width", "height",
   "purpose", "collection", "content_policy",
 ]);
 const TRANSFER_KEYS = new Set(["p", "v", "op", "artifact", "to", "nonce"]);
+const PURCHASE_KEYS = new Set([
+  "p", "v", "op", "artifact", "listing_id", "seller", "buyer", "listing_buyer",
+  "listing_ownership_nonce", "price_rao", "expiry_block", "listing_nonce",
+  "listing_signature", "nonce",
+]);
 const IMAGE_MAGIC = Uint8Array.from([0x42, 0x52, 0x49, 0x31]);
 const MAX_JSON_REMARK_BYTES = 2_048;
 const MAX_MINT_REMARK_BYTES = 16_384;
@@ -174,6 +179,35 @@ export function parseTransferPayload(bytes) {
   return decoded;
 }
 
+export function parsePurchasePayload(bytes) {
+  const decoded = parseProtocolPayload(bytes);
+  const { payload } = decoded;
+  if (Object.keys(payload).some((key) => !PURCHASE_KEYS.has(key)) || Object.keys(payload).length !== PURCHASE_KEYS.size) throw new Error("INVALID_PURCHASE_FIELDS");
+  if (payload.op !== "purchase") throw new Error("UNSUPPORTED_OPERATION");
+  if (typeof payload.artifact !== "string" || !/^br1:0x[0-9a-f]{64}:\d+:\d+$/.test(payload.artifact)) throw new Error("INVALID_ARTIFACT_ID");
+  if (typeof payload.listing_id !== "string" || !/^0x[0-9a-f]{64}$/.test(payload.listing_id)) throw new Error("INVALID_LISTING_ID");
+  for (const field of ["seller", "buyer"]) {
+    if (typeof payload[field] !== "string") throw new Error("INVALID_PURCHASE_ACCOUNT");
+    try { accountHex(payload[field]); } catch { throw new Error("INVALID_PURCHASE_ACCOUNT"); }
+  }
+  if (payload.seller === payload.buyer) throw new Error("BUYER_IS_SELLER");
+  if (payload.listing_buyer !== "*") {
+    try { accountHex(payload.listing_buyer); } catch { throw new Error("INVALID_LISTING_BUYER"); }
+  }
+  for (const field of ["listing_ownership_nonce", "price_rao", "expiry_block"]) {
+    if (typeof payload[field] !== "string" || !/^(0|[1-9]\d*)$/.test(payload[field])) throw new Error("INVALID_PURCHASE_INTEGER");
+  }
+  if (BigInt(payload.price_rao) <= 0n || BigInt(payload.expiry_block) <= 0n) throw new Error("INVALID_PURCHASE_INTEGER");
+  if (typeof payload.listing_nonce !== "string" || !/^[0-9a-f]{64}$/.test(payload.listing_nonce)) throw new Error("INVALID_LISTING_NONCE");
+  if (typeof payload.listing_signature !== "string" || !/^0x[0-9a-fA-F]{128,132}$/.test(payload.listing_signature)) throw new Error("INVALID_LISTING_SIGNATURE");
+  if (!Number.isSafeInteger(payload.nonce) || payload.nonce < 1 || BigInt(payload.nonce) !== BigInt(payload.listing_ownership_nonce) + 1n) throw new Error("INVALID_OWNERSHIP_NONCE");
+  return decoded;
+}
+
+function listingMessage(payload, chain) {
+  return `BITTENSOR_RELICS_SALE_V2\nchain=${chain}\nartifact=${payload.artifact}\nseller=${payload.seller}\nownership_nonce=${payload.listing_ownership_nonce}\nprice_rao=${payload.price_rao}\nexpiry_block=${payload.expiry_block}\nnonce=${payload.listing_nonce}\nbuyer=${payload.listing_buyer}\nsettlement=atomic_tao_transfer_and_relic_ownership\n`;
+}
+
 export function accountHex(value) {
   return u8aToHex(decodeAddress(value.toString()));
 }
@@ -282,6 +316,59 @@ export function validateTransfer({ api, extrinsic, eventRecords }) {
     nonce: decoded.payload.nonce,
     signerHex,
     destinationHex,
+    transactionFeeRao,
+    transactionTipRao,
+  };
+}
+
+export async function validatePurchase({ api, extrinsic, eventRecords, chainGenesis, blockNumber }) {
+  if (!extrinsic.isSigned) throw new Error("UNSIGNED_EXTRINSIC");
+  const outer = extrinsic.method;
+  if (outer.section !== "utility" || outer.method !== "batchAll") throw new Error("INVALID_PURCHASE_OUTER_CALL");
+  const calls = Array.from(outer.args[0]);
+  if (calls.length !== 2) throw new Error("INVALID_PURCHASE_CALL_COUNT");
+  const [paymentCall, remarkCall] = calls;
+  if (paymentCall.section !== "balances" || paymentCall.method !== "transferKeepAlive") throw new Error("INVALID_PAYMENT_CALL");
+  if (remarkCall.section !== "system" || remarkCall.method !== "remarkWithEvent") throw new Error("INVALID_PURCHASE_REMARK_CALL");
+  const bytes = remarkCall.args[0].toU8a(true);
+  const decoded = parsePurchasePayload(bytes);
+  const buyerHex = accountHex(extrinsic.signer);
+  const sellerHex = accountHex(decoded.payload.seller);
+  if (buyerHex !== accountHex(decoded.payload.buyer)) throw new Error("PURCHASE_BUYER_MISMATCH");
+  if (decoded.payload.listing_buyer !== "*" && accountHex(decoded.payload.listing_buyer) !== buyerHex) throw new Error("PURCHASE_RESTRICTED_BUYER_MISMATCH");
+  if (BigInt(decoded.payload.expiry_block) < BigInt(blockNumber)) throw new Error("LISTING_EXPIRED");
+
+  const canonical = listingMessage(decoded.payload, chainGenesis);
+  if (blake2AsHex(new TextEncoder().encode(canonical), 256) !== decoded.payload.listing_id) throw new Error("LISTING_ID_MISMATCH");
+  await cryptoWaitReady();
+  if (!signatureVerify(canonical, decoded.payload.listing_signature, sellerHex).isValid) throw new Error("INVALID_LISTING_SIGNATURE");
+
+  const [paymentDestination, paymentAmount] = paymentCall.args;
+  const priceRao = BigInt(decoded.payload.price_rao);
+  if (accountHex(paymentDestination) !== sellerHex || BigInt(paymentAmount.toString()) !== priceRao) throw new Error("PAYMENT_CALL_MISMATCH");
+  if (!eventRecords.some(({ event }) => api.events.system.ExtrinsicSuccess.is(event))) throw new Error("PURCHASE_EXTRINSIC_FAILED");
+  if (!eventRecords.some(({ event }) => api.events.utility.BatchCompleted.is(event))) throw new Error("PURCHASE_BATCH_FAILED");
+  const paymentEvent = eventRecords.find(({ event }) => api.events.balances.Transfer.is(event));
+  if (!paymentEvent) throw new Error("MISSING_PAYMENT_EVENT");
+  const [eventBuyer, eventSeller, eventAmount] = paymentEvent.event.data;
+  if (accountHex(eventBuyer) !== buyerHex || accountHex(eventSeller) !== sellerHex || BigInt(eventAmount.toString()) !== priceRao) throw new Error("PAYMENT_EVENT_MISMATCH");
+  const feePaid = eventRecords.find(({ event }) => api.events.transactionPayment.TransactionFeePaid.is(event));
+  if (!feePaid) throw new Error("MISSING_TRANSACTION_FEE_EVENT");
+  const [feeSigner, actualFee, tip] = feePaid.event.data;
+  const transactionFeeRao = BigInt(actualFee.toString());
+  const transactionTipRao = BigInt(tip.toString());
+  if (accountHex(feeSigner) !== buyerHex || transactionFeeRao <= 0n || transactionTipRao > transactionFeeRao) throw new Error("TRANSACTION_FEE_EVENT_MISMATCH");
+  const remarked = eventRecords.find(({ event }) => api.events.system.Remarked.is(event));
+  if (!remarked || accountHex(remarked.event.data[0]) !== buyerHex || remarked.event.data[1].toHex() !== decoded.payloadHash) throw new Error("REMARK_EVENT_MISMATCH");
+  return {
+    ...decoded,
+    artifactId: decoded.payload.artifact,
+    nonce: decoded.payload.nonce,
+    signerHex: sellerHex,
+    destinationHex: buyerHex,
+    buyerHex,
+    sellerHex,
+    priceRao,
     transactionFeeRao,
     transactionTipRao,
   };

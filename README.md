@@ -33,9 +33,8 @@ the [launch checklist](docs/LAUNCH_CHECKLIST.md) and a machine-checked
 - No seed phrases or private keys handled by the website
 - No EVM; the current dapp does not require a subnet to work
 - Finalized blocks only
-- Marketplace settlement remains disabled until payment and derived ownership
-  can be made loss-safe
-- Listings are discovery authorizations only and cannot move funds or ownership
+- Atomic fixed-price settlement is enabled on testnet for explicit Sale V2 listings
+- Legacy discovery-only listings must be cancelled and re-signed before buying is enabled
 
 The `/wallet` workspace reads the connected account's finalized collection.
 Transfer review refreshes ownership without CDN caching, validates the next

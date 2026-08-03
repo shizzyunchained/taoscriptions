@@ -74,10 +74,10 @@ export function ListingForm({ artifactId, ownerAccountHex, ownershipNonce, chain
 
   return (
     <section className="listing-panel">
-      <div><span>Owner listing</span><h2>Offer this relic</h2><p>Sign a seven-day discovery listing with TAOStats Wallet. No funds move.</p></div>
+      <div><span>Owner sale authorization</span><h2>List this Relic</h2><p>Authorize a seven-day fixed-price sale. A buyer can atomically pay this exact price and receive protocol ownership.</p></div>
       <label><span>Price</span><div><input inputMode="decimal" value={price} onChange={(event) => setPrice(event.target.value)} /><em>TAO</em></div></label>
       <button type="button" onClick={createListing} disabled={state === "signing" || state === "saved"}>{state === "signing" ? "Confirm in TAOStats Wallet" : state === "saved" ? "Listing published" : "Sign listing"}</button>
-      <small>Discovery only. Buying remains disabled until payment and ownership can settle atomically.</small>
+      <small>Testnet only. Signing does not move funds; it authorizes one atomic purchase at the exact price while you remain the owner.</small>
       {message && <p className={state === "error" ? "error-message" : "listing-success"} role="status">{message}</p>}
     </section>
   );
