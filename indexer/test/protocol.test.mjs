@@ -37,6 +37,18 @@ test("accepts a canonical inline mint", () => {
   assert.match(result.payloadHash, /^0x[0-9a-f]{64}$/);
 });
 
+test("accepts signed purpose and collection policy metadata", () => {
+  const result = parseMintPayload(encode(JSON.stringify(inline({
+    purpose: "collection",
+    collection: "SCORE Origins",
+    content_policy: "br-safe-1",
+  }))));
+  assert.equal(result.payload.collection, "SCORE Origins");
+  assert.throws(() => parseMintPayload(encode(JSON.stringify(inline({ purpose: "collection" })))), /MISSING_COLLECTION/);
+  assert.throws(() => parseMintPayload(encode(JSON.stringify(inline({ purpose: "personal", collection: "Spoofed" })))), /INVALID_COLLECTION/);
+  assert.throws(() => parseMintPayload(encode(JSON.stringify(inline({ content_policy: "unknown" })))), /INVALID_CONTENT_POLICY/);
+});
+
 test("accepts a content-addressed mint", () => {
   const payload = inline({
     body: undefined,

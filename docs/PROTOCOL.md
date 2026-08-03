@@ -88,6 +88,8 @@ The remark is UTF-8 JSON with no duplicate keys. A v1 mint has this shape:
   "netuid": 64,
   "subnet_generation": 4920351,
   "name": "Example Relic",
+  "purpose": "personal",
+  "content_policy": "br-safe-1",
   "media_type": "text/plain;charset=utf-8",
   "body": "An inline text artifact"
 }
@@ -116,6 +118,12 @@ Rules:
   appended image bytes and dimensions from 64 through 256 pixels per side.
 - `p`, `v`, `op`, `netuid`, `subnet_generation`, `name`, and `media_type` are
   required.
+- `purpose`, when present, MUST be `personal`, `collection`,
+  `subnet_milestone`, or `community_message`. The reference forge includes it.
+- `content_policy`, when present, MUST equal `br-safe-1`. It records the
+  signer's content attestation; it is not evidence that the content is lawful.
+- A `collection` label MUST contain 1 to 80 Unicode scalar values and is valid
+  only with `purpose: "collection"`.
 - `name` MUST contain 1 to 80 Unicode scalar values after trimming.
 - A mint MUST contain inline text, content-addressed legacy media, or a valid
   binary image envelope. The reference client creates only inline text and
@@ -198,6 +206,18 @@ For every valid mint:
 Duplicate content is allowed but MUST be disclosed. Indexers SHOULD link
 artifacts sharing an identical content hash and identify the earliest valid
 mint.
+
+### 8.1 Collection labels and future collection authority
+
+A v1 `collection` field is creator-declared grouping metadata. It does not
+prove membership, authorization by a subnet owner, a burn threshold, or a
+maximum supply. Interfaces MUST NOT display it as verified membership.
+
+A later collection operation will define a canonical authority-signed
+declaration containing the collection authority, subnet generation, eligible
+mint window, minimum finalized alpha burn, maximum supply, and content rules.
+Until that operation and its validation rules are published, a collection name
+is only a signed label on the individual Relic.
 
 ## 9. Direct-alpha burn mode
 
@@ -340,6 +360,11 @@ queryable.
 - SVG, HTML, and other active formats MUST be sandboxed or served as downloads.
 - User text MUST be escaped; inscription content is never trusted HTML.
 - The reference image client MUST NOT depend on an external media gateway.
+- The reference forge requires a `br-safe-1` signer attestation excluding
+  sexual or exploitative material, graphic violence, weapons-focused imagery,
+  hate, and illegal content. Because finalized bytes cannot be deleted, miners,
+  validators, indexers, and interfaces MAY refuse to process or display
+  content that violates their published policies.
 
 ## 15. Client safety requirements
 

@@ -5,11 +5,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ApiPromise } from "@polkadot/api";
 import {
   calculateLimitPrice,
+  CONTENT_POLICY_ID,
   createInlineMintPayload,
   createOnChainImageMintPayload,
   DEFAULT_SLIPPAGE_BPS,
   MAX_MINT_REMARK_BYTES,
   MAX_ONCHAIN_IMAGE_BYTES,
+  type RelicPurpose,
 } from "@/lib/protocol";
 import { verifyFinalizedMintReceipt, type MintReceiptExpectation } from "@/lib/mint-receipt";
 import { createMintEvidence, type MintEvidence } from "@/lib/mint-evidence";
@@ -29,6 +31,8 @@ type MintReview = {
   payload: string;
   payloadBytes: number;
   imageBytes: number;
+  purpose: RelicPurpose;
+  collection: string;
   limitPrice: bigint;
   estimatedFee: bigint;
   quoteBlock: string;
@@ -129,6 +133,9 @@ export default function Home() {
   const [walletError, setWalletError] = useState("");
   const [relicName, setRelicName] = useState("");
   const [relicBody, setRelicBody] = useState("");
+  const [relicPurpose, setRelicPurpose] = useState<RelicPurpose>("personal");
+  const [collectionLabel, setCollectionLabel] = useState("");
+  const [policyAccepted, setPolicyAccepted] = useState(false);
   const [onChainImage, setOnChainImage] = useState<OnChainImage | null>(null);
   const [imageState, setImageState] = useState<"idle" | "processing" | "ready" | "error">("idle");
   const [imageError, setImageError] = useState("");
@@ -351,6 +358,7 @@ export default function Home() {
     if (!account) throw new Error("Connect the signing wallet first.");
     if (!selectedSubnet || selectedNetuid === null) throw new Error("Choose a subnet first.");
     if (!amountRao || amountRao === 0n) throw new Error("Enter a valid TAO amount.");
+    if (!policyAccepted) throw new Error("Confirm the Relics content covenant before reviewing the mint.");
 
     const finalizedHash = await api.rpc.chain.getFinalizedHead();
     const [apiAt, header] = await Promise.all([
@@ -388,11 +396,22 @@ export default function Home() {
       subnetGeneration: currentGeneration,
       name: relicName,
       body: relicBody,
+      purpose: relicPurpose,
+      collection: relicPurpose === "collection" ? collectionLabel : undefined,
+      contentPolicy: CONTENT_POLICY_ID,
       imageBytes: onChainImage.bytes,
       contentHash: onChainImage.contentHash,
       width: onChainImage.width,
       height: onChainImage.height,
-    }) : createInlineMintPayload({ netuid: selectedNetuid, subnetGeneration: currentGeneration, name: relicName, body: relicBody });
+    }) : createInlineMintPayload({
+      netuid: selectedNetuid,
+      subnetGeneration: currentGeneration,
+      name: relicName,
+      body: relicBody,
+      purpose: relicPurpose,
+      collection: relicPurpose === "collection" ? collectionLabel : undefined,
+      contentPolicy: CONTENT_POLICY_ID,
+    });
     const signerAccountHex = api.registry.createType("AccountId32", account.address).toHex().toLowerCase();
     const routeHotkeyHex = api.registry.createType("AccountId32", routeHotkey).toHex().toLowerCase();
     if (routeHotkeyHex === `0x${"0".repeat(64)}`) throw new Error("The subnet does not expose a registered owner hotkey.");
@@ -456,6 +475,8 @@ export default function Home() {
         payload: payload.json,
         payloadBytes: payload.byteLength,
         imageBytes: onChainImage?.bytes.length ?? 0,
+        purpose: relicPurpose,
+        collection: relicPurpose === "collection" ? collectionLabel.trim() : "",
         limitPrice,
         estimatedFee,
         quoteBlock: header.number.toString(),
@@ -589,7 +610,7 @@ export default function Home() {
       <nav className="nav" aria-label="Main navigation">
         <a className="brand" href="#top" aria-label="Bittensor Relics home"><span className="brand-sigil" aria-hidden="true"><i /></span><span>Bittensor Relics</span></a>
         <div className="nav-links">
-          <a href="#forge">Forge</a><a href="/explore">Explore</a><a href="/marketplace">Market</a><a href="/wallet">My Relics</a><a href="/network">Network</a><a href="/docs">Docs</a>
+          <a href="#forge">Forge</a><a href="/explore">Explore</a><a href="/marketplace">Market</a><a href="/wallet">My Relics</a><a href="/network">Network</a><a href="/whitepaper">Whitepaper</a><a href="/docs">Docs</a>
           <span className={`chain-status ${dataState}`}><i aria-hidden="true" />{dataState === "ready" ? `Testnet v${runtimeVersion}` : dataState === "error" ? "Chain read paused" : "Reading chain"}</span>
         </div>
       </nav>
@@ -630,6 +651,8 @@ export default function Home() {
 
             <div className="step-label content-step"><span>03</span>Write the relic</div>
             <label className="field"><span>Name</span><input maxLength={80} value={relicName} onChange={(event) => { setRelicName(event.target.value); setMintReview(null); setMintState("idle"); }} placeholder="A name that survives the moment" /></label>
+            <label className="field"><span>Purpose</span><select value={relicPurpose} onChange={(event) => { const purpose = event.target.value as RelicPurpose; setRelicPurpose(purpose); if (purpose !== "collection") setCollectionLabel(""); setMintReview(null); setMintState("idle"); }}><option value="personal">Personal artifact</option><option value="collection">Collection entry</option><option value="subnet_milestone">Subnet milestone</option><option value="community_message">Community message</option></select><small>The purpose is signed into the Relic manifest.</small></label>
+            {relicPurpose === "collection" && <label className="field"><span>Collection label</span><input maxLength={80} value={collectionLabel} onChange={(event) => { setCollectionLabel(event.target.value); setMintReview(null); setMintState("idle"); }} placeholder="Example: SCORE Origins" /><small>Creator-declared in this prototype. Verified collection authorities and rule manifests are the next protocol stage.</small></label>}
             <div className="onchain-upload">
               <div className="upload-heading"><div><span>On-chain image</span><strong>Stored inside the finalized transaction</strong></div>{onChainImage && <button type="button" onClick={removeImage}>Remove</button>}</div>
               {onChainImage ? (
@@ -640,6 +663,7 @@ export default function Home() {
               {imageError && <p className="error-message" role="alert">{imageError}</p>}
             </div>
             <label className="field inscription-field"><span>{onChainImage ? "Inscription (optional)" : "Inscription"}</span><textarea maxLength={1024} value={relicBody} onChange={(event) => { setRelicBody(event.target.value); setMintReview(null); setMintState("idle"); }} placeholder="The text permanently bound to this alpha burn" /><small>{Array.from(relicBody).length}/1,024 characters</small></label>
+            <label className="content-covenant"><input type="checkbox" checked={policyAccepted} onChange={(event) => { setPolicyAccepted(event.target.checked); setMintReview(null); setMintState("idle"); }} /><span><strong>Relics content covenant</strong><small>I confirm this Relic contains no sexual or exploitative content, graphic violence, weapons-focused imagery, hate, or illegal material. The <code>{CONTENT_POLICY_ID}</code> attestation is included in the signed manifest; because on-chain bytes cannot be removed, miners, validators, and the marketplace may refuse noncompliant content.</small></span></label>
 
             <div className="step-label wallet-step"><span>04</span>Connect the signer</div>
             {account ? (
@@ -660,6 +684,7 @@ export default function Home() {
               <div className="transaction-review">
                 <div><span>Network</span><strong>Testnet / {shortAddress(genesisHash)}</strong></div>
                 <div><span>Fresh at block</span><strong>#{mintReview.quoteBlock}</strong></div>
+                <div><span>Relic purpose</span><strong>{mintReview.purpose.replaceAll("_", " ")}{mintReview.collection ? ` / ${mintReview.collection}` : ""}</strong></div>
                 <div><span>Registered burn hotkey</span><strong>{shortAddress(mintReview.routeHotkey)}</strong></div>
                 <div><span>Maximum ending spot price (2%)</span><strong>{formatPrice(mintReview.limitPrice)}</strong></div>
                 <div><span>Estimated chain fee</span><strong>{formatToken(mintReview.estimatedFee, 7)} TAO</strong></div>
@@ -682,7 +707,7 @@ export default function Home() {
             ) : mintState === "review" ? (
               <button className="forge-button danger" type="button" onClick={signMint}>Sign and forge on testnet <span>Irreversible test burn</span></button>
             ) : (
-              <button className="forge-button" type="button" onClick={reviewMint} disabled={!account || !quote || quoteLoading || mintState === "signing" || mintState === "submitted"}>
+              <button className="forge-button" type="button" onClick={reviewMint} disabled={!account || !quote || !policyAccepted || quoteLoading || mintState === "signing" || mintState === "submitted"}>
                 {mintState === "signing" ? "Confirm in TAOStats Wallet" : mintState === "submitted" ? "Waiting for finality" : account ? "Review testnet forge" : "Connect wallet to continue"}
                 <span>{mintState === "submitted" ? shortAddress(transactionHash) : "No mainnet funds"}</span>
               </button>

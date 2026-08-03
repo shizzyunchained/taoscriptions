@@ -6,12 +6,14 @@ export const INDEXER_VERSION = "0.2.0";
 const ALLOWED_KEYS = new Set([
   "p", "v", "op", "netuid", "subnet_generation", "name", "media_type",
   "body", "content_uri", "content_hash", "encoding", "content_length", "width", "height",
+  "purpose", "collection", "content_policy",
 ]);
 const TRANSFER_KEYS = new Set(["p", "v", "op", "artifact", "to", "nonce"]);
 const IMAGE_MAGIC = Uint8Array.from([0x42, 0x52, 0x49, 0x31]);
 const MAX_JSON_REMARK_BYTES = 2_048;
 const MAX_MINT_REMARK_BYTES = 16_384;
 const MAX_ONCHAIN_IMAGE_BYTES = 12_288;
+const RELIC_PURPOSES = new Set(["personal", "collection", "subnet_milestone", "community_message"]);
 
 function hasImageMagic(bytes) {
   return bytes.length >= IMAGE_MAGIC.length && IMAGE_MAGIC.every((value, index) => bytes[index] === value);
@@ -113,6 +115,10 @@ export function parseMintPayload(bytes) {
   if (!Number.isInteger(payload.netuid) || payload.netuid <= 0 || payload.netuid > 65_535) throw new Error("INVALID_NETUID");
   if (!Number.isSafeInteger(payload.subnet_generation) || payload.subnet_generation < 0) throw new Error("INVALID_SUBNET_GENERATION");
   if (typeof payload.name !== "string" || Array.from(payload.name.trim()).length < 1 || Array.from(payload.name.trim()).length > 80) throw new Error("INVALID_NAME");
+  if (payload.purpose !== undefined && !RELIC_PURPOSES.has(payload.purpose)) throw new Error("INVALID_PURPOSE");
+  if (payload.collection !== undefined && (payload.purpose !== "collection" || typeof payload.collection !== "string" || Array.from(payload.collection.trim()).length < 1 || Array.from(payload.collection.trim()).length > 80)) throw new Error("INVALID_COLLECTION");
+  if (payload.purpose === "collection" && typeof payload.collection !== "string") throw new Error("MISSING_COLLECTION");
+  if (payload.content_policy !== undefined && payload.content_policy !== "br-safe-1") throw new Error("INVALID_CONTENT_POLICY");
   if (typeof payload.media_type !== "string" || payload.media_type.length < 1 || payload.media_type.length > 255) throw new Error("INVALID_MEDIA_TYPE");
   const onchain = payload.encoding === "binary" && mediaBytes instanceof Uint8Array;
   const inline = typeof payload.body === "string" && !onchain;

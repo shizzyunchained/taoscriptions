@@ -68,6 +68,18 @@ const claims = [
     claim: "Relics can be transferred, but they are not native Subtensor NFTs.",
     detail: "Ownership and transfers are deterministic Relics protocol rules derived from signed, finalized remarks. Subtensor itself does not currently enforce a Relic NFT ownership primitive, and marketplace settlement remains intentionally disabled.",
   },
+  {
+    verdict: "Live forge rule",
+    tone: "true",
+    claim: "A creator signs the Relic purpose and BR-SAFE-1 attestation.",
+    detail: "The current forge places the selected purpose and content-policy identifier inside the signed mint manifest. This is a creator attestation and an interface rule; it is not proof that the depicted content is safe or lawful.",
+  },
+  {
+    verdict: "Prototype only",
+    tone: "planned",
+    claim: "Collection labels are not yet verified collection membership.",
+    detail: "The forge can sign a creator-declared collection label. Canonical collections still require a separate authority-signed declaration defining eligible subnet generation, burn threshold, supply, time window, and content rules.",
+  },
 ];
 
 export default function DocsPage() {
@@ -76,7 +88,7 @@ export default function DocsPage() {
       <div className="grain" aria-hidden="true" />
       <nav className="nav" aria-label="Main navigation">
         <SiteMark />
-        <div className="nav-links"><Link href="/#forge">Forge</Link><Link href="/network">Network</Link><Link href="/docs">Docs</Link><span className="chain-status ready"><i aria-hidden="true" />Fact checked</span></div>
+        <div className="nav-links"><Link href="/#forge">Forge</Link><Link href="/network">Network</Link><Link href="/whitepaper">Whitepaper</Link><Link href="/docs">Docs</Link><span className="chain-status ready"><i aria-hidden="true" />Fact checked</span></div>
       </nav>
 
       <header className="docs-hero">

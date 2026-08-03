@@ -4,14 +4,21 @@ export const MAX_JSON_REMARK_BYTES = 2_048;
 export const MAX_ONCHAIN_IMAGE_BYTES = 12_288;
 export const MAX_MINT_REMARK_BYTES = 16_384;
 export const DEFAULT_SLIPPAGE_BPS = 200n;
+export const CONTENT_POLICY_ID = "br-safe-1";
+export const RELIC_PURPOSES = ["personal", "collection", "subnet_milestone", "community_message"] as const;
 const BPS_DENOMINATOR = 10_000n;
 const IMAGE_MAGIC = new TextEncoder().encode("BRI1");
+
+export type RelicPurpose = (typeof RELIC_PURPOSES)[number];
 
 type InlineMintInput = {
   netuid: number;
   subnetGeneration: string;
   name: string;
   body: string;
+  purpose?: RelicPurpose;
+  collection?: string;
+  contentPolicy?: typeof CONTENT_POLICY_ID;
 };
 
 type OnChainImageMintInput = InlineMintInput & {
@@ -34,6 +41,8 @@ function isWebP(bytes: Uint8Array) {
 function validateMintIdentity(input: InlineMintInput) {
   const name = input.name.trim();
   const body = input.body.trim();
+  const purpose = input.purpose ?? "personal";
+  const collection = input.collection?.trim() ?? "";
   if (!Number.isSafeInteger(input.netuid) || input.netuid <= 0 || input.netuid > 65_535) {
     throw new Error("Choose a valid non-root subnet.");
   }
@@ -42,11 +51,19 @@ function validateMintIdentity(input: InlineMintInput) {
     throw new Error("Relic names must contain 1 to 80 characters.");
   }
   if (Array.from(body).length > 1_024) throw new Error("Inscriptions may contain up to 1,024 characters.");
-  return { name, body };
+  if (!RELIC_PURPOSES.includes(purpose)) throw new Error("Choose a valid Relic purpose.");
+  if (purpose === "collection" && (Array.from(collection).length < 1 || Array.from(collection).length > 80)) {
+    throw new Error("Collection labels must contain 1 to 80 characters.");
+  }
+  if (purpose !== "collection" && collection) throw new Error("Only collection entries may include a collection label.");
+  if (input.contentPolicy !== undefined && input.contentPolicy !== CONTENT_POLICY_ID) {
+    throw new Error("The Relic content policy is not supported.");
+  }
+  return { name, body, purpose, collection };
 }
 
 export function createInlineMintPayload(input: InlineMintInput) {
-  const { name, body } = validateMintIdentity(input);
+  const { name, body, purpose, collection } = validateMintIdentity(input);
   if (Array.from(body).length < 1 || Array.from(body).length > 1_024) {
     throw new Error("Inline inscriptions must contain 1 to 1,024 characters.");
   }
@@ -58,6 +75,9 @@ export function createInlineMintPayload(input: InlineMintInput) {
     netuid: input.netuid,
     subnet_generation: Number.parseInt(input.subnetGeneration, 10),
     name,
+    purpose,
+    ...(collection ? { collection } : {}),
+    ...(input.contentPolicy ? { content_policy: input.contentPolicy } : {}),
     media_type: "text/plain;charset=utf-8",
     body,
   });
@@ -71,7 +91,7 @@ export function createInlineMintPayload(input: InlineMintInput) {
 }
 
 export function createOnChainImageMintPayload(input: OnChainImageMintInput) {
-  const { name, body } = validateMintIdentity(input);
+  const { name, body, purpose, collection } = validateMintIdentity(input);
   if (!(input.imageBytes instanceof Uint8Array) || input.imageBytes.length < 1) {
     throw new Error("Choose an image to store on-chain.");
   }
@@ -90,6 +110,9 @@ export function createOnChainImageMintPayload(input: OnChainImageMintInput) {
     netuid: input.netuid,
     subnet_generation: Number.parseInt(input.subnetGeneration, 10),
     name,
+    purpose,
+    ...(collection ? { collection } : {}),
+    ...(input.contentPolicy ? { content_policy: input.contentPolicy } : {}),
     media_type: "image/webp",
     encoding: "binary",
     content_hash: input.contentHash,

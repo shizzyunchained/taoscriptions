@@ -102,6 +102,12 @@ h1 span { display: block; color: var(--ember-bright); font-style: italic; }
 .field select:focus, .field input:focus, .field textarea:focus { border-color: var(--ember); }
 .field textarea { min-height: 116px; padding-top: 14px; resize: vertical; font-family: inherit; line-height: 1.6; }
 .inscription-field small { text-align: right; }
+.content-covenant { margin-top: 16px; padding: 16px; display: grid; grid-template-columns: 18px 1fr; gap: 12px; align-items: start; border: 1px solid rgba(255,177,74,.25); background: rgba(255,159,67,.035); cursor: pointer; }
+.content-covenant input { width: 16px; height: 16px; margin-top: 2px; accent-color: var(--ember); }
+.content-covenant strong, .content-covenant small { display: block; }
+.content-covenant strong { color: #c9cdc5; font-size: 10px; }
+.content-covenant small { margin-top: 6px; color: var(--dim); font-size: 9px; line-height: 1.6; }
+.content-covenant code { color: var(--ember); font: inherit; }
 .field select:disabled { color: var(--dim); cursor: wait; }
 .amount-field > div { position: relative; }
 .amount-field input { padding-right: 62px; font: 16px var(--font-geist-mono), monospace; }
@@ -593,6 +599,23 @@ footer > a:last-child:hover { color: var(--ink); }
 .sources a:hover { background: rgba(200,245,107,.035); }
 .docs-actions { padding-top: 70px; }
 
+/* Working white paper */
+.whitepaper-hero { min-height: 590px; padding: 88px 0 72px; display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 50px; align-content: center; border-bottom: 1px solid var(--line); }
+.whitepaper-hero > .eyebrow { grid-column: 1 / -1; }
+.whitepaper-hero h1 { color: var(--ink); font: 400 clamp(58px, 8.6vw, 118px)/.84 Georgia, serif; letter-spacing: -.07em; }
+.whitepaper-hero > div { align-self: end; padding: 18px 0; border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); }
+.whitepaper-hero > div span, .whitepaper-hero > div strong { display: block; }
+.whitepaper-hero > div span { color: var(--ember); font: 8px var(--font-geist-mono), monospace; text-transform: uppercase; letter-spacing: .09em; }
+.whitepaper-hero > div strong { margin-top: 10px; color: #c6cbc2; font-size: 12px; line-height: 1.45; }
+.paper-body section { padding: clamp(48px, 8vw, 94px) 0; display: grid; grid-template-columns: 90px minmax(0, 930px); gap: 42px; border-bottom: 1px solid var(--line); }
+.paper-body section > span { color: var(--ember); font: 10px var(--font-geist-mono), monospace; }
+.paper-body section > p { color: #c8ccc4; font: 400 clamp(20px, 2.45vw, 33px)/1.62 Georgia, serif; }
+.paper-body section:first-child > p::first-letter { float: left; margin: 7px 11px 0 0; color: var(--acid); font-size: 76px; line-height: .72; }
+.paper-status { margin-top: 54px; padding: clamp(28px, 5vw, 50px); border: 1px solid rgba(255,177,74,.24); background: linear-gradient(135deg, var(--panel), rgba(255,159,67,.025)); }
+.paper-status > span { color: var(--ember); font: 8px var(--font-geist-mono), monospace; text-transform: uppercase; letter-spacing: .09em; }
+.paper-status > strong { max-width: 760px; margin-top: 14px; display: block; color: var(--ink); font: 400 clamp(24px, 3vw, 40px)/1.12 Georgia, serif; }
+.paper-status ul { margin: 26px 0 0; padding-left: 18px; color: var(--dim); font-size: 10px; line-height: 1.9; }
+
 @media (max-width: 850px) {
   .docs-hero { grid-template-columns: 1fr; gap: 42px; }
   .docs-hero > .eyebrow { grid-column: auto; }
@@ -601,6 +624,8 @@ footer > a:last-child:hover { color: var(--ink); }
   .docs-architecture { grid-template-columns: 1fr; gap: 0; }
   .docs-architecture > b { min-height: 32px; transform: rotate(90deg); }
   .claim-audit { grid-template-columns: repeat(2, 1fr); }
+  .whitepaper-hero { grid-template-columns: 1fr; min-height: auto; }
+  .whitepaper-hero > .eyebrow { grid-column: auto; }
 }
 
 @media (max-width: 620px) {
@@ -609,6 +634,7 @@ footer > a:last-child:hover { color: var(--ink); }
   .mint-callout dl { grid-template-columns: 1fr; }
   .mint-callout dl div { border-right: 0; border-bottom: 1px solid var(--line); }
   .score-art { min-height: 330px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .paper-body section { grid-template-columns: 1fr; gap: 18px; }
   .score-example dl div { flex-direction: column; gap: 7px; }
   .score-example dd { max-width: none; text-align: left; }
 }
