@@ -45,7 +45,7 @@ a:focus-visible {
 .site-shell {
   min-height: 100vh;
   position: relative;
-  overflow: hidden;
+  overflow: clip;
   padding: 0 5vw;
   background:
     radial-gradient(
@@ -84,8 +84,12 @@ a:focus-visible {
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--line);
-  position: relative;
-  z-index: 2;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(8, 10, 9, 0.92);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(18px);
 }
 .brand {
   display: inline-flex;
