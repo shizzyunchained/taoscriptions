@@ -5,11 +5,13 @@ import { RelicCard } from "@/components/relic-card";
 import { SiteMark } from "@/components/site-mark";
 import { SiteNav } from "@/components/site-nav";
 import { compactHex, formatRao } from "@/lib/format";
+import { readTestnetSubnets } from "@/lib/chain-reader";
 import {
   IndexerUnavailableError,
   listArtifacts,
   pageCursor,
 } from "@/lib/indexer-db";
+import { buildSubnetNameMap, getSubnetName, type SubnetNameMap } from "@/lib/subnet-display";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -25,12 +27,18 @@ export default async function ExplorePage({
 }) {
   const { cursor: rawCursor } = await searchParams;
   let result: Awaited<ReturnType<typeof listArtifacts>> | null = null;
+  let subnetNames: SubnetNameMap = {};
   let unavailable = false;
   try {
-    result = await listArtifacts({
-      limit: 24,
-      cursor: pageCursor(rawCursor ?? null),
-    });
+    const [collection, chainSnapshot] = await Promise.all([
+      listArtifacts({
+        limit: 24,
+        cursor: pageCursor(rawCursor ?? null),
+      }),
+      readTestnetSubnets().catch(() => null),
+    ]);
+    result = collection;
+    subnetNames = buildSubnetNameMap(chainSnapshot?.subnets ?? []);
   } catch (error) {
     if (error instanceof IndexerUnavailableError) unavailable = true;
     else throw error;
@@ -77,8 +85,8 @@ export default async function ExplorePage({
                 <dd>1 test TAO</dd>
               </div>
               <div>
-                <dt>Alpha burned</dt>
-                <dd>1,035.580333229 α</dd>
+                <dt>Subnet token burned</dt>
+                <dd><strong>1,035.580333229 SN1 BURNED</strong><small>Subnet 1</small></dd>
               </div>
               <div>
                 <dt>Transaction</dt>
@@ -115,7 +123,7 @@ export default async function ExplorePage({
               <div><dt>Position</dt><dd>Block {Number(featured.blockNumber).toLocaleString()} · {featured.extrinsicIndex}</dd></div>
               <div><dt>Purpose</dt><dd>{featured.purpose}</dd></div>
               <div><dt>TAO spent</dt><dd>{formatRao(featured.taoSpentRao)} test TAO</dd></div>
-              <div><dt>Alpha burned</dt><dd>{formatRao(featured.alphaBurnedRao)} α</dd></div>
+              <div className="subnet-burn-stat"><dt>Subnet token burned</dt><dd><strong>{formatRao(featured.alphaBurnedRao)} SN{featured.netuid} BURNED</strong><small>{getSubnetName(subnetNames, featured.netuid, featured.subnetGeneration)}</small></dd></div>
               <div><dt>On-chain image</dt><dd>{featured.mediaByteLength?.toLocaleString()} bytes</dd></div>
               <div><dt>Current owner</dt><dd>{compactHex(featured.ownerAccountHex)}</dd></div>
             </dl>
@@ -132,7 +140,7 @@ export default async function ExplorePage({
             aria-label="Finalized Bittensor Relics"
           >
             {result.artifacts.map((artifact) => (
-              <RelicCard key={artifact.artifactId} artifact={artifact} />
+              <RelicCard key={artifact.artifactId} artifact={artifact} subnetName={getSubnetName(subnetNames, artifact.netuid, artifact.subnetGeneration)} />
             ))}
           </section>
           {result.nextCursor && (

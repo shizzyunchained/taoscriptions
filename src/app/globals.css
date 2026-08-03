@@ -2112,6 +2112,21 @@ footer > a:last-child:hover {
     16px var(--font-geist-mono),
     monospace;
 }
+.subnet-burn-stat dd strong,
+.subnet-burn-stat dd small {
+  display: block;
+}
+.subnet-burn-stat dd strong {
+  color: var(--acid);
+  font: inherit;
+  line-height: 1.4;
+}
+.subnet-burn-stat dd small {
+  margin-top: 5px;
+  color: var(--ink);
+  font: 600 13px/1.35 var(--font-geist-sans), sans-serif;
+  text-transform: none;
+}
 .artifact-card > a,
 .indexer-empty a,
 .pagination a {
@@ -2303,6 +2318,17 @@ footer > a:last-child:hover {
     13px var(--font-geist-mono),
     monospace;
   overflow-wrap: anywhere;
+}
+.proof-grid .subnet-burn-proof strong {
+  color: var(--acid);
+  font-size: 15px;
+}
+.proof-grid .subnet-burn-proof small {
+  display: block;
+  margin-top: 7px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 650;
 }
 .chain-proof {
   padding: clamp(28px, 5vw, 52px);
@@ -3374,6 +3400,13 @@ footer > a:last-child:hover {
 .owned-proof-grid > div:nth-child(3) strong {
   color: var(--acid);
 }
+.owned-proof-grid .subnet-burn-proof small {
+  display: block;
+  margin-top: 7px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 650;
+}
 .owned-chain-receipt {
   margin-top: 22px;
   padding: 20px 22px;
@@ -3928,6 +3961,15 @@ footer > a:last-child:hover {
   font: 13px var(--font-geist-mono), monospace;
   line-height: 1.45;
   overflow-wrap: anywhere;
+}
+.market-card-body .subnet-burn-stat {
+  min-width: 145px;
+}
+.market-card-body .subnet-burn-stat dd {
+  font-size: 14px;
+}
+.market-card-body .subnet-burn-stat dd small {
+  font-size: 13px;
 }
 .market-card-body dl > div:first-child dd {
   color: var(--acid);

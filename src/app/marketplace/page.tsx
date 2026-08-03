@@ -3,12 +3,13 @@ import Link from "next/link";
 import { MarketplaceBrowser } from "@/components/marketplace-browser";
 import { SiteMark } from "@/components/site-mark";
 import { SiteNav } from "@/components/site-nav";
-import { formatRao } from "@/lib/format";
+import { readTestnetSubnets } from "@/lib/chain-reader";
 import {
   IndexerUnavailableError,
   listActiveListings,
   listArtifacts,
 } from "@/lib/indexer-db";
+import { buildSubnetNameMap, type SubnetNameMap } from "@/lib/subnet-display";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -19,21 +20,24 @@ export const metadata: Metadata = {
 export default async function MarketplacePage() {
   let listings: Awaited<ReturnType<typeof listActiveListings>> = [];
   let artifacts: Awaited<ReturnType<typeof listArtifacts>>["artifacts"] = [];
+  let subnetNames: SubnetNameMap = {};
   let unavailable = false;
   try {
-    const [activeListings, collection] = await Promise.all([
+    const [activeListings, collection, chainSnapshot] = await Promise.all([
       listActiveListings(null, 100),
       listArtifacts({ limit: 100, cursor: null }),
+      readTestnetSubnets().catch(() => null),
     ]);
     listings = activeListings;
     artifacts = collection.artifacts;
+    subnetNames = buildSubnetNameMap(chainSnapshot?.subnets ?? []);
   } catch (error) {
     if (error instanceof IndexerUnavailableError) unavailable = true;
     else throw error;
   }
-  const totalAlpha = artifacts
-    .reduce((total, artifact) => total + BigInt(artifact.alphaBurnedRao), 0n)
-    .toString();
+  const subnetEconomies = new Set(
+    artifacts.map((artifact) => `${artifact.netuid}:${artifact.subnetGeneration}`),
+  ).size;
 
   return (
     <main className="site-shell inner-site">
@@ -43,7 +47,7 @@ export default async function MarketplacePage() {
         <div>
           <p className="eyebrow">The Relic market</p>
           <h1>Collect proof.<br />Discover history.</h1>
-          <p>Discover permanent on-chain art backed by a finalized alpha burn. Every card links to the media bytes, inscription, owner, and chain receipt.</p>
+          <p>Discover permanent on-chain art backed by a finalized subnet-token burn. Every card identifies the subnet economy and links to the media bytes, inscription, owner, and chain receipt.</p>
           <div className="market-hero-actions">
             <Link href="/wallet#listing">List a Relic</Link>
             <Link href="/wallet">My Relics</Link>
@@ -52,7 +56,7 @@ export default async function MarketplacePage() {
         <dl className="market-stats">
           <div><dt>Relics</dt><dd>{artifacts.length}</dd></div>
           <div><dt>Listed</dt><dd>{listings.length}</dd></div>
-          <div><dt>Alpha burned</dt><dd>{formatRao(totalAlpha)}</dd></div>
+          <div><dt>Subnet economies</dt><dd>{subnetEconomies}</dd></div>
           <div><dt>Network</dt><dd>Testnet</dd></div>
         </dl>
       </section>
@@ -65,7 +69,7 @@ export default async function MarketplacePage() {
       {unavailable ? (
         <section className="indexer-empty"><span>Indexer gate</span><h2>The marketplace index is temporarily unavailable.</h2><p>Relics will never display unverified market inventory.</p><Link href="/explore">View collection status</Link></section>
       ) : (
-        <MarketplaceBrowser artifacts={artifacts} listings={listings} />
+        <MarketplaceBrowser artifacts={artifacts} listings={listings} subnetNames={subnetNames} />
       )}
       <footer><SiteMark className="footer-brand" /><p>Wallet-signed listings. Chain-verifiable ownership.</p><Link href="/wallet#listing">List a Relic -&gt;</Link></footer>
     </main>

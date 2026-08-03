@@ -7,6 +7,7 @@ import { SiteNav } from "@/components/site-nav";
 import { RelicListings } from "@/components/relic-listings";
 import { BuyerCheckout } from "@/components/buyer-checkout";
 import { compactHex, formatRao } from "@/lib/format";
+import { readTestnetSubnets } from "@/lib/chain-reader";
 import {
   getArtifact,
   getArtifactByGlobalNumber,
@@ -14,6 +15,7 @@ import {
   listActiveListings,
   listArtifactTransfers,
 } from "@/lib/indexer-db";
+import { buildSubnetNameMap, getSubnetName } from "@/lib/subnet-display";
 
 export const dynamic = "force-dynamic";
 
@@ -37,16 +39,25 @@ export default async function RelicPage({ params }: Props) {
   let artifact: Awaited<ReturnType<typeof getArtifact>> = null;
   let transfers: Awaited<ReturnType<typeof listArtifactTransfers>> = [];
   let listings: Awaited<ReturnType<typeof listActiveListings>> = [];
+  let subnetName = "";
   let unavailable = false;
   try {
     artifact = isGlobalNumber
       ? await getArtifactByGlobalNumber(id)
       : await getArtifact(id);
     if (artifact) {
-      [transfers, listings] = await Promise.all([
+      const [artifactTransfers, activeListings, chainSnapshot] = await Promise.all([
         listArtifactTransfers(artifact.artifactId),
         listActiveListings(artifact.artifactId, 20),
+        readTestnetSubnets().catch(() => null),
       ]);
+      transfers = artifactTransfers;
+      listings = activeListings;
+      subnetName = getSubnetName(
+        buildSubnetNameMap(chainSnapshot?.subnets ?? []),
+        artifact.netuid,
+        artifact.subnetGeneration,
+      );
     }
   } catch (error) {
     if (error instanceof IndexerUnavailableError) unavailable = true;
@@ -111,8 +122,8 @@ export default async function RelicPage({ params }: Props) {
           </section>
           <section className="proof-grid">
             <div><span>TAO spent</span><strong>{formatRao(artifact.taoSpentRao)} TAO</strong></div>
-            <div><span>Alpha burned</span><strong>{formatRao(artifact.alphaBurnedRao)}</strong></div>
-            <div><span>Subnet identity</span><strong>SN{artifact.netuid}:{artifact.subnetGeneration}</strong></div>
+            <div className="subnet-burn-proof"><span>Subnet token burned</span><strong>{formatRao(artifact.alphaBurnedRao)} SN{artifact.netuid} BURNED</strong><small>{subnetName}</small></div>
+            <div><span>Canonical subnet</span><strong>SN{artifact.netuid}:{artifact.subnetGeneration}</strong></div>
             <div><span>Limit price</span><strong>{formatRao(artifact.limitPriceRao)} TAO / alpha</strong></div>
             <div><span>Chain fee</span><strong>{artifact.transactionFeeRao ? `${formatRao(artifact.transactionFeeRao)} TAO` : "Legacy record"}</strong></div>
           </section>

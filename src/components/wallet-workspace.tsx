@@ -9,6 +9,11 @@ import { createTransferPayload } from "@/lib/protocol";
 import { compactHex, formatRao } from "@/lib/format";
 import { assertExpectedGenesis } from "@/lib/chain-guard";
 import {
+  buildSubnetNameMap,
+  getSubnetName,
+  type SubnetNameMap,
+} from "@/lib/subnet-display";
+import {
   createTransferEvidence,
   type TransferEvidence,
 } from "@/lib/transfer-evidence";
@@ -101,6 +106,7 @@ export function WalletWorkspace() {
   const [account, setAccount] = useState<WalletAccount | null>(null);
   const [walletAccounts, setWalletAccounts] = useState<WalletAccount[]>([]);
   const [relics, setRelics] = useState<OwnedRelic[]>([]);
+  const [subnetNames, setSubnetNames] = useState<SubnetNameMap>({});
   const [proofMode, setProofMode] = useState(false);
   const [state, setState] = useState<
     "idle" | "connecting" | "ready" | "offline" | "error"
@@ -121,14 +127,23 @@ export function WalletWorkspace() {
   async function loadCollection(wallet: WalletAccount) {
     const requestId = ++collectionRequest.current;
     try {
-      const response = await fetch(
-        `/api/v1/accounts/${encodeURIComponent(wallet.address)}/artifacts?limit=100&fresh=1`,
-        { cache: "no-store" },
-      );
+      const [response, subnetResponse] = await Promise.all([
+        fetch(
+          `/api/v1/accounts/${encodeURIComponent(wallet.address)}/artifacts?limit=100&fresh=1`,
+          { cache: "no-store" },
+        ),
+        fetch("/api/v1/chain/subnets", { cache: "no-store" }).catch(() => null),
+      ]);
       const body = (await response.json()) as {
         artifacts?: OwnedRelic[];
         error?: { message?: string };
       };
+      if (subnetResponse?.ok) {
+        const subnetBody = (await subnetResponse.json()) as {
+          subnets?: Array<{ netuid: number; generation: string; name: string }>;
+        };
+        setSubnetNames(buildSubnetNameMap(subnetBody.subnets ?? []));
+      }
       if (requestId !== collectionRequest.current) return;
       if (!response.ok) {
         if (
@@ -447,6 +462,7 @@ export function WalletWorkspace() {
             relic.globalNumber,
             relic.subnetNumber,
             `sn${relic.netuid}`,
+            getSubnetName(subnetNames, relic.netuid, relic.subnetGeneration),
           ].some((value) => value.toLowerCase().includes(term)),
         )
       : [...relics];
@@ -460,14 +476,10 @@ export function WalletWorkspace() {
       const direction = sort === "newest" ? -1 : 1;
       return (Number(a.globalNumber) - Number(b.globalNumber)) * direction;
     });
-  }, [relics, search, sort]);
+  }, [relics, search, sort, subnetNames]);
 
   const collectionTotals = useMemo(
     () => ({
-      alpha: relics.reduce(
-        (total, relic) => total + BigInt(relic.alphaBurnedRao),
-        0n,
-      ),
       tao: relics.reduce(
         (total, relic) => total + BigInt(relic.taoSpentRao),
         0n,
@@ -609,7 +621,7 @@ export function WalletWorkspace() {
                 <dl>
                   <div><dt>Items</dt><dd>{relics.length}</dd></div>
                   <div><dt>Subnets</dt><dd>{collectionTotals.subnets}</dd></div>
-                  <div><dt>Alpha burned</dt><dd>{formatRao(collectionTotals.alpha.toString())}</dd></div>
+                  <div><dt>Burn receipts</dt><dd>{relics.length}</dd></div>
                   <div><dt>TAO committed</dt><dd>{formatRao(collectionTotals.tao.toString())}</dd></div>
                 </dl>
               </section>
@@ -632,7 +644,7 @@ export function WalletWorkspace() {
                 >
                   <option value="newest">Recently forged</option>
                   <option value="oldest">Oldest first</option>
-                  <option value="alpha">Most alpha burned</option>
+                  <option value="alpha">Largest token burn</option>
                 </select>
               </div>
               <div className="owned-list">
@@ -675,8 +687,8 @@ export function WalletWorkspace() {
                       <p>{relic.body ?? "Image-only Relic · no separate inscription"}</p>
                       <dl>
                         <div>
-                          <dt>Alpha burned</dt>
-                            <dd>{formatRao(relic.alphaBurnedRao)} α</dd>
+                          <dt>Subnet token burned</dt>
+                          <dd><strong>{formatRao(relic.alphaBurnedRao)} SN{relic.netuid} BURNED</strong><small>{getSubnetName(subnetNames, relic.netuid, relic.subnetGeneration)}</small></dd>
                         </div>
                         <div>
                           <dt>TAO spent</dt>
@@ -734,7 +746,7 @@ export function WalletWorkspace() {
                     <div className="owned-proof-grid">
                       <div><span>Relic number</span><strong>#{selected.globalNumber}</strong></div>
                       <div><span>Subnet Relic number</span><strong>SN{selected.netuid} · #{selected.subnetNumber}</strong></div>
-                      <div><span>Alpha burned</span><strong>{formatRao(selected.alphaBurnedRao)} α</strong></div>
+                      <div className="subnet-burn-proof"><span>Subnet token burned</span><strong>{formatRao(selected.alphaBurnedRao)} SN{selected.netuid} BURNED</strong><small>{getSubnetName(subnetNames, selected.netuid, selected.subnetGeneration)}</small></div>
                       <div><span>TAO committed</span><strong>{formatRao(selected.taoSpentRao)} TAO</strong></div>
                       <div><span>Purpose</span><strong>{selected.purpose}</strong></div>
                       <div><span>On-chain image</span><strong>{selected.mediaByteLength?.toLocaleString() ?? "—"} bytes</strong></div>

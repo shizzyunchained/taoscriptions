@@ -3,7 +3,7 @@ import Image from "next/image";
 import type { Artifact } from "@/lib/indexer-db";
 import { compactHex, formatRao } from "@/lib/format";
 
-export function RelicCard({ artifact }: { artifact: Artifact }) {
+export function RelicCard({ artifact, subnetName }: { artifact: Artifact; subnetName: string }) {
   return (
     <article className="artifact-card">
       <div className="artifact-card-top">
@@ -14,7 +14,7 @@ export function RelicCard({ artifact }: { artifact: Artifact }) {
       <h2>{artifact.name}</h2>
       <p>{artifact.body ?? `${artifact.mediaType} · ${compactHex(artifact.contentHash ?? "unverified")}`}</p>
       <dl>
-        <div><dt>Alpha burned</dt><dd>{formatRao(artifact.alphaBurnedRao)}</dd></div>
+        <div className="subnet-burn-stat"><dt>Subnet token burned</dt><dd><strong>{formatRao(artifact.alphaBurnedRao)} SN{artifact.netuid} BURNED</strong><small>{subnetName}</small></dd></div>
         <div><dt>TAO spent</dt><dd>{formatRao(artifact.taoSpentRao)}</dd></div>
       </dl>
       <Link href={`/relic/${artifact.globalNumber}`}>Open finalized proof <span aria-hidden="true">-&gt;</span></Link>
