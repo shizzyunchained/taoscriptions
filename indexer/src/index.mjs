@@ -268,7 +268,10 @@ async function processBlock(api, blockNumber) {
 async function backfillCheckpointRoot() {
   const client = await pool.connect();
   try {
-    await client.query("BEGIN ISOLATION LEVEL SERIALIZABLE");
+    // Deployment handoffs can briefly overlap a retiring worker with its
+    // replacement. Waiting on the checkpoint row is sufficient here; using a
+    // serializable snapshot would turn that safe overlap into a startup error.
+    await client.query("BEGIN");
     const checkpoint = await client.query(
       `SELECT block_number, state_root FROM chain_checkpoints
        WHERE chain_genesis = $1 FOR UPDATE`,
