@@ -994,42 +994,42 @@ export default function Home() {
 
         <div
           className="relic-preview founding-receipt"
-          aria-label="Founding Relic burn receipt"
+          aria-label="Founding Relic zero, the symbolic Bittensor Relics homepage emblem"
         >
           <div className="relic-topline">
-            <span>Founding Relic</span>
-            <span>Finalized proof</span>
+            <span>Founding Relic · #0</span>
+            <span>Protocol emblem</span>
           </div>
           <div className="relic-orbit" aria-hidden="true">
             <Image
               className="relic-scarab founding-chain-image"
-              src="/founding-relic.webp"
-              alt="Shizzy Unchained, the image stored in the founding Relic transaction"
+              src="/brand-relic.webp"
+              alt="Bittensor Relics scarab emblem"
               fill
               sizes="(max-width: 640px) 255px, 285px"
               priority
             />
           </div>
           <div className="relic-number">
-            <span>Shizzy</span>
-            <strong>SN1 / #1</strong>
+            <span>Bittensor Relics</span>
+            <strong>#0</strong>
           </div>
           <div className="receipt-grid">
             <div>
-              <span>TAO committed</span>
-              <strong>1 test TAO</strong>
+              <span>Role</span>
+              <strong>Homepage origin</strong>
             </div>
             <div>
-              <span>Alpha relinquished</span>
-              <strong>1,035.580333 α</strong>
+              <span>Chain status</span>
+              <strong>Symbolic · not indexed</strong>
             </div>
           </div>
-          <p>Finalized at block 7,698,721 · extrinsic 6.</p>
+          <p>Relic #0 marks the protocol origin. Finalized on-chain numbering begins at #1.</p>
           <a
             className="receipt-proof-link"
-            href="/evidence/founding-testnet-relic.json"
+            href="/explore"
           >
-            Verify the evidence <span aria-hidden="true">→</span>
+            Explore on-chain Relics <span aria-hidden="true">→</span>
           </a>
         </div>
       </section>
