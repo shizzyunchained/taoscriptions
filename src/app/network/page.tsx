@@ -17,7 +17,7 @@ export default function NetworkPage() {
       <div className="grain" aria-hidden="true" />
       <nav className="nav" aria-label="Main navigation">
         <SiteMark />
-        <div className="nav-links"><Link href="/#forge">Forge</Link><Link href="/explore">Explore</Link><Link href="/network">Network</Link><Link href="/whitepaper">Whitepaper</Link><Link href="/docs">Docs</Link><span className="chain-status prototype"><i aria-hidden="true" />Simulation</span></div>
+        <div className="nav-links"><Link href="/#forge">Forge</Link><Link href="/explore">Explore</Link><Link href="/network">Network</Link><Link href="/blackpaper">Blackpaper</Link><Link href="/docs">Docs</Link><span className="chain-status prototype"><i aria-hidden="true" />Simulation</span></div>
       </nav>
 
       <section className="network-hero">

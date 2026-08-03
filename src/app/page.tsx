@@ -616,7 +616,7 @@ export default function Home() {
       <nav className="nav" aria-label="Main navigation">
         <a className="brand" href="#top" aria-label="Bittensor Relics home"><span className="brand-sigil" aria-hidden="true"><i /></span><span>Bittensor Relics</span></a>
         <div className="nav-links">
-          <a href="#forge">Forge</a><a href="/explore">Explore</a><a href="/marketplace">Market</a><a href="/wallet">My Relics</a><a href="/network">Network</a><a href="/whitepaper">Whitepaper</a><a href="/docs">Docs</a>
+          <a href="#forge">Forge</a><a href="/explore">Explore</a><a href="/marketplace">Market</a><a href="/wallet">My Relics</a><a href="/network">Network</a><a href="/blackpaper">Blackpaper</a><a href="/docs">Docs</a>
           <span className={`chain-status ${dataState}`}><i aria-hidden="true" />{dataState === "ready" ? `Testnet v${runtimeVersion}` : dataState === "error" ? "Chain read paused" : "Reading chain"}</span>
         </div>
       </nav>
@@ -636,7 +636,7 @@ export default function Home() {
             <Image className="relic-scarab" src="/relic-scarab.webp" alt="" fill sizes="(max-width: 640px) 255px, 285px" priority />
           </div>
           <div className="relic-number"><span>Subnet artifact</span><strong>SN{selectedSubnet?.netuid ?? "--"} / #0001</strong></div>
-          <div className="receipt-grid"><div><span>TAO committed</span><strong>{taoAmount || "0"} TAO</strong></div><div><span>Alpha destroyed</span><strong>{quote ? formatToken(quote.alphaAmount, 4) : "--"} {selectedSubnet?.symbol}</strong></div></div>
+          <div className="receipt-grid"><div><span>TAO committed</span><strong>{taoAmount || "0"} TAO</strong></div><div><span>Alpha burned</span><strong>{quote ? formatToken(quote.alphaAmount, 4) : "--"} {selectedSubnet?.symbol}</strong></div></div>
           <p>Burn event + inscription, bound inside one atomic extrinsic.</p>
         </div>
       </section>
@@ -682,7 +682,7 @@ export default function Home() {
 
           <aside className="quote-card" aria-live="polite">
             <div className="quote-header"><div><span>Live chain quote</span><strong>{selectedSubnet?.name ?? "Select a subnet"}</strong></div><span className="read-only">Testnet</span></div>
-            <div className="burn-output"><span>Estimated alpha destroyed</span><strong className={quoteLoading ? "loading" : ""}>{quote ? formatToken(quote.alphaAmount, 6) : "--"}</strong><em>{selectedSubnet?.symbol ?? "alpha"}</em></div>
+            <div className="burn-output"><span>Estimated alpha burned</span><strong className={quoteLoading ? "loading" : ""}>{quote ? formatToken(quote.alphaAmount, 6) : "--"}</strong><em>{selectedSubnet?.symbol ?? "alpha"}</em></div>
             <dl className="quote-details"><div><dt>Spot price</dt><dd>{quote ? formatPrice(quote.priceRao) : "--"}</dd></div><div><dt>Pool fee</dt><dd>{quote ? `${formatToken(quote.taoFee, 7)} TAO` : "--"}</dd></div><div><dt>Price impact</dt><dd>{quote ? formatBps(quoteImpactBps(quote)) : "--"}</dd></div><div><dt>Execution</dt><dd>Atomic batch</dd></div></dl>
             {quoteError && <p className="quote-error">{quoteError}</p>}
             <div className="burn-warning"><span aria-hidden="true">!</span><p>The finished mint will permanently spend the TAO and burn the purchased alpha. It cannot be reversed.</p></div>

@@ -29,7 +29,7 @@ export default async function ExplorePage({
       </nav>
       <section className="collection-hero">
         <p className="eyebrow">Canonical collection</p>
-        <h1>Relics proven by<br />destroyed alpha.</h1>
+        <h1>Relics proven by<br />burned alpha.</h1>
         <p>Every number below is assigned from finalized Bittensor block order. Pending transactions and rejected inscriptions never appear.</p>
       </section>
       {unavailable ? (

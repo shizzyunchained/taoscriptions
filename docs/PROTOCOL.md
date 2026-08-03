@@ -11,13 +11,18 @@ Bittensor Relics is an open protocol for creating numbered digital artifacts fro
 native Subtensor transactions. A valid v1 mint atomically:
 
 1. spends TAO to buy a selected subnet's alpha;
-2. permanently burns the alpha received from that swap; and
+2. irreversibly burns the user's alpha stake received from that swap; and
 3. records an inscription with `System.remark_with_event`.
 
 The burn and inscription are native chain facts. Artifact numbering, ownership,
 collections, and marketplace state are deterministic derived state. Any indexer
 implementing this document against the same finalized chain must produce the
 same result.
+
+Under the current runtime, this burn is supply-neutral: it removes the user's
+alpha stake without reducing `SubnetAlphaOut`. Protocol validity proves the
+finalized economic sacrifice and MUST NOT be described as guaranteed subnet
+deflation.
 
 Bittensor Relics v1 is not an EVM NFT contract and does not require its planned
 indexing subnet for protocol validity. It also does not claim that arbitrary

@@ -88,7 +88,7 @@ export default function DocsPage() {
       <div className="grain" aria-hidden="true" />
       <nav className="nav" aria-label="Main navigation">
         <SiteMark />
-        <div className="nav-links"><Link href="/#forge">Forge</Link><Link href="/network">Network</Link><Link href="/whitepaper">Whitepaper</Link><Link href="/docs">Docs</Link><span className="chain-status ready"><i aria-hidden="true" />Fact checked</span></div>
+        <div className="nav-links"><Link href="/#forge">Forge</Link><Link href="/network">Network</Link><Link href="/blackpaper">Blackpaper</Link><Link href="/docs">Docs</Link><span className="chain-status ready"><i aria-hidden="true" />Fact checked</span></div>
       </nav>
 
       <header className="docs-hero">
