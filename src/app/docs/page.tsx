@@ -14,6 +14,7 @@ const navigation = [
   ["Architecture", "architecture"],
   ["Mint transaction", "mint"],
   ["On-chain media", "media"],
+  ["Future miner queue", "miner-queue"],
   ["Burn economics", "economics"],
   ["Identity & ownership", "ownership"],
   ["Proof network", "proof-network"],
@@ -112,33 +113,51 @@ export default function DocsPage() {
             <div className="manual-metrics"><div><span>JSON remark</span><strong>≤ 2,048 B</strong></div><div><span>Full envelope</span><strong>≤ 16,384 B</strong></div><div><span>WebP bytes</span><strong>≤ 12,288 B</strong></div><div><span>Dimensions</span><strong>64–256 px</strong></div></div>
           </Section>
 
-          <Section id="economics" label="04 / Burn economics" title="The sacrifice is real. The supply claim is not.">
+          <Section id="miner-queue" label="04 / Future miner queue" title="Miners prepare the candidate. The creator approves the exact bytes.">
+            <div className="manual-queue-intro">
+              <span>Proposed subnet workflow · not live</span>
+              <p>The production vision moves image preparation into a competitive queue. Miners may optimize an original before inscription, but they can never modify a finalized Relic. The creator keeps final authority: no TAO is committed until the exact candidate image and transaction are reviewed and signed.</p>
+            </div>
+            <ol className="manual-queue">
+              <li><i>01</i><div><strong>Upload the original</strong><p>The creator submits the source image and defines the Relic, subnet, byte limit, and permitted transformation rules.</p></div></li>
+              <li><i>02</i><div><strong>Open a preparation job</strong><p>The queue publishes a content-addressed task so competing miners work from the same original and requirements.</p></div></li>
+              <li><i>03</i><div><strong>Miners produce candidates</strong><p>Miners compete to create the best on-chain version within the protocol&apos;s dimensions and byte budget while preserving aspect ratio and legibility.</p></div></li>
+              <li><i>04</i><div><strong>Validators verify</strong><p>Validators check dimensions, encoding, byte length, source and candidate hashes, declared quality rules, content policy, and transaction construction.</p></div></li>
+              <li><i>05</i><div><strong>Preview the exact result</strong><p>The site displays the exact miner-produced bytes at actual size and enlarged. The preview hash must equal the hash placed in the signed manifest.</p></div></li>
+              <li><i>06</i><div><strong>Approve and sign</strong><p>The creator chooses a candidate and signs only after reviewing the image, subnet, TAO amount, price limit, fees, burn call, and inscription. Rejection costs no mint TAO.</p></div></li>
+              <li><i>07</i><div><strong>Finalize, index, and archive</strong><p>The approved bytes are inscribed in finalized chain history. Miners then reconstruct the Relic, preserve its media, and serve proofs to the network.</p></div></li>
+            </ol>
+            <div className="manual-queue-rule"><span>Immutable boundary</span><strong>Optimization happens before the signature—never after finalization.</strong><p>This prevents silent cropping, distortion, or substitution. A miner cannot replace the approved candidate because the signed manifest commits its SHA-256 hash and byte length, and validators reject any mismatch.</p></div>
+            <p className="manual-note">Today&apos;s testnet Forge prepares the WebP locally in the browser; the live miner preparation queue does not exist yet. This section defines the intended workflow that a future Relics subnet must implement and prove.</p>
+          </Section>
+
+          <Section id="economics" label="05 / Burn economics" title="The sacrifice is real. The supply claim is not.">
             <div className="manual-correction"><span>Important correction</span><h3>Buy & Burn is supply-neutral under the current Bittensor runtime.</h3><p>The operation removes the user&apos;s acquired alpha stake and emits a provable burn event, but it does not reduce <code>SubnetAlphaOut</code>. Relics uses Buy & Burn—not the separate recycle path. We therefore make no promise of deflation, reduced issuance, or token appreciation.</p></div>
             <div className="manual-economics-grid"><article><span>What is proven</span><ul><li>TAO permanently committed</li><li>Selected subnet and generation</li><li>Actual alpha burned</li><li>Pool fee and execution evidence</li><li>Finalized transaction fee</li></ul></article><article><span>What is variable</span><ul><li>Alpha output for a TAO input</li><li>Price impact and pool state</li><li>Ending spot price</li><li>Future subnet value</li><li>Market demand for a Relic</li></ul></article></div>
             <p className="manual-note">The forge targets a TAO amount, not an exact alpha amount. A collection promising “at least 1,000 SCORE burned” needs a future alpha-target quote mode and must verify the finalized event before accepting membership.</p>
           </Section>
 
-          <Section id="ownership" label="05 / Identity & ownership" title="Chain position makes the Relic. Signed history assigns the owner.">
+          <Section id="ownership" label="06 / Identity & ownership" title="Chain position makes the Relic. Signed history assigns the owner.">
             <div className="manual-id"><span>Canonical artifact ID</span><code>br1:&lt;full-genesis-hash&gt;:&lt;finalized-block&gt;:&lt;extrinsic-index&gt;</code></div>
             <div className="manual-two-column"><article><span>Numbering</span><p>Accepted mints receive one global number and one number inside <code>(netuid, subnet_generation)</code>. Order follows finalized block number then extrinsic index. Invalid candidates consume no number.</p></article><article><span>Ownership</span><p>The mint signer starts as protocol owner. A valid standalone transfer remark must be signed by the current owner and use the exact next ownership nonce. This prevents replay.</p></article><article><span>Subnet identity</span><p>Netuid alone is insufficient because numbers can be reused after deregistration. Relics binds every mint to <code>NetworkRegisteredAt[netuid]</code>.</p></article><article><span>Marketplace</span><p>Owners may sign discovery listings. Transfers, expiry, or cancellation invalidate them. Listings cannot move funds or ownership, and purchase settlement remains disabled.</p></article></div>
             <div className="manual-founding"><span>Verified founding testnet Relic</span><div><h3>Shizzy</h3><p>Block 7,698,721 · Extrinsic 6 · 1 test TAO · 1,035.580333229 SN1 alpha burned · 8,698 on-chain image bytes</p></div><a href="/evidence/founding-testnet-relic.json">Evidence JSON →</a></div>
           </Section>
 
-          <Section id="proof-network" label="06 / Proof network" title="Miners replay. Validators challenge. The dapp requires agreement.">
+          <Section id="proof-network" label="07 / Proof network" title="Miners replay. Validators challenge. The dapp requires agreement.">
             <div className="manual-network-grid"><article><div><span>Miner work</span><i>Proposed</i></div><h3>Reconstruct the complete index</h3><ul><li>Follow finalized blocks</li><li>Verify accepted and rejected operations</li><li>Preserve exact media</li><li>Publish checkpoint commitments</li><li>Serve state and history queries</li></ul></article><article><div><span>Validator work</span><i>Proposed</i></div><h3>Challenge exact public facts</h3><ul><li>Maintain independent replay</li><li>Sample unpredictable checkpoints</li><li>Check roots, ownership, and media hashes</li><li>Measure freshness and availability</li><li>Reject divergence</li></ul></article><article><div><span>Gateway rule</span><i>Prototype</i></div><h3>Fail closed without quorum</h3><ul><li>Query multiple miners</li><li>Require identical checkpoint and answer</li><li>Never let one fast miner redefine history</li><li>Return no consensus when threshold fails</li></ul></article></div>
             <p className="manual-note">The public Network page is a deterministic three-miner simulation. No Relics subnet, live miners, validator weights, netuid, or emissions exist today. If launched, subnet emissions—not a per-mint user escrow—would compensate miners for the continuous service.</p>
           </Section>
 
-          <Section id="claim-audit" label="07 / Claim audit" title="Facts, corrections, and unfinished work.">
+          <Section id="claim-audit" label="08 / Claim audit" title="Facts, corrections, and unfinished work.">
             <div className="manual-claims">{claims.map((claim) => <article className={claim.tone} key={claim.title}><div><span>{claim.state}</span><i aria-hidden="true" /></div><h3>{claim.title}</h3><p>{claim.body}</p></article>)}</div>
           </Section>
 
-          <Section id="api" label="08 / API map" title="Finalized reads only. No endpoint creates chain truth.">
+          <Section id="api" label="09 / API map" title="Finalized reads only. No endpoint creates chain truth.">
             <div className="manual-api"><header><span>Method</span><span>Path</span><span>Returns</span></header>{apiRows.map(([method, path, detail]) => <div key={path}><b>{method}</b><code>{path}</code><p>{detail}</p></div>)}</div>
             <p className="manual-note">Until the public database is configured, index-backed routes return <code>503 INDEXER_UNAVAILABLE</code> instead of presenting an empty collection. That is intentional fail-closed behavior.</p>
           </Section>
 
-          <Section id="library" label="09 / Reference library" title="Go deeper without hunting through the repository.">
+          <Section id="library" label="10 / Reference library" title="Go deeper without hunting through the repository.">
             <div className="manual-library">
               <Link href="/blackpaper"><span>Vision + system design</span><strong>The Blackpaper</strong><p>The complete narrative, economics, subnet design, safety limits, founding mint, and roadmap.</p></Link>
               <a href="https://github.com/shizzyunchained/taoscriptions/blob/feat/neural-relics-v1/docs/PROTOCOL.md" target="_blank" rel="noreferrer"><span>Normative</span><strong>Protocol v1</strong><p>Exact payload, call, validation, identity, ownership, and marketplace rules.</p></a>

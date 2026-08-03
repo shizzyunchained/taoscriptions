@@ -4157,6 +4157,82 @@ footer > a:last-child:hover {
     13px var(--font-geist-mono),
     monospace;
 }
+.manual-queue-intro {
+  margin-bottom: 24px;
+  padding: 24px;
+  border-left: 2px solid var(--ember);
+  background: rgba(255, 177, 74, 0.045);
+}
+.manual-queue-intro span,
+.manual-queue-rule span {
+  color: var(--ember);
+  font: 9px var(--font-geist-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.manual-queue-intro p {
+  max-width: 900px;
+  margin: 12px 0 0;
+  color: #bbc0b7;
+  font-size: 12px;
+  line-height: 1.75;
+}
+.manual-queue {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+  list-style: none;
+}
+.manual-queue li {
+  min-height: 170px;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  gap: 14px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.manual-queue li:last-child {
+  grid-column: 1 / -1;
+}
+.manual-queue i {
+  color: var(--acid);
+  font: 10px var(--font-geist-mono), monospace;
+  font-style: normal;
+}
+.manual-queue strong {
+  color: var(--ink);
+  font-size: 14px;
+}
+.manual-queue p {
+  margin: 10px 0 0;
+  color: var(--dim);
+  font-size: 10px;
+  line-height: 1.7;
+}
+.manual-queue-rule {
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid rgba(200, 245, 107, 0.28);
+  background: rgba(200, 245, 107, 0.035);
+}
+.manual-queue-rule strong {
+  margin-top: 12px;
+  display: block;
+  color: var(--ink);
+  font-size: clamp(20px, 3vw, 34px);
+  line-height: 1.1;
+}
+.manual-queue-rule p {
+  max-width: 850px;
+  margin: 14px 0 0;
+  color: var(--dim);
+  font-size: 10px;
+  line-height: 1.7;
+}
 .manual-correction {
   margin-top: 25px;
   padding: clamp(25px, 5vw, 44px);
@@ -4611,6 +4687,7 @@ footer > a:last-child:hover {
   }
   .manual-status-strip,
   .manual-metrics,
+  .manual-queue,
   .manual-trust-grid,
   .manual-rule-grid,
   .manual-economics-grid,
@@ -4619,6 +4696,9 @@ footer > a:last-child:hover {
   .manual-claims,
   .manual-library {
     grid-template-columns: 1fr;
+  }
+  .manual-queue li:last-child {
+    grid-column: auto;
   }
   .manual-flow {
     grid-template-columns: 1fr;
