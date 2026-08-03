@@ -64,7 +64,7 @@ export default async function ExplorePage({
             />
           </div>
           <div className="founding-explorer-copy">
-            <span>Founding Relic · #0001</span>
+            <span>Founding Relic · #1</span>
             <h2>Shizzy</h2>
             <p>Finalized on Bittensor testnet. The exact image, signed manifest, burn receipt, and transaction position can all be reconstructed from chain history.</p>
             <dl>
@@ -106,7 +106,7 @@ export default async function ExplorePage({
             />
           </div>
           <div className="founding-explorer-copy">
-            <span>Founding Relic · #{String(featured.globalNumber).padStart(4, "0")}</span>
+            <span>Founding Relic · #{featured.globalNumber}</span>
             <h2>{featured.name}</h2>
             <p className={featured.body ? "relic-inscription" : "relic-inscription absent"}>
               {featured.body ?? "No separate inscription text was finalized with this mint. The name, image, burn receipt, purpose, and safety attestation are the complete signed Relic."}

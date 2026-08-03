@@ -1012,7 +1012,7 @@ export default function Home() {
           </div>
           <div className="relic-number">
             <span>Shizzy</span>
-            <strong>SN1 / #0001</strong>
+            <strong>SN1 / #1</strong>
           </div>
           <div className="receipt-grid">
             <div>

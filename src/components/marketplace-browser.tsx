@@ -75,7 +75,7 @@ export function MarketplaceBrowser({ artifacts, listings }: { artifacts: Artifac
                   <article className="market-card" key={artifact.artifactId}>
                     <Link className="market-card-media" href={`/relic/${artifact.globalNumber}`}>
                       <Image src={`/api/v1/artifacts/${encodeURIComponent(artifact.artifactId)}/media`} alt={artifact.name} fill sizes="(max-width: 640px) 92vw, (max-width: 1100px) 42vw, 24vw" unoptimized />
-                      <span>#{artifact.globalNumber.padStart(4, "0")}</span>
+                      <span>#{artifact.globalNumber}</span>
                       <i>{listing ? "For sale" : "Finalized"}</i>
                     </Link>
                     <div className="market-card-body">

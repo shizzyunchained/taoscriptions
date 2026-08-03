@@ -574,7 +574,7 @@ export function WalletWorkspace() {
                         height={520}
                         unoptimized={!proofMode}
                       />
-                      <strong>#{relic.globalNumber.padStart(4, "0")}</strong>
+                      <strong>#{relic.globalNumber}</strong>
                     </div>
                     <div className="owned-card-copy">
                       <span>
@@ -602,7 +602,7 @@ export function WalletWorkspace() {
                     <span>
                       {proofMode
                         ? "Finalized founding proof"
-                        : `Selected Relic #${selected.globalNumber.padStart(4, "0")}`}
+                        : `Selected Relic #${selected.globalNumber}`}
                     </span>
                     {selected.mediaType === "image/webp" && (
                       <div className="owned-relic-media">
@@ -626,7 +626,7 @@ export function WalletWorkspace() {
                       <p className="no-inscription">No separate inscription text was finalized with this image.</p>
                     )}
                     <div className="owned-proof-grid">
-                      <div><span>Relic number</span><strong>#{selected.globalNumber.padStart(4, "0")}</strong></div>
+                      <div><span>Relic number</span><strong>#{selected.globalNumber}</strong></div>
                       <div><span>Subnet Relic number</span><strong>SN{selected.netuid} · #{selected.subnetNumber}</strong></div>
                       <div><span>Alpha burned</span><strong>{formatRao(selected.alphaBurnedRao)} α</strong></div>
                       <div><span>TAO committed</span><strong>{formatRao(selected.taoSpentRao)} TAO</strong></div>
