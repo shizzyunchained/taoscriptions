@@ -3279,6 +3279,31 @@ footer > a:last-child:hover {
   color: var(--dim);
   font: 8px var(--font-geist-mono), monospace;
 }
+.market-active-filter {
+  min-height: 44px;
+  padding: 0 11px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(200, 245, 107, 0.06);
+  box-shadow: inset 2px 0 0 var(--acid);
+}
+.market-active-filter strong {
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 550;
+}
+.market-active-filter small {
+  color: var(--dim);
+  font: 8px var(--font-geist-mono), monospace;
+}
+.market-filters > div:first-child > a {
+  margin: 15px 11px 0;
+  display: inline-block;
+  color: var(--acid);
+  font-size: 8px;
+  text-decoration: none;
+}
 .market-filter-proof strong {
   color: var(--ink);
   font-size: 11px;
@@ -3459,13 +3484,16 @@ footer > a:last-child:hover {
   color: var(--ink);
   font: 400 clamp(38px, 5vw, 72px)/0.95 Georgia, serif;
 }
-.market-no-results button {
+.market-no-results button,
+.market-no-results > a {
   margin-top: 25px;
   padding: 12px 17px;
+  display: inline-block;
   border: 1px solid var(--acid);
   background: transparent;
   color: var(--acid);
   font-size: 9px;
+  text-decoration: none;
   cursor: pointer;
 }
 

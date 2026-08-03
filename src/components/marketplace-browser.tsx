@@ -6,12 +6,10 @@ import { useMemo, useState } from "react";
 import { formatRao } from "@/lib/format";
 import type { Artifact, Listing } from "@/lib/indexer-db";
 
-type StatusFilter = "all" | "listed" | "unlisted";
 type SortOrder = "newest" | "burn-high" | "burn-low" | "price-low";
 
 export function MarketplaceBrowser({ artifacts, listings }: { artifacts: Artifact[]; listings: Listing[] }) {
   const [query, setQuery] = useState("");
-  const [status, setStatus] = useState<StatusFilter>("all");
   const [sort, setSort] = useState<SortOrder>("newest");
   const listingByArtifact = useMemo(
     () => new Map(listings.map((listing) => [listing.artifactId, listing])),
@@ -21,9 +19,7 @@ export function MarketplaceBrowser({ artifacts, listings }: { artifacts: Artifac
     const normalizedQuery = query.trim().toLowerCase();
     return artifacts
       .filter((artifact) => {
-        const isListed = listingByArtifact.has(artifact.artifactId);
-        if (status === "listed" && !isListed) return false;
-        if (status === "unlisted" && isListed) return false;
+        if (!listingByArtifact.has(artifact.artifactId)) return false;
         if (!normalizedQuery) return true;
         return `${artifact.name} ${artifact.body ?? ""} ${artifact.globalNumber} ${artifact.netuid}`
           .toLowerCase()
@@ -39,7 +35,7 @@ export function MarketplaceBrowser({ artifacts, listings }: { artifacts: Artifac
         }
         return Number(BigInt(right.globalNumber) - BigInt(left.globalNumber));
       });
-  }, [artifacts, listingByArtifact, query, sort, status]);
+  }, [artifacts, listingByArtifact, query, sort]);
 
   return (
     <section className="market-browser" aria-label="Relic marketplace">
@@ -55,12 +51,8 @@ export function MarketplaceBrowser({ artifacts, listings }: { artifacts: Artifac
         <aside className="market-filters">
           <div>
             <span>Status</span>
-            {(["all", "listed", "unlisted"] as StatusFilter[]).map((value) => (
-              <button key={value} type="button" className={status === value ? "active" : ""} onClick={() => setStatus(value)}>
-                {value === "all" ? "All Relics" : value === "listed" ? "For sale" : "Not listed"}
-                <small>{value === "all" ? artifacts.length : value === "listed" ? listings.length : artifacts.length - listings.length}</small>
-              </button>
-            ))}
+            <div className="market-active-filter"><strong>Active listings</strong><small>{listings.length}</small></div>
+            <Link href="/explore">Explore all Relics</Link>
           </div>
           <div className="market-filter-proof"><span>Proof standard</span><strong>Finalized only</strong><p>On-chain image · burn receipt · current owner</p></div>
           <div className="market-filter-proof"><span>Network</span><strong>Bittensor testnet</strong><p>Non-EVM · native Subtensor</p></div>
@@ -101,7 +93,7 @@ export function MarketplaceBrowser({ artifacts, listings }: { artifacts: Artifac
               })}
             </div>
           ) : (
-            <div className="market-no-results"><span>No matches</span><h2>No Relics fit these filters.</h2><button type="button" onClick={() => { setQuery(""); setStatus("all"); }}>Clear filters</button></div>
+            <div className="market-no-results"><span>{listings.length ? "No matches" : "No active listings"}</span><h2>{listings.length ? "No listed Relics match your search." : "List the first Relic."}</h2>{listings.length ? <button type="button" onClick={() => setQuery("")}>Clear search</button> : <Link href="/wallet#listing">List a Relic</Link>}</div>
           )}
         </div>
       </div>
