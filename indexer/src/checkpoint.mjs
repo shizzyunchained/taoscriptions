@@ -63,27 +63,25 @@ export function nextCheckpointRoot(previousRoot, transcript) {
 }
 
 export async function transcriptForBlock(client, chainGenesis, blockNumber, blockHash) {
-  const [artifacts, transfers, rejections] = await Promise.all([
-    client.query(
-      `SELECT extrinsic_index, artifact_id, payload_hash, owner_account_hex, ownership_nonce
-       FROM artifacts WHERE chain_genesis = $1 AND block_number = $2
-       ORDER BY extrinsic_index ASC`,
-      [chainGenesis, blockNumber],
-    ),
-    client.query(
-      `SELECT extrinsic_index, transfer_id, artifact_id, payload_hash,
-        from_account_hex, to_account_hex, ownership_nonce
-       FROM transfers WHERE chain_genesis = $1 AND block_number = $2
-       ORDER BY extrinsic_index ASC`,
-      [chainGenesis, blockNumber],
-    ),
-    client.query(
-      `SELECT extrinsic_index, payload_hash, reason_code
-       FROM rejected_operations WHERE chain_genesis = $1 AND block_number = $2
-       ORDER BY extrinsic_index ASC`,
-      [chainGenesis, blockNumber],
-    ),
-  ]);
+  const artifacts = await client.query(
+    `SELECT extrinsic_index, artifact_id, payload_hash, owner_account_hex, ownership_nonce
+     FROM artifacts WHERE chain_genesis = $1 AND block_number = $2
+     ORDER BY extrinsic_index ASC`,
+    [chainGenesis, blockNumber],
+  );
+  const transfers = await client.query(
+    `SELECT extrinsic_index, transfer_id, artifact_id, payload_hash,
+      from_account_hex, to_account_hex, ownership_nonce
+     FROM transfers WHERE chain_genesis = $1 AND block_number = $2
+     ORDER BY extrinsic_index ASC`,
+    [chainGenesis, blockNumber],
+  );
+  const rejections = await client.query(
+    `SELECT extrinsic_index, payload_hash, reason_code
+     FROM rejected_operations WHERE chain_genesis = $1 AND block_number = $2
+     ORDER BY extrinsic_index ASC`,
+    [chainGenesis, blockNumber],
+  );
   return blockTranscript({
     blockNumber,
     blockHash,
