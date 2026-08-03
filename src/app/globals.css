@@ -2,13 +2,13 @@
 
 :root {
   --background: #080a09;
-  --panel: rgba(16, 19, 17, 0.92);
+  --panel: rgba(19, 23, 20, 0.96);
   --field: #111411;
-  --ink: #f0f1e9;
-  --muted: #8e958c;
-  --dim: #5f665f;
-  --line: rgba(232, 240, 224, 0.11);
-  --line-strong: rgba(232, 240, 224, 0.2);
+  --ink: #fbfff7;
+  --muted: #c2c9bf;
+  --dim: #949e93;
+  --line: rgba(232, 240, 224, 0.18);
+  --line-strong: rgba(232, 240, 224, 0.32);
   --ember: #ffb14a;
   --ember-bright: #ffc66f;
   --acid: #c8f56b;
@@ -27,6 +27,9 @@ body {
   background: var(--background);
   color: var(--ink);
   font-family: var(--font-geist-sans), Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 450;
+  text-rendering: optimizeLegibility;
 }
 button,
 input,
@@ -142,7 +145,7 @@ a:focus-visible {
 .nav-links > a {
   color: var(--muted);
   text-decoration: none;
-  font-size: 12px;
+  font-size: 15px;
 }
 .nav-links > a:hover {
   color: var(--ink);
@@ -167,7 +170,7 @@ a:focus-visible {
   color: var(--muted);
   background: rgba(255, 255, 255, 0.025);
   font:
-    10px var(--font-geist-mono),
+    13px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -204,7 +207,7 @@ a:focus-visible {
   margin: 0;
   color: var(--ember);
   font:
-    700 10px var(--font-geist-mono),
+    700 13px var(--font-geist-mono),
     monospace;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -246,7 +249,7 @@ h1 span {
   background: var(--ink);
   color: #0a0c0a;
   text-decoration: none;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 760;
   transition:
     transform 0.2s ease,
@@ -258,7 +261,7 @@ h1 span {
 }
 .text-link {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 15px;
   text-underline-offset: 5px;
 }
 .text-link:hover {
@@ -277,7 +280,7 @@ h1 span {
 .hero-facts dt {
   color: var(--dim);
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -285,7 +288,7 @@ h1 span {
 .hero-facts dd {
   margin: 6px 0 0;
   color: #bec3ba;
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .relic-preview {
@@ -317,7 +320,7 @@ h1 span {
   justify-content: space-between;
   color: var(--dim);
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -348,7 +351,7 @@ h1 span {
 .receipt-grid span {
   color: var(--dim);
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -373,14 +376,14 @@ h1 span {
   text-overflow: ellipsis;
   color: #d9dbd2;
   font:
-    12px var(--font-geist-mono),
+    15px var(--font-geist-mono),
     monospace;
   white-space: nowrap;
 }
 .relic-preview > p {
   margin: 20px 0 0;
   color: var(--dim);
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.5;
 }
 .receipt-proof-link {
@@ -392,7 +395,7 @@ h1 span {
   z-index: 1;
   color: var(--acid);
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
   text-decoration: none;
   text-transform: uppercase;
@@ -430,7 +433,7 @@ h1 span {
 .section-heading > p {
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 16px;
   line-height: 1.7;
 }
 .forge-guide {
@@ -449,26 +452,26 @@ h1 span {
 .forge-guide span {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
 }
 .forge-guide strong {
   margin-top: 17px;
   display: block;
   color: #d9ddd5;
-  font-size: 11px;
+  font-size: 14px;
 }
 .forge-guide p {
   margin: 7px 0 0;
   color: var(--dim);
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.55;
 }
 .forge-guide a {
   margin-top: 8px;
   display: inline-block;
   color: var(--acid);
-  font-size: 8px;
+  font-size: 11px;
   text-underline-offset: 3px;
 }
 .forge-layout {
@@ -496,7 +499,7 @@ h1 span {
   align-items: center;
   gap: 11px;
   color: #bfc4ba;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 650;
 }
 .step-label > span {
@@ -508,7 +511,7 @@ h1 span {
   border-radius: 50%;
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
 }
 .amount-step,
@@ -527,7 +530,7 @@ h1 span {
   margin-bottom: 8px;
   color: var(--dim);
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -543,7 +546,7 @@ h1 span {
   outline: 0;
   background: #111411;
   color: var(--ink);
-  font-size: 12px;
+  font-size: 15px;
 }
 .field select:focus,
 .field input:focus,
@@ -607,7 +610,7 @@ h1 span {
   margin-top: 14px;
   max-width: 860px;
   color: #aeb5aa;
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.65;
 }
 .content-covenant small b {
@@ -628,11 +631,11 @@ h1 span {
 }
 .forge-covenant em {
   margin-top: 7px;
-  font-size: 12px;
+  font-size: 15px;
 }
 .forge-covenant small {
   margin-top: 9px;
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.55;
 }
 .field select:disabled {
@@ -681,7 +684,7 @@ h1 span {
   margin: 0;
   color: var(--dim);
   font:
-    10px var(--font-geist-mono),
+    13px var(--font-geist-mono),
     monospace;
   text-align: right;
 }
@@ -727,7 +730,7 @@ h1 span {
   border: 0;
   border-bottom: 1px solid var(--line-strong);
   font:
-    12px var(--font-geist-mono),
+    15px var(--font-geist-mono),
     monospace;
 }
 .subnet-results {
@@ -758,7 +761,7 @@ h1 span {
 .subnet-results button > em,
 .subnet-results button > small {
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
 }
 .subnet-results button > span {
@@ -766,7 +769,7 @@ h1 span {
 }
 .subnet-results button > strong {
   overflow: hidden;
-  font-size: 10px;
+  font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -784,7 +787,7 @@ h1 span {
   margin: 0;
   padding: 20px;
   color: var(--dim);
-  font-size: 10px;
+  font-size: 13px;
 }
 .amount-field > div {
   position: relative;
@@ -802,7 +805,7 @@ h1 span {
   transform: translateY(-50%);
   color: var(--ember);
   font:
-    10px var(--font-geist-mono),
+    13px var(--font-geist-mono),
     monospace;
   font-style: normal;
 }
@@ -810,7 +813,7 @@ h1 span {
   display: block;
   margin-top: 8px;
   color: var(--dim);
-  font-size: 9px;
+  font-size: 12px;
 }
 .onchain-upload {
   margin-top: 15px;
@@ -833,7 +836,7 @@ h1 span {
 .upload-heading span {
   color: var(--dim);
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -841,7 +844,7 @@ h1 span {
 .upload-heading strong {
   margin-top: 4px;
   color: #afb5aa;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 500;
 }
 .upload-heading button {
@@ -849,7 +852,7 @@ h1 span {
   border: 1px solid rgba(255, 141, 120, 0.3);
   background: transparent;
   color: var(--danger);
-  font-size: 8px;
+  font-size: 11px;
   cursor: pointer;
 }
 .upload-drop {
@@ -884,12 +887,12 @@ h1 span {
 .upload-drop strong {
   margin-top: 12px;
   color: var(--ink);
-  font-size: 12px;
+  font-size: 15px;
 }
 .upload-drop small {
   margin-top: 6px;
   color: var(--dim);
-  font-size: 9px;
+  font-size: 12px;
 }
 .upload-drop:focus-within {
   box-shadow: inset 0 0 0 1px var(--ember);
@@ -915,20 +918,20 @@ h1 span {
 .upload-preview strong {
   color: var(--ink);
   font:
-    11px var(--font-geist-mono),
+    14px var(--font-geist-mono),
     monospace;
 }
 .upload-preview span {
   margin-top: 8px;
   color: var(--acid);
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
 }
 .upload-preview small {
   margin-top: 11px;
   color: var(--dim);
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.5;
 }
 .onchain-upload > .error-message {
@@ -949,7 +952,7 @@ h1 span {
 .subnet-meta span {
   display: block;
   color: #8f998e;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 650;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -978,7 +981,7 @@ h1 span {
 }
 .chain-read-error span {
   color: var(--danger);
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.45;
 }
 .chain-read-error button {
@@ -988,7 +991,7 @@ h1 span {
   background: transparent;
   color: var(--ember-bright);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   cursor: pointer;
 }
@@ -999,7 +1002,7 @@ h1 span {
   gap: 7px;
   color: var(--dim);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
 }
 .signer-readiness i {
@@ -1027,7 +1030,7 @@ h1 span {
   border-radius: 2px;
   background: transparent;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   cursor: pointer;
 }
 .amount-options button:hover,
@@ -1049,7 +1052,7 @@ h1 span {
   border-radius: 2px;
   background: var(--ink);
   color: #0b0d0b;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 760;
   cursor: pointer;
 }
@@ -1067,7 +1070,7 @@ h1 span {
   background: #111411;
   color: var(--ember);
   font:
-    13px Georgia,
+    16px Georgia,
     serif;
 }
 .wallet-button > span:last-child {
@@ -1077,7 +1080,7 @@ h1 span {
 .quote-error {
   margin: 10px 0 0;
   color: var(--danger);
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.5;
 }
 .connected-wallet {
@@ -1095,13 +1098,13 @@ h1 span {
   display: block;
 }
 .connected-wallet > div:nth-child(2) strong {
-  font-size: 10px;
+  font-size: 13px;
 }
 .connected-wallet > div:nth-child(2) span {
   margin-top: 4px;
   color: var(--dim);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
 }
 .account-balance {
@@ -1113,13 +1116,13 @@ h1 span {
 }
 .account-balance span {
   color: var(--dim);
-  font-size: 8px;
+  font-size: 11px;
 }
 .account-balance strong {
   margin-top: 4px;
   color: var(--acid);
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
 }
 .connected-wallet button {
@@ -1128,7 +1131,7 @@ h1 span {
   border: 1px solid var(--line);
   background: transparent;
   color: var(--dim);
-  font-size: 8px;
+  font-size: 11px;
   cursor: pointer;
 }
 
@@ -1144,7 +1147,7 @@ h1 span {
 .quote-header > div > span {
   color: var(--dim);
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -1163,7 +1166,7 @@ h1 span {
   border: 1px solid rgba(200, 245, 107, 0.2);
   color: var(--acid);
   font:
-    7px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -1176,7 +1179,8 @@ h1 span {
 .burn-output > span {
   display: block;
   color: var(--dim);
-  font-size: 9px;
+  font-size: 14px;
+  font-weight: 650;
 }
 .burn-output strong {
   margin-top: 8px;
@@ -1198,7 +1202,7 @@ h1 span {
   margin-top: 6px;
   color: var(--muted);
   font:
-    10px var(--font-geist-mono),
+    13px var(--font-geist-mono),
     monospace;
   font-style: normal;
 }
@@ -1214,13 +1218,13 @@ h1 span {
 }
 .quote-details dt {
   color: var(--dim);
-  font-size: 9px;
+  font-size: 14px;
 }
 .quote-details dd {
   margin: 0;
   color: #b9bdb5;
   font:
-    9px var(--font-geist-mono),
+    14px var(--font-geist-mono),
     monospace;
   text-align: right;
 }
@@ -1242,13 +1246,13 @@ h1 span {
   border: 1px solid rgba(255, 177, 74, 0.35);
   color: var(--ember);
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
 }
 .burn-warning p {
   margin: 0;
   color: #8f8b80;
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.55;
 }
 .forge-button {
@@ -1259,13 +1263,13 @@ h1 span {
   background: rgba(255, 255, 255, 0.025);
   color: #686d66;
   cursor: not-allowed;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 700;
 }
 .forge-button span {
   margin-left: 8px;
   color: #4d524d;
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 400;
 }
 .forge-button:not(:disabled) {
@@ -1299,12 +1303,12 @@ h1 span {
 }
 .transaction-review span {
   color: var(--dim);
-  font-size: 9px;
+  font-size: 12px;
 }
 .transaction-review strong {
   color: #c5cac0;
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-align: right;
 }
@@ -1338,7 +1342,7 @@ h1 span {
 .mint-success-head p {
   margin-top: 4px;
   color: var(--dim);
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.5;
 }
 .mint-success-id {
@@ -1355,7 +1359,7 @@ h1 span {
 .mint-success-id small {
   flex: 0 0 auto;
   color: var(--dim);
-  font-size: 8px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -1363,7 +1367,7 @@ h1 span {
   min-width: 0;
   overflow: hidden;
   color: #dfe6da;
-  font: 10px var(--font-geist-mono), monospace;
+  font: 13px var(--font-geist-mono), monospace;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1380,12 +1384,12 @@ h1 span {
 }
 .mint-success dt {
   color: var(--dim);
-  font-size: 8px;
+  font-size: 11px;
 }
 .mint-success dd {
   color: #c8cec3;
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-align: right;
   overflow-wrap: anywhere;
@@ -1397,7 +1401,7 @@ h1 span {
   border: 1px solid rgba(200, 245, 107, 0.45);
   background: transparent;
   color: var(--acid);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -1421,7 +1425,7 @@ h1 span {
 .protocol-steps article > span {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.11em;
@@ -1439,7 +1443,7 @@ h1 span {
   max-width: 300px;
   margin: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.65;
 }
 .protocol-call {
@@ -1455,19 +1459,19 @@ h1 span {
 }
 .protocol-call > span {
   color: var(--dim);
-  font-size: 9px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 .protocol-call code {
   color: var(--acid);
   font:
-    11px var(--font-geist-mono),
+    14px var(--font-geist-mono),
     monospace;
 }
 .protocol-call em {
   color: var(--dim);
-  font-size: 9px;
+  font-size: 12px;
   font-style: normal;
 }
 .subnet-vision {
@@ -1487,7 +1491,7 @@ h1 span {
 .subnet-vision li span {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1503,7 +1507,7 @@ h1 span {
 .subnet-vision p {
   margin: 16px 0 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.65;
 }
 .subnet-vision ol {
@@ -1523,7 +1527,7 @@ h1 span {
 }
 .subnet-vision li strong {
   color: #b9bdb6;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 520;
   line-height: 1.5;
 }
@@ -1541,7 +1545,7 @@ footer {
   z-index: 1;
 }
 .footer-brand {
-  font-size: 12px;
+  font-size: 15px;
 }
 .footer-brand .brand-sigil {
   width: 28px;
@@ -1550,7 +1554,7 @@ footer {
 footer p,
 footer > a:last-child {
   color: var(--dim);
-  font-size: 9px;
+  font-size: 12px;
 }
 footer > a:last-child {
   text-decoration: none;
@@ -1624,7 +1628,7 @@ footer > a:last-child:hover {
     background: rgba(255, 255, 255, 0.025);
     color: var(--muted);
     font:
-      8px var(--font-geist-mono),
+      11px var(--font-geist-mono),
       monospace;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -1689,7 +1693,7 @@ footer > a:last-child:hover {
   .nav-mobile > a span {
     color: var(--ember);
     font:
-      8px var(--font-geist-mono),
+      11px var(--font-geist-mono),
       monospace;
   }
   .nav-mobile > div {
@@ -1697,7 +1701,7 @@ footer > a:last-child:hover {
   }
   .chain-status {
     padding: 0 8px;
-    font-size: 8px;
+    font-size: 11px;
   }
   .hero {
     padding: 65px 0 70px;
@@ -1716,7 +1720,7 @@ footer > a:last-child:hover {
     margin-top: 45px;
   }
   .hero-facts dd {
-    font-size: 10px;
+    font-size: 13px;
   }
   .relic-preview {
     min-height: 470px;
@@ -1851,7 +1855,7 @@ footer > a:last-child:hover {
 .founding-explorer-copy > span {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.11em;
@@ -1868,7 +1872,7 @@ footer > a:last-child:hover {
   max-width: 610px;
   margin-top: 18px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.7;
 }
 .founding-explorer-copy dl {
@@ -1886,7 +1890,7 @@ footer > a:last-child:hover {
 }
 .founding-explorer-copy dt {
   color: var(--dim);
-  font-size: 8px;
+  font-size: 11px;
   text-transform: uppercase;
 }
 .founding-explorer-copy dd {
@@ -1894,7 +1898,7 @@ footer > a:last-child:hover {
   overflow: hidden;
   color: #d3d8cf;
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1935,7 +1939,7 @@ footer > a:last-child:hover {
 }
 .live-featured-relic .founding-explorer-copy dd {
   color: #f0f2ed;
-  font-size: 10px;
+  font-size: 13px;
 }
 .founding-explorer-actions .primary {
   border-color: rgba(200, 245, 107, 0.55);
@@ -1955,7 +1959,7 @@ footer > a:last-child:hover {
   align-items: center;
   border: 1px solid var(--line-strong);
   color: #dce1d7;
-  font-size: 9px;
+  font-size: 12px;
   text-decoration: none;
 }
 .founding-explorer-actions a:first-child:not(.primary) {
@@ -1981,7 +1985,7 @@ footer > a:last-child:hover {
   gap: 12px;
   color: var(--dim);
   font:
-    8px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -2049,7 +2053,7 @@ footer > a:last-child:hover {
   margin-top: 10px;
   overflow: hidden;
   color: var(--dim);
-  font-size: 10px;
+  font-size: 15px;
   line-height: 1.55;
 }
 .artifact-card dl {
@@ -2063,21 +2067,21 @@ footer > a:last-child:hover {
 }
 .artifact-card dt {
   color: var(--dim);
-  font-size: 8px;
+  font-size: 12px;
   text-transform: uppercase;
 }
 .artifact-card dd {
   margin-top: 5px;
   color: #bfc5ba;
   font:
-    9px var(--font-geist-mono),
+    16px var(--font-geist-mono),
     monospace;
 }
 .artifact-card > a,
 .indexer-empty a,
 .pagination a {
   color: var(--acid);
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 650;
   text-decoration: none;
 }
@@ -2094,7 +2098,7 @@ footer > a:last-child:hover {
 .indexer-empty > span {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -2113,7 +2117,7 @@ footer > a:last-child:hover {
   max-width: 580px;
   margin: 20px 0 28px;
   color: var(--dim);
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.7;
 }
 .pagination {
@@ -2148,7 +2152,7 @@ footer > a:last-child:hover {
   margin-top: 18px;
   color: var(--dim);
   font:
-    10px var(--font-geist-mono),
+    13px var(--font-geist-mono),
     monospace;
 }
 .detail-orbit {
@@ -2207,7 +2211,7 @@ footer > a:last-child:hover {
 .relic-content > span {
   color: var(--dim);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
@@ -2229,13 +2233,13 @@ footer > a:last-child:hover {
 }
 .relic-content strong {
   color: #bfc4ba;
-  font-size: 11px;
+  font-size: 14px;
 }
 .relic-content code {
   margin-top: 10px;
   color: var(--dim);
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
   overflow-wrap: anywhere;
 }
@@ -2253,7 +2257,7 @@ footer > a:last-child:hover {
 .proof-grid span {
   display: block;
   color: var(--dim);
-  font-size: 8px;
+  font-size: 11px;
   text-transform: uppercase;
 }
 .proof-grid strong {
@@ -2261,7 +2265,7 @@ footer > a:last-child:hover {
   margin-top: 10px;
   color: var(--ink);
   font:
-    10px var(--font-geist-mono),
+    13px var(--font-geist-mono),
     monospace;
   overflow-wrap: anywhere;
 }
@@ -2287,12 +2291,12 @@ footer > a:last-child:hover {
 }
 .chain-proof dt {
   color: var(--dim);
-  font-size: 9px;
+  font-size: 12px;
 }
 .chain-proof dd {
   color: #aeb4aa;
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
   overflow-wrap: anywhere;
 }
@@ -2315,14 +2319,14 @@ footer > a:last-child:hover {
 .ownership-history > div span {
   color: var(--dim);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
 .ownership-history > p {
   margin-top: 20px;
   color: var(--dim);
-  font-size: 11px;
+  font-size: 14px;
 }
 .ownership-history ol {
   margin-top: 22px;
@@ -2340,13 +2344,13 @@ footer > a:last-child:hover {
 .ownership-history li small {
   color: var(--dim);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
 }
 .ownership-history li strong {
   color: #bfc5ba;
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
   overflow-wrap: anywhere;
 }
@@ -2361,7 +2365,7 @@ footer > a:last-child:hover {
   padding: 24px 0;
   color: var(--dim);
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
 }
 .detail-actions a {
@@ -2389,7 +2393,7 @@ footer > a:last-child:hover {
   align-items: center;
   border: 1px solid var(--line-strong);
   color: var(--ink);
-  font-size: 10px;
+  font-size: 13px;
   text-decoration: none;
 }
 .market-hero-actions a:first-child {
@@ -2410,14 +2414,14 @@ footer > a:last-child:hover {
 .settlement-lock strong {
   flex: 0 0 auto;
   color: var(--ember);
-  font-size: 11px;
+  font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 .settlement-lock p {
   max-width: 720px;
   color: var(--dim);
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.6;
 }
 .listing-grid {
@@ -2454,7 +2458,7 @@ footer > a:last-child:hover {
 .listing-grid article > span {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
@@ -2468,7 +2472,7 @@ footer > a:last-child:hover {
   margin-top: 10px;
   color: var(--dim);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   overflow: hidden;
   overflow-wrap: anywhere;
@@ -2488,11 +2492,11 @@ footer > a:last-child:hover {
 .listing-grid dt,
 .listing-grid dd {
   color: var(--dim);
-  font-size: 8px;
+  font-size: 11px;
 }
 .listing-grid article > a {
   color: var(--acid);
-  font-size: 9px;
+  font-size: 12px;
   text-decoration: none;
 }
 .listing-grid button,
@@ -2503,7 +2507,7 @@ footer > a:last-child:hover {
   border: 1px solid var(--line);
   background: transparent;
   color: var(--dim);
-  font-size: 9px;
+  font-size: 12px;
 }
 .active-offers,
 .listing-panel {
@@ -2526,14 +2530,14 @@ footer > a:last-child:hover {
 .listing-panel > div > span {
   color: var(--dim);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
 .active-offers > p {
   margin-top: 18px;
   color: var(--dim);
-  font-size: 11px;
+  font-size: 14px;
 }
 .active-offers article {
   margin-top: 18px;
@@ -2551,7 +2555,7 @@ footer > a:last-child:hover {
 .active-offers article span {
   color: var(--dim);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
 }
 .active-offers article button {
@@ -2584,14 +2588,14 @@ footer > a:last-child:hover {
   max-width: 470px;
   margin-top: 10px;
   color: var(--dim);
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.55;
 }
 .listing-panel label > span {
   display: block;
   margin-bottom: 8px;
   color: var(--dim);
-  font-size: 8px;
+  font-size: 11px;
   text-transform: uppercase;
 }
 .listing-panel label > div {
@@ -2608,13 +2612,13 @@ footer > a:last-child:hover {
   background: transparent;
   color: var(--ink);
   font:
-    13px var(--font-geist-mono),
+    16px var(--font-geist-mono),
     monospace;
 }
 .listing-panel em {
   padding-right: 12px;
   color: var(--dim);
-  font-size: 9px;
+  font-size: 12px;
   font-style: normal;
 }
 .listing-panel > button {
@@ -2622,7 +2626,7 @@ footer > a:last-child:hover {
   border: 0;
   background: var(--acid);
   color: #11150d;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -2633,7 +2637,7 @@ footer > a:last-child:hover {
 .listing-panel > small {
   grid-column: 1 / -1;
   color: var(--ember);
-  font-size: 8px;
+  font-size: 11px;
   line-height: 1.5;
 }
 .listing-panel .listing-success,
@@ -2643,7 +2647,7 @@ footer > a:last-child:hover {
 }
 .listing-success {
   color: var(--acid);
-  font-size: 10px;
+  font-size: 13px;
 }
 
 /* Wallet-owned collection */
@@ -2658,7 +2662,7 @@ footer > a:last-child:hover {
 .wallet-hero > p:last-child {
   max-width: 760px;
   margin-top: 38px;
-  font-size: 13px;
+  font-size: 16px;
 }
 .wallet-workspace {
   margin-bottom: 90px;
@@ -2683,7 +2687,7 @@ footer > a:last-child:hover {
 .transfer-empty > span {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -2704,7 +2708,7 @@ footer > a:last-child:hover {
   max-width: 580px;
   margin-top: 18px;
   color: var(--dim);
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.7;
 }
 .wallet-gate > button {
@@ -2714,7 +2718,7 @@ footer > a:last-child:hover {
   border: 0;
   background: var(--acid);
   color: #11150d;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 750;
   cursor: pointer;
 }
@@ -2733,7 +2737,7 @@ footer > a:last-child:hover {
 }
 .wallet-workspace > header span {
   color: var(--dim);
-  font-size: 8px;
+  font-size: 11px;
   text-transform: uppercase;
 }
 .wallet-workspace > header select {
@@ -2743,13 +2747,13 @@ footer > a:last-child:hover {
   border: 1px solid var(--line);
   background: var(--field);
   color: var(--ink);
-  font-size: 12px;
+  font-size: 15px;
 }
 .wallet-workspace > header p {
   margin-top: 5px;
   color: var(--dim);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
 }
 .wallet-workspace > header button {
@@ -2757,7 +2761,7 @@ footer > a:last-child:hover {
   border: 1px solid var(--line);
   background: transparent;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   cursor: pointer;
 }
 .wallet-workspace > header button:disabled {
@@ -2770,19 +2774,19 @@ footer > a:last-child:hover {
 }
 .wallet-notice strong {
   color: var(--ember);
-  font-size: 11px;
+  font-size: 14px;
   text-transform: uppercase;
 }
 .wallet-notice p {
   max-width: 600px;
   margin: 18px 0 25px;
   color: var(--dim);
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.7;
 }
 .wallet-notice a {
   color: var(--acid);
-  font-size: 10px;
+  font-size: 13px;
   text-decoration: none;
 }
 .owned-layout {
@@ -2805,7 +2809,7 @@ footer > a:last-child:hover {
 .owned-list > div strong {
   color: var(--dim);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
@@ -2850,7 +2854,7 @@ footer > a:last-child:hover {
   border: 1px solid rgba(200, 245, 107, 0.55);
   background: rgba(4, 7, 4, 0.88);
   color: var(--acid);
-  font: 700 13px var(--font-geist-mono), monospace;
+  font: 700 16px var(--font-geist-mono), monospace;
   letter-spacing: 0.03em;
 }
 .owned-card-copy {
@@ -2863,7 +2867,7 @@ footer > a:last-child:hover {
 .owned-card-copy > span {
   color: var(--dim);
   font:
-    8px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -2880,7 +2884,7 @@ footer > a:last-child:hover {
   min-height: 42px;
   margin-top: 18px;
   color: #b9c0b5;
-  font-size: 11px;
+  font-size: 15px;
   line-height: 1.55;
 }
 .owned-card-copy dl {
@@ -2898,13 +2902,14 @@ footer > a:last-child:hover {
 }
 .owned-card-copy dt {
   color: var(--dim);
-  font-size: 7px;
+  font-size: 12px;
   text-transform: uppercase;
 }
 .owned-card-copy dd {
   margin-top: 7px;
   color: var(--acid);
-  font: 10px var(--font-geist-mono), monospace;
+  font: 16px var(--font-geist-mono), monospace;
+  font-weight: 650;
   overflow-wrap: anywhere;
 }
 .transfer-console {
@@ -2937,7 +2942,7 @@ footer > a:last-child:hover {
   max-width: 620px;
   margin-top: 22px;
   color: var(--dim);
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.6;
 }
 .owned-relic-media {
@@ -2972,7 +2977,8 @@ footer > a:last-child:hover {
 .owned-chain-receipt span {
   display: block;
   color: var(--dim);
-  font-size: 7px;
+  font-size: 12px;
+  font-weight: 650;
   text-transform: uppercase;
   letter-spacing: 0.07em;
 }
@@ -2980,7 +2986,7 @@ footer > a:last-child:hover {
   display: block;
   margin-top: 12px;
   color: var(--ink);
-  font: 10px var(--font-geist-mono), monospace;
+  font: 15px var(--font-geist-mono), monospace;
   line-height: 1.45;
   overflow-wrap: anywhere;
 }
@@ -3005,7 +3011,7 @@ footer > a:last-child:hover {
 }
 .owned-chain-receipt strong {
   color: #c6ccc2;
-  font: 9px var(--font-geist-mono), monospace;
+  font: 14px var(--font-geist-mono), monospace;
   text-align: right;
   overflow-wrap: anywhere;
 }
@@ -3022,7 +3028,7 @@ footer > a:last-child:hover {
   align-items: center;
   border: 1px solid var(--line-strong);
   color: var(--ink);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 680;
   text-decoration: none;
 }
@@ -3038,7 +3044,7 @@ footer > a:last-child:hover {
 }
 .ownership-divider > span {
   color: var(--ember);
-  font: 8px var(--font-geist-mono), monospace;
+  font: 11px var(--font-geist-mono), monospace;
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
@@ -3053,7 +3059,7 @@ footer > a:last-child:hover {
   max-width: 680px;
   margin-top: 12px;
   color: var(--dim);
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.6;
 }
 .transfer-console > label,
@@ -3073,7 +3079,7 @@ footer > a:last-child:hover {
   display: block;
   margin-bottom: 9px;
   color: var(--dim);
-  font-size: 8px;
+  font-size: 11px;
   text-transform: uppercase;
 }
 .transfer-console input {
@@ -3084,7 +3090,7 @@ footer > a:last-child:hover {
   background: var(--field);
   color: var(--ink);
   font:
-    11px var(--font-geist-mono),
+    14px var(--font-geist-mono),
     monospace;
 }
 .transfer-review {
@@ -3105,12 +3111,12 @@ footer > a:last-child:hover {
 }
 .transfer-review span {
   color: var(--dim);
-  font-size: 8px;
+  font-size: 11px;
 }
 .transfer-review strong {
   color: #bfc5ba;
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-align: right;
 }
@@ -3129,12 +3135,12 @@ footer > a:last-child:hover {
 }
 .transfer-evidence span {
   color: var(--dim);
-  font-size: 8px;
+  font-size: 11px;
 }
 .transfer-evidence strong {
   color: #c7cdc2;
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-align: right;
   overflow-wrap: anywhere;
@@ -3146,7 +3152,7 @@ footer > a:last-child:hover {
   border: 1px solid rgba(200, 245, 107, 0.4);
   background: transparent;
   color: var(--acid);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -3157,7 +3163,7 @@ footer > a:last-child:hover {
   border: 0;
   background: var(--acid);
   color: #11150d;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 750;
   cursor: pointer;
 }
@@ -3173,7 +3179,7 @@ footer > a:last-child:hover {
   display: inline-block;
   margin-top: 18px;
   color: var(--acid);
-  font-size: 9px;
+  font-size: 12px;
   text-decoration: none;
 }
 .transfer-console > .error-message,
@@ -3216,7 +3222,7 @@ footer > a:last-child:hover {
   max-width: 670px;
   margin-top: 36px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 16px;
   line-height: 1.7;
 }
 .market-stats {
@@ -3233,7 +3239,7 @@ footer > a:last-child:hover {
 }
 .market-stats dt {
   color: var(--dim);
-  font-size: 8px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -3293,7 +3299,7 @@ footer > a:last-child:hover {
   justify-content: center;
   background: var(--acid);
   color: #11150d;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 780;
   text-decoration: none;
 }
@@ -3312,7 +3318,7 @@ footer > a:last-child:hover {
   display: block;
   margin-bottom: 13px;
   color: var(--dim);
-  font: 10px var(--font-geist-mono), monospace;
+  font: 13px var(--font-geist-mono), monospace;
   text-transform: uppercase;
   letter-spacing: 0.09em;
 }
@@ -3326,7 +3332,7 @@ footer > a:last-child:hover {
   border: 0;
   background: transparent;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 13px;
   text-align: left;
   cursor: pointer;
 }
@@ -3340,7 +3346,7 @@ footer > a:last-child:hover {
 }
 .market-filters button small {
   color: var(--dim);
-  font: 8px var(--font-geist-mono), monospace;
+  font: 11px var(--font-geist-mono), monospace;
 }
 .market-active-filter {
   min-height: 44px;
@@ -3353,29 +3359,29 @@ footer > a:last-child:hover {
 }
 .market-active-filter strong {
   color: var(--ink);
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 550;
 }
 .market-active-filter small {
   color: var(--dim);
-  font: 10px var(--font-geist-mono), monospace;
+  font: 13px var(--font-geist-mono), monospace;
 }
 .market-filters > div:first-child > a {
   margin: 15px 11px 0;
   display: inline-block;
   color: var(--acid);
-  font-size: 10px;
+  font-size: 13px;
   text-decoration: none;
 }
 .market-filter-proof strong {
   color: var(--ink);
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 600;
 }
 .market-filter-proof p {
   margin-top: 9px;
   color: var(--dim);
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.55;
 }
 .market-results > header {
@@ -3398,7 +3404,7 @@ footer > a:last-child:hover {
 }
 .market-results > header span {
   color: var(--dim);
-  font-size: 10px;
+  font-size: 13px;
   text-transform: uppercase;
 }
 .market-results select {
@@ -3407,7 +3413,7 @@ footer > a:last-child:hover {
   border: 1px solid var(--line);
   background: var(--field);
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
 }
 .market-card-grid {
   padding: 16px;
@@ -3448,7 +3454,7 @@ footer > a:last-child:hover {
   top: 12px;
   border: 1px solid var(--line-strong);
   background: rgba(4, 7, 4, 0.88);
-  font: 10px var(--font-geist-mono), monospace;
+  font: 13px var(--font-geist-mono), monospace;
   font-style: normal;
   text-transform: uppercase;
   backdrop-filter: blur(10px);
@@ -3466,7 +3472,7 @@ footer > a:last-child:hover {
 }
 .market-card-body > span {
   color: var(--dim);
-  font: 10px var(--font-geist-mono), monospace;
+  font: 13px var(--font-geist-mono), monospace;
   text-transform: uppercase;
 }
 .market-card-body h2 {
@@ -3480,7 +3486,7 @@ footer > a:last-child:hover {
   margin-top: 9px;
   overflow: hidden;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.55;
 }
 .market-card-body dl {
@@ -3499,13 +3505,13 @@ footer > a:last-child:hover {
 }
 .market-card-body dt {
   color: var(--dim);
-  font-size: 9px;
+  font-size: 12px;
   text-transform: uppercase;
 }
 .market-card-body dd {
   margin-top: 8px;
   color: var(--ink);
-  font: 10px var(--font-geist-mono), monospace;
+  font: 13px var(--font-geist-mono), monospace;
   line-height: 1.45;
   overflow-wrap: anywhere;
 }
@@ -3520,7 +3526,7 @@ footer > a:last-child:hover {
   justify-content: center;
   border: 1px solid var(--line-strong);
   color: var(--ink);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 700;
   text-decoration: none;
 }
@@ -3538,7 +3544,7 @@ footer > a:last-child:hover {
 }
 .market-no-results span {
   color: var(--ember);
-  font: 8px var(--font-geist-mono), monospace;
+  font: 11px var(--font-geist-mono), monospace;
   text-transform: uppercase;
 }
 .market-no-results h2 {
@@ -3555,7 +3561,7 @@ footer > a:last-child:hover {
   border: 1px solid var(--acid);
   background: transparent;
   color: var(--acid);
-  font-size: 9px;
+  font-size: 12px;
   text-decoration: none;
   cursor: pointer;
 }
@@ -3777,7 +3783,7 @@ footer > a:last-child:hover {
 .network-intro strong {
   color: var(--acid);
   font:
-    10px var(--font-geist-mono),
+    13px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -3785,7 +3791,7 @@ footer > a:last-child:hover {
 .network-intro p {
   margin-top: 18px;
   color: var(--dim);
-  font-size: 13px;
+  font-size: 16px;
   line-height: 1.75;
 }
 .simulation-warning {
@@ -3799,12 +3805,12 @@ footer > a:last-child:hover {
 .simulation-warning strong {
   flex: 0 0 auto;
   color: var(--ember);
-  font-size: 10px;
+  font-size: 13px;
   text-transform: uppercase;
 }
 .simulation-warning p {
   color: var(--dim);
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.55;
 }
 .consensus-summary {
@@ -3824,7 +3830,7 @@ footer > a:last-child:hover {
 .checkpoint-panel span {
   display: block;
   color: var(--dim);
-  font-size: 8px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -3841,7 +3847,7 @@ footer > a:last-child:hover {
   display: block;
   margin-top: 10px;
   color: var(--dim);
-  font-size: 8px;
+  font-size: 11px;
 }
 .miner-section {
   padding: 100px 0 28px;
@@ -3864,7 +3870,7 @@ footer > a:last-child:hover {
 }
 .miner-section header > p {
   color: var(--dim);
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.65;
 }
 .miner-grid {
@@ -3894,7 +3900,7 @@ footer > a:last-child:hover {
 .miner-grid i {
   color: var(--dim);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   font-style: normal;
@@ -3922,7 +3928,7 @@ footer > a:last-child:hover {
 .miner-grid dd {
   color: var(--dim);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
 }
 .checkpoint-panel {
@@ -3945,7 +3951,7 @@ footer > a:last-child:hover {
   margin-top: 10px;
   color: #bec4b9;
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
   overflow-wrap: anywhere;
 }
@@ -3966,7 +3972,7 @@ footer > a:last-child:hover {
 .network-flow span {
   color: var(--ember);
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
 }
 .network-flow h3 {
@@ -3978,7 +3984,7 @@ footer > a:last-child:hover {
 .network-flow p {
   margin-top: 13px;
   color: var(--dim);
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.65;
 }
 .network-actions {
@@ -3988,7 +3994,7 @@ footer > a:last-child:hover {
 }
 .network-actions a {
   color: var(--acid);
-  font-size: 10px;
+  font-size: 13px;
   text-decoration: none;
 }
 
@@ -4070,7 +4076,7 @@ footer > a:last-child:hover {
 .docs-hero > div strong {
   color: var(--acid);
   font:
-    10px var(--font-geist-mono),
+    13px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -4078,7 +4084,7 @@ footer > a:last-child:hover {
 .docs-hero > div p {
   margin-top: 18px;
   color: var(--dim);
-  font-size: 13px;
+  font-size: 16px;
   line-height: 1.75;
 }
 .docs-verdict {
@@ -4094,7 +4100,7 @@ footer > a:last-child:hover {
 .docs-section > header span {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -4111,7 +4117,7 @@ footer > a:last-child:hover {
   max-width: 790px;
   margin-top: 25px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.75;
 }
 .docs-section {
@@ -4142,7 +4148,7 @@ footer > a:last-child:hover {
 .docs-prose p,
 .docs-boundary {
   color: var(--dim);
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.78;
 }
 .docs-prose code {
@@ -4166,13 +4172,13 @@ footer > a:last-child:hover {
   place-items: center;
   color: var(--ember);
   font:
-    12px var(--font-geist-mono),
+    15px var(--font-geist-mono),
     monospace;
 }
 .docs-architecture article > span {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
@@ -4185,7 +4191,7 @@ footer > a:last-child:hover {
 .docs-architecture p {
   margin-top: 14px;
   color: var(--dim);
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.65;
 }
 .docs-boundary {
@@ -4217,7 +4223,7 @@ footer > a:last-child:hover {
 .storage-comparison article > span {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -4246,13 +4252,13 @@ footer > a:last-child:hover {
 .storage-comparison dt {
   color: var(--dim);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
 .storage-comparison dd {
   color: #b9beb5;
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.55;
 }
 .storage-notes {
@@ -4266,7 +4272,7 @@ footer > a:last-child:hover {
   border-left: 2px solid var(--line-strong);
   background: rgba(255, 255, 255, 0.015);
   color: var(--dim);
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.7;
 }
 .storage-notes strong {
@@ -4301,14 +4307,14 @@ footer > a:last-child:hover {
 .mint-callout dt {
   color: var(--ember);
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
 .mint-callout dd {
   margin-top: 11px;
   color: var(--dim);
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.55;
 }
 .score-example {
@@ -4342,7 +4348,7 @@ footer > a:last-child:hover {
 .score-art i {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   font-style: normal;
   letter-spacing: 0.1em;
@@ -4381,7 +4387,7 @@ footer > a:last-child:hover {
 .score-example dd {
   color: var(--dim);
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
 }
 .score-example dd {
@@ -4411,7 +4417,7 @@ footer > a:last-child:hover {
 .claim-audit span {
   color: var(--dim);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
@@ -4442,7 +4448,7 @@ footer > a:last-child:hover {
 .claim-audit p {
   margin-top: 16px;
   color: var(--dim);
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.65;
 }
 .docs-section blockquote {
@@ -4487,14 +4493,14 @@ footer > a:last-child:hover {
 .sources a span {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
 .sources a strong {
   margin-top: 12px;
   color: #bec4b9;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 520;
 }
 .sources a:hover {
@@ -4533,7 +4539,7 @@ footer > a:last-child:hover {
 .manual-sidebar-head span {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -4548,7 +4554,7 @@ footer > a:last-child:hover {
   margin-top: 6px;
   color: var(--dim);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
 }
 .manual-sidebar ol {
@@ -4562,7 +4568,7 @@ footer > a:last-child:hover {
   gap: 12px;
   align-items: center;
   color: #929b8f;
-  font-size: 10px;
+  font-size: 13px;
   text-decoration: none;
   border-left: 2px solid transparent;
 }
@@ -4574,7 +4580,7 @@ footer > a:last-child:hover {
 .manual-sidebar a i {
   color: #586055;
   font:
-    normal 7px var(--font-geist-mono),
+    normal 11px var(--font-geist-mono),
     monospace;
 }
 .manual-sidebar-foot {
@@ -4595,14 +4601,14 @@ footer > a:last-child:hover {
   margin-left: 8px;
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
 .manual-sidebar-foot p {
   margin-top: 9px;
   color: #858e82;
-  font-size: 8px;
+  font-size: 11px;
   line-height: 1.55;
 }
 .manual-content {
@@ -4626,7 +4632,7 @@ footer > a:last-child:hover {
 .manual-kicker i {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -4668,7 +4674,7 @@ footer > a:last-child:hover {
   align-items: center;
   border: 1px solid var(--line-strong);
   color: #c9d0c4;
-  font-size: 10px;
+  font-size: 13px;
   text-decoration: none;
 }
 .manual-hero-actions a:first-child {
@@ -4699,7 +4705,7 @@ footer > a:last-child:hover {
 .manual-status-strip span {
   color: #60695f;
   font:
-    7px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
@@ -4707,7 +4713,7 @@ footer > a:last-child:hover {
   margin-top: 7px;
   color: #c4cbc0;
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
   font-weight: 500;
 }
@@ -4734,12 +4740,12 @@ footer > a:last-child:hover {
   border-radius: 50%;
   color: var(--ember);
   font:
-    11px var(--font-geist-mono),
+    14px var(--font-geist-mono),
     monospace;
 }
 .manual-alert p {
   color: #aeb5aa;
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.6;
 }
 .manual-alert strong {
@@ -4761,7 +4767,7 @@ footer > a:last-child:hover {
   padding-top: 7px;
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -4790,14 +4796,14 @@ footer > a:last-child:hover {
   place-items: center;
   color: var(--ember);
   font:
-    11px var(--font-geist-mono),
+    14px var(--font-geist-mono),
     monospace;
 }
 .manual-flow article > span,
 .manual-flow article > i {
   color: #60695f;
   font:
-    7px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   font-style: normal;
 }
@@ -4815,7 +4821,7 @@ footer > a:last-child:hover {
 .manual-flow p {
   margin-top: 12px;
   color: #858e82;
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.65;
 }
 .manual-trust-grid,
@@ -4846,7 +4852,7 @@ footer > a:last-child:hover {
 .manual-two-column article > span {
   color: var(--acid);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
@@ -4855,7 +4861,7 @@ footer > a:last-child:hover {
 .manual-two-column p {
   margin-top: 12px;
   color: #8d968a;
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.65;
 }
 .manual-code {
@@ -4874,7 +4880,7 @@ footer > a:last-child:hover {
 .manual-code > div i {
   color: var(--ember);
   font:
-    7px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   font-style: normal;
@@ -4891,7 +4897,7 @@ footer > a:last-child:hover {
 .manual-code code {
   color: var(--acid);
   font:
-    12px/1.8 var(--font-geist-mono),
+    15px/1.8 var(--font-geist-mono),
     monospace;
 }
 .manual-rule-grid {
@@ -4904,7 +4910,7 @@ footer > a:last-child:hover {
   margin-top: 24px;
   display: block;
   color: #d7ddd3;
-  font-size: 13px;
+  font-size: 16px;
   line-height: 1.4;
 }
 .manual-requirements {
@@ -4918,7 +4924,7 @@ footer > a:last-child:hover {
 .manual-requirements > span {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
@@ -4933,7 +4939,7 @@ footer > a:last-child:hover {
   border: 1px solid var(--line);
   color: #8e978a;
   font:
-    7px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
 }
 .manual-media-layout {
@@ -4950,7 +4956,7 @@ footer > a:last-child:hover {
 .manual-envelope > span {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
@@ -4968,13 +4974,13 @@ footer > a:last-child:hover {
 .manual-envelope i {
   color: #626b61;
   font:
-    normal 8px var(--font-geist-mono),
+    normal 11px var(--font-geist-mono),
     monospace;
 }
 .manual-envelope strong {
   color: #d0d6cc;
   font:
-    10px var(--font-geist-mono),
+    13px var(--font-geist-mono),
     monospace;
   font-weight: 500;
 }
@@ -5010,7 +5016,7 @@ footer > a:last-child:hover {
 .manual-metrics span {
   color: #626b61;
   font:
-    7px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
@@ -5018,7 +5024,7 @@ footer > a:last-child:hover {
   margin-top: 8px;
   color: var(--acid);
   font:
-    13px var(--font-geist-mono),
+    16px var(--font-geist-mono),
     monospace;
 }
 .manual-queue-intro {
@@ -5030,7 +5036,7 @@ footer > a:last-child:hover {
 .manual-queue-intro span,
 .manual-queue-rule span {
   color: var(--ember);
-  font: 9px var(--font-geist-mono), monospace;
+  font: 12px var(--font-geist-mono), monospace;
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
@@ -5038,7 +5044,7 @@ footer > a:last-child:hover {
   max-width: 900px;
   margin: 12px 0 0;
   color: #bbc0b7;
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.75;
 }
 .manual-queue {
@@ -5064,7 +5070,7 @@ footer > a:last-child:hover {
 }
 .manual-queue i {
   color: var(--acid);
-  font: 10px var(--font-geist-mono), monospace;
+  font: 13px var(--font-geist-mono), monospace;
   font-style: normal;
 }
 .manual-queue strong {
@@ -5074,7 +5080,7 @@ footer > a:last-child:hover {
 .manual-queue p {
   margin: 10px 0 0;
   color: var(--dim);
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.7;
 }
 .manual-queue-rule {
@@ -5094,7 +5100,7 @@ footer > a:last-child:hover {
   max-width: 850px;
   margin: 14px 0 0;
   color: var(--dim);
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.7;
 }
 .manual-correction {
@@ -5110,7 +5116,7 @@ footer > a:last-child:hover {
 .manual-correction > span {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
@@ -5126,7 +5132,7 @@ footer > a:last-child:hover {
   max-width: 820px;
   margin-top: 17px;
   color: #9da59a;
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.7;
 }
 .manual-correction code,
@@ -5143,7 +5149,7 @@ footer > a:last-child:hover {
 }
 .manual-economics-grid li {
   color: #969f93;
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.55;
 }
 .manual-economics-grid li + li {
@@ -5155,7 +5161,7 @@ footer > a:last-child:hover {
   border-left: 2px solid var(--ember);
   background: rgba(255, 159, 67, 0.025);
   color: #8f988c;
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.7;
 }
 .manual-id {
@@ -5168,7 +5174,7 @@ footer > a:last-child:hover {
   display: block;
   color: var(--acid);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
@@ -5201,7 +5207,7 @@ footer > a:last-child:hover {
 .manual-founding > span {
   color: var(--acid);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
@@ -5212,12 +5218,12 @@ footer > a:last-child:hover {
 .manual-founding p {
   margin-top: 5px;
   color: #879085;
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.5;
 }
 .manual-founding a {
   color: var(--acid);
-  font-size: 9px;
+  font-size: 12px;
   text-decoration: none;
 }
 .manual-network-grid {
@@ -5233,7 +5239,7 @@ footer > a:last-child:hover {
 .manual-network-grid article > div i {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   font-style: normal;
@@ -5253,7 +5259,7 @@ footer > a:last-child:hover {
 }
 .manual-network-grid li {
   color: #8b9488;
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.55;
 }
 .manual-network-grid li + li {
@@ -5281,7 +5287,7 @@ footer > a:last-child:hover {
 .manual-claims article span {
   color: #7b8479;
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
@@ -5315,7 +5321,7 @@ footer > a:last-child:hover {
 .manual-claims p {
   margin-top: 12px;
   color: #879085;
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.65;
 }
 .manual-api {
@@ -5337,26 +5343,26 @@ footer > a:last-child:hover {
 .manual-api > header span {
   color: #626b61;
   font:
-    7px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
 .manual-api b {
   color: var(--acid);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
 }
 .manual-api code {
   color: #c6cec0;
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
   overflow-wrap: anywhere;
 }
 .manual-api p {
   color: #818a7f;
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.5;
 }
 .manual-library {
@@ -5381,7 +5387,7 @@ footer > a:last-child:hover {
 .manual-library span {
   color: var(--ember);
   font:
-    7px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
@@ -5393,7 +5399,7 @@ footer > a:last-child:hover {
 .manual-library p {
   margin-top: 11px;
   color: #818a7f;
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.6;
 }
 .manual-library a:hover {
@@ -5410,7 +5416,7 @@ footer > a:last-child:hover {
 .manual-primary-sources > span {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
@@ -5424,7 +5430,7 @@ footer > a:last-child:hover {
   padding: 8px 10px;
   border: 1px solid var(--line);
   color: #90998d;
-  font-size: 8px;
+  font-size: 11px;
   text-decoration: none;
 }
 .manual-primary-sources a:hover {
@@ -5444,7 +5450,7 @@ footer > a:last-child:hover {
 .manual-end > span {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
 }
@@ -5463,7 +5469,7 @@ footer > a:last-child:hover {
 }
 .manual-end a {
   color: var(--acid);
-  font-size: 10px;
+  font-size: 13px;
   text-decoration: none;
 }
 
@@ -5612,7 +5618,7 @@ footer > a:last-child:hover {
 .blackpaper-hero > div span {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.09em;
@@ -5620,7 +5626,7 @@ footer > a:last-child:hover {
 .blackpaper-hero > div strong {
   margin-top: 10px;
   color: #c6cbc2;
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.45;
 }
 .paper-body section {
@@ -5633,7 +5639,7 @@ footer > a:last-child:hover {
 .paper-body section > span {
   color: var(--ember);
   font:
-    10px var(--font-geist-mono),
+    13px var(--font-geist-mono),
     monospace;
 }
 .paper-body section > p {
@@ -5658,7 +5664,7 @@ footer > a:last-child:hover {
 .paper-status > span {
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.09em;
@@ -5676,7 +5682,7 @@ footer > a:last-child:hover {
   margin: 26px 0 0;
   padding-left: 18px;
   color: var(--dim);
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.9;
 }
 
@@ -5708,7 +5714,7 @@ footer > a:last-child:hover {
 .blackpaper-contents > span {
   color: var(--ember);
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -5734,7 +5740,7 @@ footer > a:last-child:hover {
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   color: #aeb5aa;
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.35;
   text-decoration: none;
 }
@@ -5745,7 +5751,7 @@ footer > a:last-child:hover {
 .blackpaper-contents i {
   color: var(--ember);
   font:
-    normal 8px var(--font-geist-mono),
+    normal 11px var(--font-geist-mono),
     monospace;
 }
 .blackpaper-chapter {
@@ -5764,7 +5770,7 @@ footer > a:last-child:hover {
 .blackpaper-chapter > header span {
   color: var(--ember);
   font:
-    9px var(--font-geist-mono),
+    12px var(--font-geist-mono),
     monospace;
   letter-spacing: 0.1em;
 }
@@ -5825,7 +5831,7 @@ footer > a:last-child:hover {
 }
 .blackpaper-prose pre code {
   color: #c8f56b;
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.75;
   white-space: pre;
   overflow-wrap: normal;
@@ -5868,7 +5874,7 @@ footer > a:last-child:hover {
   display: block;
   color: var(--ember);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.09em;
@@ -5881,7 +5887,7 @@ footer > a:last-child:hover {
   display: block;
   color: #d9ded5;
   font:
-    500 12px/1.55 var(--font-geist-sans),
+    500 15px/1.55 var(--font-geist-sans),
     sans-serif;
 }
 .paper-call-path {
@@ -5893,7 +5899,7 @@ footer > a:last-child:hover {
 .paper-correction > span {
   color: var(--acid);
   font:
-    8px var(--font-geist-mono),
+    11px var(--font-geist-mono),
     monospace;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -5902,14 +5908,14 @@ footer > a:last-child:hover {
   margin-top: 16px;
   display: block;
   color: #e5ecd9;
-  font-size: 13px;
+  font-size: 16px;
   line-height: 1.7;
 }
 .paper-call-path > p {
   margin-top: 18px;
   color: #929b8f;
   font:
-    11px/1.75 var(--font-geist-sans),
+    14px/1.75 var(--font-geist-sans),
     sans-serif;
 }
 .paper-correction {
@@ -5937,7 +5943,7 @@ footer > a:last-child:hover {
   margin-top: 18px;
   color: #abb2a8;
   font:
-    12px/1.75 var(--font-geist-sans),
+    15px/1.75 var(--font-geist-sans),
     sans-serif;
 }
 .paper-status-table > div {
@@ -5987,7 +5993,7 @@ footer > a:last-child:hover {
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   color: #c7cec2;
-  font-size: 10px;
+  font-size: 13px;
   text-decoration: none;
 }
 .blackpaper-references a:hover {
