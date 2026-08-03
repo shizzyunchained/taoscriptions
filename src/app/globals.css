@@ -102,11 +102,13 @@ h1 span { display: block; color: var(--ember-bright); font-style: italic; }
 .field select:focus, .field input:focus, .field textarea:focus { border-color: var(--ember); }
 .field textarea { min-height: 116px; padding-top: 14px; resize: vertical; font-family: inherit; line-height: 1.6; }
 .inscription-field small { text-align: right; }
-.content-covenant { margin-top: 16px; padding: 16px; display: grid; grid-template-columns: 18px 1fr; gap: 12px; align-items: start; border: 1px solid rgba(255,177,74,.25); background: rgba(255,159,67,.035); cursor: pointer; }
-.content-covenant input { width: 16px; height: 16px; margin-top: 2px; accent-color: var(--ember); }
-.content-covenant strong, .content-covenant small { display: block; }
-.content-covenant strong { color: #c9cdc5; font-size: 10px; }
-.content-covenant small { margin-top: 6px; color: var(--dim); font-size: 9px; line-height: 1.6; }
+.content-covenant { margin-top: 22px; padding: 24px; display: grid; grid-template-columns: 24px 1fr; gap: 16px; align-items: start; border: 1px solid rgba(255,177,74,.55); background: linear-gradient(135deg, rgba(255,159,67,.1), rgba(255,159,67,.025)); box-shadow: inset 3px 0 0 var(--ember); cursor: pointer; }
+.content-covenant input { width: 21px; height: 21px; margin-top: 3px; accent-color: var(--ember); }
+.content-covenant strong, .content-covenant em, .content-covenant small { display: block; }
+.content-covenant strong { max-width: 760px; color: #ffbe68; font-size: clamp(16px, 1.5vw, 21px); line-height: 1.25; text-transform: uppercase; letter-spacing: .035em; }
+.content-covenant em { margin-top: 10px; color: #eef1e9; font-size: 14px; line-height: 1.5; font-style: normal; font-weight: 700; }
+.content-covenant small { margin-top: 14px; max-width: 860px; color: #aeb5aa; font-size: 12px; line-height: 1.65; }
+.content-covenant small b { color: #dfe4db; }
 .content-covenant code { color: var(--ember); font: inherit; }
 .field select:disabled { color: var(--dim); cursor: wait; }
 .amount-field > div { position: relative; }
