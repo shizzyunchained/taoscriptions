@@ -73,20 +73,20 @@ export function MarketplaceBrowser({ artifacts, listings }: { artifacts: Artifac
                 const listing = listingByArtifact.get(artifact.artifactId);
                 return (
                   <article className="market-card" key={artifact.artifactId}>
-                    <Link className="market-card-media" href={`/relic/${encodeURIComponent(artifact.artifactId)}`}>
+                    <Link className="market-card-media" href={`/relic/${artifact.globalNumber}`}>
                       <Image src={`/api/v1/artifacts/${encodeURIComponent(artifact.artifactId)}/media`} alt={artifact.name} fill sizes="(max-width: 640px) 92vw, (max-width: 1100px) 42vw, 24vw" unoptimized />
                       <span>#{artifact.globalNumber.padStart(4, "0")}</span>
                       <i>{listing ? "For sale" : "Finalized"}</i>
                     </Link>
                     <div className="market-card-body">
-                      <span>SN{artifact.netuid} · Edition #{artifact.subnetNumber}</span>
+                      <span>SN{artifact.netuid} · Subnet Relic #{artifact.subnetNumber}</span>
                       <h2>{artifact.name}</h2>
                       <p>{artifact.body ?? "Image-only Relic"}</p>
                       <dl>
                         <div><dt>{listing ? "Price" : "Status"}</dt><dd>{listing ? `${formatRao(listing.priceRao)} TAO` : "Not listed"}</dd></div>
                         <div><dt>Alpha burned</dt><dd>{formatRao(artifact.alphaBurnedRao)} α</dd></div>
                       </dl>
-                      <Link href={`/relic/${encodeURIComponent(artifact.artifactId)}`}>{listing ? "View listing" : "View Relic"}</Link>
+                      <Link href={`/relic/${artifact.globalNumber}`}>{listing ? "View listing" : "View Relic"}</Link>
                     </div>
                   </article>
                 );

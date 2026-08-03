@@ -17,7 +17,7 @@ export function RelicCard({ artifact }: { artifact: Artifact }) {
         <div><dt>Alpha burned</dt><dd>{formatRao(artifact.alphaBurnedRao)}</dd></div>
         <div><dt>TAO spent</dt><dd>{formatRao(artifact.taoSpentRao)}</dd></div>
       </dl>
-      <Link href={`/relic/${encodeURIComponent(artifact.artifactId)}`}>Open finalized proof <span aria-hidden="true">-&gt;</span></Link>
+      <Link href={`/relic/${artifact.globalNumber}`}>Open finalized proof <span aria-hidden="true">-&gt;</span></Link>
     </article>
   );
 }

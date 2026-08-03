@@ -210,6 +210,19 @@ export async function getArtifact(artifactId: string) {
   return result.rows[0] ? artifact(result.rows[0]) : null;
 }
 
+export async function getArtifactByGlobalNumber(globalNumber: string) {
+  const result = await pool().query<ArtifactRow>(
+    `SELECT artifact_id, block_number, block_hash, extrinsic_index, extrinsic_hash,
+      global_number, subnet_number, netuid, subnet_generation,
+      creator_account_hex, owner_account_hex, hotkey_account_hex,
+      name, payload_json ->> 'purpose' AS purpose, media_type, body, content_uri, content_hash, media_byte_length, payload_hash,
+      tao_spent_rao, alpha_burned_rao, limit_price_rao, transaction_fee_rao, ownership_nonce
+     FROM artifacts WHERE chain_genesis = $1 AND global_number = $2`,
+    [configuredGenesis(), globalNumber],
+  );
+  return result.rows[0] ? artifact(result.rows[0]) : null;
+}
+
 export async function getArtifactMedia(artifactId: string) {
   const result = await pool().query<{ media_type: string; media_bytes: Buffer; content_hash: string }>(
     `SELECT media_type, media_bytes, content_hash FROM artifacts

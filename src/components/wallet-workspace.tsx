@@ -627,7 +627,7 @@ export function WalletWorkspace() {
                     )}
                     <div className="owned-proof-grid">
                       <div><span>Relic number</span><strong>#{selected.globalNumber.padStart(4, "0")}</strong></div>
-                      <div><span>Subnet edition</span><strong>SN{selected.netuid} · #{selected.subnetNumber}</strong></div>
+                      <div><span>Subnet Relic number</span><strong>SN{selected.netuid} · #{selected.subnetNumber}</strong></div>
                       <div><span>Alpha burned</span><strong>{formatRao(selected.alphaBurnedRao)} α</strong></div>
                       <div><span>TAO committed</span><strong>{formatRao(selected.taoSpentRao)} TAO</strong></div>
                       <div><span>Purpose</span><strong>{selected.purpose}</strong></div>
@@ -642,7 +642,7 @@ export function WalletWorkspace() {
                       <div><span>Current owner</span><strong>{compactHex(selected.ownerAccountHex, 15, 12)}</strong></div>
                     </div>
                     <div className="owned-primary-actions">
-                      <Link href={`/relic/${encodeURIComponent(selected.artifactId)}`}>Open full proof</Link>
+                      <Link href={`/relic/${selected.globalNumber}`}>Open full proof</Link>
                       {!proofMode && <a href="#listing">List for sale</a>}
                       {!proofMode && <a href="#transfer">Transfer ownership</a>}
                     </div>
