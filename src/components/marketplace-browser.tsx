@@ -86,7 +86,7 @@ export function MarketplaceBrowser({ artifacts, listings }: { artifacts: Artifac
                         <div><dt>{listing ? "Price" : "Status"}</dt><dd>{listing ? `${formatRao(listing.priceRao)} TAO` : "Not listed"}</dd></div>
                         <div><dt>Alpha burned</dt><dd>{formatRao(artifact.alphaBurnedRao)} α</dd></div>
                       </dl>
-                      <Link href={`/relic/${artifact.globalNumber}`}>{listing ? "View asking price" : "View Relic"}</Link>
+                      <Link href={`/relic/${artifact.globalNumber}`}>{listing ? "View listing" : "View Relic"}</Link>
                     </div>
                   </article>
                 );

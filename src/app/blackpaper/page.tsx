@@ -46,7 +46,7 @@ export default function BlackpaperPage() {
 
       <header className="blackpaper-hero">
         <p className="eyebrow">Bittensor Relics / The Blackpaper</p>
-        <h1>Memory should<br />carry proof.</h1>
+        <h1>The image is permanent.<br />The burn is the proof.</h1>
         <div><span>Protocol v1 / Draft 0.3</span><strong>A rigorous account of the artifact, the burn, the deterministic state machine, and the proposed Bittensor proof network.</strong></div>
       </header>
 
