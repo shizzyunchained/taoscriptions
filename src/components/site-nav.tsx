@@ -6,6 +6,7 @@ import { SiteMark } from "@/components/site-mark";
 
 const links = [
   ["Forge", "/#forge"],
+  ["Marketplace", "/marketplace"],
   ["Explore", "/explore"],
   ["My Relics", "/wallet"],
   ["Network", "/network"],
