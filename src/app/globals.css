@@ -2459,6 +2459,35 @@ footer > a:last-child:hover {
   font-size: 13px;
   line-height: 1.6;
 }
+.market-rules {
+  margin: -12px 0 36px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+.market-rules > div {
+  min-height: 135px;
+  padding: 22px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.market-rules span {
+  color: var(--ember);
+  font: 11px var(--font-geist-mono), monospace;
+}
+.market-rules strong {
+  margin-top: 15px;
+  display: block;
+  color: var(--ink);
+  font-size: 16px;
+}
+.market-rules p {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
 .listing-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -2633,7 +2662,7 @@ footer > a:last-child:hover {
   font-size: clamp(25px, 3vw, 38px);
 }
 .purchase-panel article {
-  grid-template-columns: minmax(170px, 0.7fr) 1fr minmax(260px, 0.8fr);
+  grid-template-columns: minmax(170px, 0.55fr) minmax(340px, 1fr) minmax(260px, 0.7fr);
 }
 .purchase-panel article > .purchase-price {
   display: block;
@@ -2662,9 +2691,36 @@ footer > a:last-child:hover {
   font-size: 12px;
   line-height: 1.5;
 }
+.listing-proof-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+.listing-proof-summary > div {
+  min-width: 0;
+  padding: 10px 12px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.listing-proof-summary dt {
+  color: var(--dim);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.listing-proof-summary dd {
+  margin-top: 5px;
+  color: var(--ink);
+  font: 12px var(--font-geist-mono), monospace;
+  overflow-wrap: anywhere;
+}
+.listing-primary-actions {
+  align-self: stretch;
+}
 .listing-panel {
   display: grid;
-  grid-template-columns: 1fr minmax(180px, 240px) minmax(170px, 210px);
+  grid-template-columns: minmax(280px, 1fr) minmax(150px, 210px) minmax(140px, 180px) minmax(180px, 220px);
   gap: 28px;
   align-items: end;
 }
@@ -2688,7 +2744,8 @@ footer > a:last-child:hover {
   border: 1px solid var(--line-strong);
   background: var(--field);
 }
-.listing-panel input {
+.listing-panel input,
+.listing-panel select {
   width: 100%;
   padding: 13px;
   border: 0;
@@ -2699,13 +2756,21 @@ footer > a:last-child:hover {
     16px var(--font-geist-mono),
     monospace;
 }
+.listing-panel select {
+  min-height: 46px;
+  cursor: pointer;
+}
 .listing-panel em {
   padding-right: 12px;
   color: var(--dim);
   font-size: 12px;
   font-style: normal;
 }
-.listing-panel > button {
+.listing-form-actions {
+  display: grid;
+  gap: 8px;
+}
+.listing-form-actions > button {
   min-height: 44px;
   border: 0;
   background: var(--acid);
@@ -2714,9 +2779,14 @@ footer > a:last-child:hover {
   font-weight: 700;
   cursor: pointer;
 }
-.listing-panel > button:disabled {
+.listing-form-actions > button:disabled {
   cursor: default;
   opacity: 0.55;
+}
+.listing-form-actions > .listing-cancel-button {
+  border: 1px solid rgba(255, 141, 120, 0.38);
+  background: transparent;
+  color: var(--danger);
 }
 .listing-panel > small {
   grid-column: 1 / -1;
@@ -2732,6 +2802,24 @@ footer > a:last-child:hover {
 .listing-success {
   color: var(--acid);
   font-size: 13px;
+}
+.current-listing {
+  margin-top: 15px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  border: 1px solid rgba(200, 245, 107, 0.25);
+  background: rgba(200, 245, 107, 0.04);
+}
+.current-listing span,
+.current-listing small {
+  color: var(--dim);
+  font-size: 11px;
+}
+.current-listing strong {
+  color: var(--acid);
+  font: 14px var(--font-geist-mono), monospace;
 }
 
 /* Wallet-owned collection */
@@ -3468,6 +3556,33 @@ footer > a:last-child:hover {
   font-size: 13px;
   line-height: 1.55;
 }
+.market-filter-control label,
+.market-filter-actions > span {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--dim);
+  font: 12px var(--font-geist-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.market-filter-control select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 34px 0 11px;
+  border: 1px solid var(--line-strong);
+  background: var(--field);
+  color: var(--ink);
+  font-size: 13px;
+}
+.market-filter-actions button {
+  min-height: 38px;
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+}
+.market-filter-actions button:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
 .market-results > header {
   min-height: 74px;
   padding: 14px 22px;
@@ -3739,6 +3854,9 @@ footer > a:last-child:hover {
     align-items: flex-start;
     flex-direction: column;
     gap: 10px;
+  }
+  .market-rules {
+    grid-template-columns: 1fr;
   }
   .market-hero h1 {
     font-size: clamp(64px, 19vw, 96px);

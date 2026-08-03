@@ -57,6 +57,11 @@ export default async function MarketplacePage() {
         </dl>
       </section>
       <section className="settlement-lock"><strong>Discovery marketplace</strong><p>Asking prices are wallet-signed and checked against current indexed ownership. Buying is disabled until one native state transition can enforce both TAO payment and Relic ownership.</p></section>
+      <section className="market-rules" aria-label="Marketplace safety rules">
+        <div><span>01</span><strong>Finalized ownership</strong><p>Only the current indexed owner can publish or cancel a listing.</p></div>
+        <div><span>02</span><strong>Portable authorization</strong><p>Every asking price is bound to the Relic, owner, nonce, network, and expiry.</p></div>
+        <div><span>03</span><strong>Buyer no-loss gate</strong><p>Payment stays locked until TAO and ownership can settle together.</p></div>
+      </section>
       {unavailable ? (
         <section className="indexer-empty"><span>Indexer gate</span><h2>The marketplace index is temporarily unavailable.</h2><p>Relics will never display unverified market inventory.</p><Link href="/explore">View collection status</Link></section>
       ) : (

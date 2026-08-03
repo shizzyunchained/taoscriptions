@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { buildCancellationMessage } from "@/lib/listing-message.mjs";
-import { formatRao } from "@/lib/format";
+import { compactHex, formatRao } from "@/lib/format";
 
 type RelicListing = {
   listingId: string;
+  sellerAccountHex: string;
+  ownershipNonce: string;
   priceRao: string;
   expiryBlock: string;
+  createdAt: string;
 };
 
 export function RelicListings({ initialListings, ownerAccountHex, chainGenesis }: {
@@ -67,8 +70,14 @@ export function RelicListings({ initialListings, ownerAccountHex, chainGenesis }
             <span>Price</span>
             <strong>{formatRao(listing.priceRao)} TAO</strong>
           </div>
-          <span>Listing expires at block #{listing.expiryBlock}</span>
-          <div>
+          <dl className="listing-proof-summary">
+            <div><dt>Seller</dt><dd>{compactHex(listing.sellerAccountHex, 12, 10)}</dd></div>
+            <div><dt>Ownership version</dt><dd>Nonce {listing.ownershipNonce}</dd></div>
+            <div><dt>Published</dt><dd>{listing.createdAt.slice(0, 10)}</dd></div>
+            <div><dt>Expires</dt><dd>Block #{listing.expiryBlock}</dd></div>
+            <div><dt>Listing ID</dt><dd>{compactHex(listing.listingId, 12, 10)}</dd></div>
+          </dl>
+          <div className="listing-primary-actions">
             <button
               type="button"
               className="buy-relic-button"

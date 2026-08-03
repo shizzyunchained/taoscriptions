@@ -1,10 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { buildListingMessage } from "@/lib/listing-message.mjs";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { buildCancellationMessage, buildListingMessage } from "@/lib/listing-message.mjs";
+import { formatRao } from "@/lib/format";
 
 const APP_NAME = "Bittensor Relics";
 const RAO_PER_TAO = 1_000_000_000n;
+const BLOCKS_PER_DAY = 7_200n;
+
+type CurrentListing = {
+  listingId: string;
+  priceRao: string;
+  expiryBlock: string;
+};
 
 function taoToRao(value: string) {
   if (!/^\d+(\.\d{0,9})?$/.test(value.trim())) return null;
@@ -18,9 +27,24 @@ export function ListingForm({ artifactId, ownerAccountHex, ownershipNonce, chain
   ownershipNonce: string;
   chainGenesis: string;
 }) {
+  const router = useRouter();
   const [price, setPrice] = useState("1");
+  const [duration, setDuration] = useState("7");
+  const [currentListing, setCurrentListing] = useState<CurrentListing | null>(null);
   const [state, setState] = useState<"idle" | "signing" | "saved" | "error">("idle");
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    void fetch(`/api/v1/listings?artifact=${encodeURIComponent(artifactId)}&limit=1`, { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const body = await response.json() as { listings?: CurrentListing[] };
+        if (active) setCurrentListing(body.listings?.[0] ?? null);
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [artifactId]);
 
   async function createListing() {
     setState("signing");
@@ -48,7 +72,7 @@ export function ListingForm({ artifactId, ownerAccountHex, ownershipNonce, chain
       if (!injector.signer.signRaw) throw new Error("This wallet does not support signed marketplace messages.");
       const nonceBytes = crypto.getRandomValues(new Uint8Array(32));
       const nonce = Array.from(nonceBytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
-      const expiryBlock = (BigInt(status.checkpoint.blockNumber) + 50_400n).toString();
+      const expiryBlock = (BigInt(status.checkpoint.blockNumber) + BigInt(duration) * BLOCKS_PER_DAY).toString();
       const canonical = buildListingMessage({
         chain: chainGenesis, artifact: artifactId, seller: ownerAccountHex,
         ownershipNonce, priceRao, expiryBlock, nonce, buyer: "*",
@@ -62,21 +86,65 @@ export function ListingForm({ artifactId, ownerAccountHex, ownershipNonce, chain
           ownershipNonce, priceRao, expiryBlock, nonce, buyer: "*", signature: signed.signature,
         }),
       });
-      const result = await response.json() as { error?: { message?: string } };
+      const result = await response.json() as { listing?: CurrentListing; error?: { message?: string } };
       if (!response.ok) throw new Error(result.error?.message || "The signed listing was not accepted.");
+      if (result.listing) setCurrentListing(result.listing);
       setState("saved");
-      setMessage("Listing published. It is a discovery offer only; no buyer payment is enabled.");
+      setMessage("Listing published. Any older active asking price for this Relic was replaced.");
+      router.refresh();
     } catch (error) {
       setState("error");
       setMessage(error instanceof Error ? error.message : "The listing could not be created.");
     }
   }
 
+  async function cancelListing() {
+    if (!currentListing) return;
+    setState("signing");
+    setMessage("");
+    try {
+      const [{ web3Accounts, web3Enable, web3FromSource }, { stringToHex }, { normalizeAccount }] = await Promise.all([
+        import("@polkadot/extension-dapp"),
+        import("@polkadot/util"),
+        import("@/lib/listing-protocol.mjs"),
+      ]);
+      const extensions = await web3Enable(APP_NAME);
+      if (!extensions.length) throw new Error("Unlock TAOStats Wallet, then try again.");
+      const accounts = await web3Accounts();
+      const account = accounts.find((candidate) => {
+        try { return normalizeAccount(candidate.address) === ownerAccountHex; } catch { return false; }
+      });
+      if (!account) throw new Error("Connect the wallet that currently owns this relic.");
+      const injector = await web3FromSource(account.meta.source);
+      if (!injector.signer.signRaw) throw new Error("This wallet does not support signed cancellation messages.");
+      const canonical = buildCancellationMessage({ chain: chainGenesis, listingId: currentListing.listingId, seller: ownerAccountHex });
+      const signed = await injector.signer.signRaw({ address: account.address, data: stringToHex(canonical), type: "bytes" });
+      const response = await fetch(`/api/v1/listings/${currentListing.listingId}`, {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ seller: account.address, signature: signed.signature }),
+      });
+      const result = await response.json() as { error?: { message?: string } };
+      if (!response.ok) throw new Error(result.error?.message || "The cancellation was not accepted.");
+      setCurrentListing(null);
+      setState("saved");
+      setMessage("Listing cancelled. No funds or ownership moved.");
+      router.refresh();
+    } catch (error) {
+      setState("error");
+      setMessage(error instanceof Error ? error.message : "The listing could not be cancelled.");
+    }
+  }
+
   return (
     <section className="listing-panel">
-      <div><span>Owner listing authorization</span><h2>List this Relic</h2><p>Publish a seven-day, wallet-signed asking price for discovery. Buying stays disabled until TAO payment and protocol ownership can be enforced by the same native state transition.</p></div>
+      <div><span>Owner listing authorization</span><h2>{currentListing ? "Manage listing" : "List this Relic"}</h2><p>Publish a wallet-signed asking price for discovery. A new signature replaces the current active listing without moving funds or ownership.</p>{currentListing && <div className="current-listing"><span>Current asking price</span><strong>{formatRao(currentListing.priceRao)} TAO</strong><small>Expires at block #{currentListing.expiryBlock}</small></div>}</div>
       <label><span>Price</span><div><input inputMode="decimal" value={price} onChange={(event) => setPrice(event.target.value)} /><em>TAO</em></div></label>
-      <button type="button" onClick={createListing} disabled={state === "signing" || state === "saved"}>{state === "signing" ? "Confirm in TAOStats Wallet" : state === "saved" ? "Listing published" : "Sign listing"}</button>
+      <label><span>Duration</span><div><select value={duration} onChange={(event) => setDuration(event.target.value)}><option value="1">1 day</option><option value="3">3 days</option><option value="7">7 days</option><option value="14">14 days</option></select></div></label>
+      <div className="listing-form-actions">
+        <button type="button" onClick={createListing} disabled={state === "signing"}>{state === "signing" ? "Confirm in TAOStats Wallet" : currentListing ? "Update asking price" : "Publish listing"}</button>
+        {currentListing && <button type="button" className="listing-cancel-button" onClick={cancelListing} disabled={state === "signing"}>Cancel listing</button>}
+      </div>
       <small>Testnet only. Signing does not move funds, transfer the Relic, or authorize the current purchase prototype.</small>
       {message && <p className={state === "error" ? "error-message" : "listing-success"} role="status">{message}</p>}
     </section>
