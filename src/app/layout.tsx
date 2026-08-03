@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://bittensor-relics.vercel.app"),
+  metadataBase: new URL("https://bittensorrelics.com"),
   title: "Bittensor Relics — Alpha Burn Artifacts on Bittensor",
   description:
     "Forge numbered digital artifacts by atomically buying and burning subnet alpha on Bittensor.",
