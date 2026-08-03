@@ -116,65 +116,91 @@ function SubnetPicker({
   return (
     <div className="field subnet-picker">
       <span>Alpha economy</span>
-      <div className="subnet-picker-control">
-        <div className="subnet-selected">
-          <strong>
-            {selected
-              ? `SN${selected.netuid} · ${selected.name}`
-              : disabled
-                ? "Reading alpha economies…"
-                : "Choose an alpha economy"}
-          </strong>
-          <small>
-            {selected
-              ? `${selected.symbol} · generation ${selected.generation}`
-              : "Search by subnet name or number"}
-          </small>
-        </div>
-        <input
-          type="search"
-          value={query}
-          onChange={(event) => {
-            setQuery(event.target.value);
-            setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          onBlur={() => window.setTimeout(() => setOpen(false), 120)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" && results[0]) {
-              event.preventDefault();
-              choose(results[0]);
-            }
-            if (event.key === "Escape") setOpen(false);
-          }}
-          placeholder="Search name or SN number"
-          role="combobox"
-          aria-label="Search alpha economies"
+      <div
+        className={`subnet-picker-control ${open ? "open" : ""}`}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+        }}
+      >
+        <button
+          className="subnet-selected"
+          type="button"
+          disabled={disabled}
+          aria-haspopup="listbox"
           aria-expanded={open}
           aria-controls="subnet-results"
-          disabled={disabled}
-        />
+          onClick={() => setOpen((value) => !value)}
+          onKeyDown={(event) => {
+            if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+              event.preventDefault();
+              setQuery(event.key);
+              setOpen(true);
+            }
+          }}
+        >
+          <span>
+            <strong>
+              {selected
+                ? `SN${selected.netuid} · ${selected.name}`
+                : disabled
+                  ? "Reading alpha economies…"
+                  : "Choose an alpha economy"}
+            </strong>
+            <small>
+              {selected
+                ? `${selected.symbol} · generation ${selected.generation}`
+                : "Select a subnet"}
+            </small>
+          </span>
+          <i aria-hidden="true" />
+        </button>
         {open && !disabled && (
-          <div className="subnet-results" id="subnet-results" role="listbox">
-            {results.length ? (
-              results.map((subnet) => (
-                <button
-                  key={`${subnet.netuid}-${subnet.generation}`}
-                  type="button"
-                  role="option"
-                  aria-selected={subnet.netuid === selectedNetuid}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => choose(subnet)}
-                >
-                  <span>SN{subnet.netuid}</span>
-                  <strong>{subnet.name}</strong>
-                  <em>{subnet.symbol}</em>
-                  <small>gen {subnet.generation}</small>
-                </button>
-              ))
-            ) : (
-              <p>No matching alpha economy.</p>
-            )}
+          <div className="subnet-dropdown">
+            <label>
+              <span className="sr-only">Search subnets</span>
+              <input
+                autoFocus
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && results[0]) {
+                    event.preventDefault();
+                    choose(results[0]);
+                  }
+                  if (event.key === "Escape") {
+                    event.preventDefault();
+                    setOpen(false);
+                  }
+                }}
+                placeholder="Type a subnet name or SN number…"
+                role="combobox"
+                aria-label="Search alpha economies"
+                aria-expanded="true"
+                aria-controls="subnet-results"
+                aria-autocomplete="list"
+              />
+            </label>
+            <div className="subnet-results" id="subnet-results" role="listbox">
+              {results.length ? (
+                results.map((subnet) => (
+                  <button
+                    key={`${subnet.netuid}-${subnet.generation}`}
+                    type="button"
+                    role="option"
+                    aria-selected={subnet.netuid === selectedNetuid}
+                    onClick={() => choose(subnet)}
+                  >
+                    <span>SN{subnet.netuid}</span>
+                    <strong>{subnet.name}</strong>
+                    <em>{subnet.symbol}</em>
+                    <small>gen {subnet.generation}</small>
+                  </button>
+                ))
+              ) : (
+                <p>No matching alpha economy.</p>
+              )}
+            </div>
           </div>
         )}
       </div>
