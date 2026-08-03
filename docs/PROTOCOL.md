@@ -276,15 +276,16 @@ change state.
 
 ## 11. Marketplace foundation
 
-Testnet supports signed, non-custodial fixed-price sales. Mainnet value
-settlement remains a separate approval gate.
+Testnet supports signed, non-custodial fixed-price discovery listings. These
+messages publish an asking price; they do not authorize or execute payment.
+Value settlement remains a separate approval gate on every network.
 
 A listing authorization is signed off-chain by the current owner using the
 wallet's raw-byte signing capability. Addresses are normalized to AccountId32
 before constructing the message.
 
 ```text
-BITTENSOR_RELICS_SALE_V2
+BITTENSOR_RELICS_LISTING_V1
 chain=<full genesis hash>
 artifact=<canonical artifact id>
 seller=<0x account-id-32>
@@ -293,7 +294,6 @@ price_rao=<unsigned decimal integer>
 expiry_block=<unsigned decimal integer>
 nonce=<64 lowercase hex characters>
 buyer=<* or 0x account-id-32>
-settlement=atomic_tao_transfer_and_relic_ownership
 ```
 
 The message ends with one newline. `listing_id` is BLAKE2-256 of these exact
@@ -315,7 +315,7 @@ seller=<0x account-id-32>
 This message also ends with one newline. Cancellation changes marketplace
 discovery state only; it is not an on-chain ownership operation.
 
-The testnet buyer settlement is:
+The disabled settlement prototype is:
 
 ```text
 Utility.batch_all([
@@ -324,7 +324,7 @@ Utility.batch_all([
 ])
 ```
 
-This makes payment and the purchase remark atomic at the runtime level, but the
+This would make payment and the purchase remark atomic at the runtime level, but the
 runtime does not know Bittensor Relics ownership. A seller transfer, cancellation,
 or competing purchase ordered before the buyer can cause a deterministic
 indexer rejection after TAO has moved. Therefore the UI MUST NOT enable this

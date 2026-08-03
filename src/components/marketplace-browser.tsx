@@ -76,7 +76,7 @@ export function MarketplaceBrowser({ artifacts, listings }: { artifacts: Artifac
                     <Link className="market-card-media" href={`/relic/${artifact.globalNumber}`}>
                       <Image src={`/api/v1/artifacts/${encodeURIComponent(artifact.artifactId)}/media`} alt={artifact.name} fill sizes="(max-width: 640px) 92vw, (max-width: 1100px) 42vw, 24vw" unoptimized />
                       <span>#{artifact.globalNumber}</span>
-                      <i>{listing ? "For sale" : "Finalized"}</i>
+                      <i>{listing ? "Listed" : "Finalized"}</i>
                     </Link>
                     <div className="market-card-body">
                       <span>SN{artifact.netuid} · Subnet Relic #{artifact.subnetNumber}</span>
@@ -86,7 +86,7 @@ export function MarketplaceBrowser({ artifacts, listings }: { artifacts: Artifac
                         <div><dt>{listing ? "Price" : "Status"}</dt><dd>{listing ? `${formatRao(listing.priceRao)} TAO` : "Not listed"}</dd></div>
                         <div><dt>Alpha burned</dt><dd>{formatRao(artifact.alphaBurnedRao)} α</dd></div>
                       </dl>
-                      <Link href={`/relic/${artifact.globalNumber}`}>{listing ? "View listing" : "View Relic"}</Link>
+                      <Link href={`/relic/${artifact.globalNumber}`}>{listing ? "View asking price" : "View Relic"}</Link>
                     </div>
                   </article>
                 );

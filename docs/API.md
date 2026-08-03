@@ -68,11 +68,11 @@ does not accept caller-supplied message text or listing IDs.
 `DELETE /api/v1/listings/:id` accepts `seller` and `signature` for the canonical
 cancellation message. This only removes the listing from discovery.
 
-Listing responses include `settlementEnabled: true`. Purchases do not use a
-custodial API endpoint: the buyer submits one native `Utility.batchAll` containing
-the exact TAO payment and the signed Sale V2 purchase receipt. The finalized
-indexer derives ownership only after validating both calls, their events, the
-seller signature, price, expiry, buyer policy, and ownership nonce.
+Listing responses include `settlementEnabled: false`. The listing is discovery
+only and never authorizes a buyer payment. A payment-plus-remark research
+prototype can validate transaction evidence after finality, but the Subtensor
+runtime does not enforce index-derived Relic ownership. The public interface
+therefore does not submit marketplace payments.
 
 ## Owner collection
 

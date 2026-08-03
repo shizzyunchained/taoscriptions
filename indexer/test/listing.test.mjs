@@ -22,6 +22,8 @@ test("builds and verifies a canonical wallet listing authorization", async () =>
     expiryBlock: "12345", nonce: "a".repeat(64), buyer: "*",
   });
   assert.equal(message.endsWith("\n"), true);
+  assert.equal(message.startsWith("BITTENSOR_RELICS_LISTING_V1\n"), true);
+  assert.equal(message.includes("settlement="), false);
   assert.match(messageId(message), /^0x[0-9a-f]{64}$/);
   const signature = u8aToHex(sr25519Sign(stringToU8a(message), pair));
   assert.equal(await verifyRawSignature(message, signature, seller), true);

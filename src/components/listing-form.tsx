@@ -65,7 +65,7 @@ export function ListingForm({ artifactId, ownerAccountHex, ownershipNonce, chain
       const result = await response.json() as { error?: { message?: string } };
       if (!response.ok) throw new Error(result.error?.message || "The signed listing was not accepted.");
       setState("saved");
-      setMessage("Listing published. Refresh to see it in discovery.");
+      setMessage("Listing published. It is a discovery offer only; no buyer payment is enabled.");
     } catch (error) {
       setState("error");
       setMessage(error instanceof Error ? error.message : "The listing could not be created.");
@@ -74,10 +74,10 @@ export function ListingForm({ artifactId, ownerAccountHex, ownershipNonce, chain
 
   return (
     <section className="listing-panel">
-      <div><span>Owner sale authorization</span><h2>List this Relic</h2><p>Authorize a seven-day fixed-price sale. A buyer can atomically pay this exact price and receive protocol ownership.</p></div>
+      <div><span>Owner listing authorization</span><h2>List this Relic</h2><p>Publish a seven-day, wallet-signed asking price for discovery. Buying stays disabled until TAO payment and protocol ownership can be enforced by the same native state transition.</p></div>
       <label><span>Price</span><div><input inputMode="decimal" value={price} onChange={(event) => setPrice(event.target.value)} /><em>TAO</em></div></label>
       <button type="button" onClick={createListing} disabled={state === "signing" || state === "saved"}>{state === "signing" ? "Confirm in TAOStats Wallet" : state === "saved" ? "Listing published" : "Sign listing"}</button>
-      <small>Testnet only. Signing does not move funds; it authorizes one atomic purchase at the exact price while you remain the owner.</small>
+      <small>Testnet only. Signing does not move funds, transfer the Relic, or authorize the current purchase prototype.</small>
       {message && <p className={state === "error" ? "error-message" : "listing-success"} role="status">{message}</p>}
     </section>
   );

@@ -14,12 +14,12 @@ const links = [
   ["Docs", "/docs"],
 ] as const;
 
-export function SiteNav(_props: { status: string; tone?: string }) {
+export function SiteNav({ status, tone = "ready" }: { status: string; tone?: string }) {
   const [open, setOpen] = useState(false);
   const networkStatus = "Bittensor Testnet · v440";
 
   return (
-    <nav className={`nav site-nav ${open ? "menu-open" : ""}`} aria-label="Main navigation">
+    <nav className={`nav site-nav ${open ? "menu-open" : ""}`} aria-label="Main navigation" data-page-status={status} data-page-tone={tone}>
       <SiteMark />
       <div className="nav-desktop">
         <div className="nav-links">

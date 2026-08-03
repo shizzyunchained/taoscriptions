@@ -1557,7 +1557,7 @@ export default function Home() {
           </article>
           <article>
             <span>02 / Burn</span>
-            <h3>The acquired alpha is relinquished.</h3>
+            <h3>The acquired alpha is burned.</h3>
             <p>
               A finalized AlphaBurned event records the exact amount, subnet,
               and signer. The present runtime operation is supply-neutral.
@@ -1580,11 +1580,11 @@ export default function Home() {
         <div className="subnet-vision">
           <div>
             <span>Relics proof network</span>
-            <h3>Proof-serving, not database trust.</h3>
+            <h3>A path beyond single-database trust.</h3>
             <p>
               Relics can work before its own subnet. The current research
-              network demonstrates deterministic three-miner challenges where
-              the dapp requires matching checkpoint proofs.
+              simulation demonstrates deterministic three-miner challenges and
+              how a future gateway can require matching checkpoint proofs.
             </p>
             <p>
               <a className="text-link" href="/network">
@@ -1606,9 +1606,9 @@ export default function Home() {
               </strong>
             </li>
             <li>
-              <span>Dapp</span>
+              <span>Future gateway</span>
               <strong>
-                Accepts threshold agreement instead of trusting one server.
+                Will require threshold agreement instead of trusting one server.
               </strong>
             </li>
           </ol>

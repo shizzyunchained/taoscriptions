@@ -413,7 +413,11 @@ export async function listActiveListings(artifactId: string | null, limit = DEFA
      LIMIT $${values.length}`,
     values,
   );
-  return result.rows.map(listing);
+  const newestByArtifact = new Map<string, Listing>();
+  for (const row of result.rows) {
+    if (!newestByArtifact.has(row.artifact_id)) newestByArtifact.set(row.artifact_id, listing(row));
+  }
+  return [...newestByArtifact.values()];
 }
 
 type NewListing = Omit<Listing, "createdAt" | "artifactName" | "mediaByteLength"> & { chainGenesis: string };
@@ -443,13 +447,12 @@ export async function createListingAuthorization(input: NewListing) {
     const checkpoint = BigInt(current.block_number);
     if (expiry <= checkpoint) throw new MarketplaceStateError("LISTING_EXPIRED", "The listing expiry must be after the finalized checkpoint.");
     if (expiry > checkpoint + 1_000_000n) throw new MarketplaceStateError("EXPIRY_TOO_FAR", "The listing expiry is too far in the future.");
-    const active = await client.query<{ count: string }>(
-      `SELECT COUNT(*) AS count FROM listings
+    await client.query(
+      `UPDATE listings SET cancelled_at = COALESCE(cancelled_at, NOW())
        WHERE artifact_id = $1 AND ownership_nonce = $2
-         AND cancelled_at IS NULL AND expiry_block > $3`,
-      [input.artifactId, input.ownershipNonce, current.block_number],
+         AND cancelled_at IS NULL AND expiry_block > $3 AND listing_id <> $4`,
+      [input.artifactId, input.ownershipNonce, current.block_number, input.listingId],
     );
-    if (Number(active.rows[0].count) >= 20) throw new MarketplaceStateError("LISTING_LIMIT", "This relic already has too many active listings.");
     await client.query(
       `INSERT INTO listings (
         listing_id, artifact_id, chain_genesis, seller_account_hex,

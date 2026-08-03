@@ -29,7 +29,7 @@ const claims = [
   { state: "Correction", tone: "corrected", title: "Buy & Burn does not currently reduce SubnetAlphaOut.", body: "The finalized AlphaBurned event proves the user's economic sacrifice. Current runtime accounting makes this burn supply-neutral, not guaranteed deflation." },
   { state: "Protocol", tone: "protocol", title: "Relics are transferable, but they are not native Subtensor NFTs.", body: "Ownership is deterministic derived state from signed finalized remarks. Subtensor itself does not expose a Relic asset balance." },
   { state: "Prototype", tone: "prototype", title: "Miners and validators can reproduce the index.", body: "The three-miner conformance simulation works, but no Relics subnet is registered and no live miner receives emissions today." },
-  { state: "Testnet", tone: "ready", title: "Atomic marketplace settlement is live on testnet.", body: "Sale V2 listings authorize one exact-price purchase. The buyer payment and signed ownership receipt execute together in a finalized batchAll transaction." },
+  { state: "Boundary", tone: "corrected", title: "Marketplace buying is not loss-safe yet.", body: "Listings are signed discovery offers. A payment plus remark batch cannot enforce index-derived ownership, so the public interface does not submit buyer payments." },
   { state: "Creator claim", tone: "protocol", title: "Collection labels are not verified membership yet.", body: "Version 1 signs a creator-declared label. Authority rules, burn thresholds, mint windows, and supply caps require a future collection declaration." },
   { state: "Boundary", tone: "corrected", title: "Chain authenticity is not artistic or legal authenticity.", body: "The proof establishes bytes, signer, time, chain position, and burn. It cannot prove originality, copyright, identity, or truth of the depicted event." },
 ];
@@ -64,7 +64,7 @@ export default function DocsPage() {
         <aside className="manual-sidebar">
           <div className="manual-sidebar-head"><span>Documentation</span><strong>Field Manual</strong><small>Draft v1 · Testnet</small></div>
           <nav aria-label="Documentation sections"><ol>{navigation.map(([label, id], index) => <li key={id}><a href={`#${id}`}><i>{String(index + 1).padStart(2, "0")}</i>{label}</a></li>)}</ol></nav>
-          <div className="manual-sidebar-foot"><i aria-hidden="true" /><span>Experiment</span><p>Use testnet TAO only. Atomic purchases are experimental; mainnet remains disabled.</p></div>
+          <div className="manual-sidebar-foot"><i aria-hidden="true" /><span>Experiment</span><p>Use testnet TAO only. Marketplace buying and mainnet minting remain disabled.</p></div>
         </aside>
 
         <div className="manual-content">
@@ -73,10 +73,10 @@ export default function DocsPage() {
             <h1>Build the artifact.<br /><em>Prove the history.</em></h1>
             <p>Bittensor Relics is a non-EVM protocol for binding exact on-chain media to a finalized subnet-alpha burn. This manual explains what the chain proves, what the index derives, and what the proposed subnet must verify.</p>
             <div className="manual-hero-actions"><Link href="/#forge">Enter the Forge <span>→</span></Link><Link href="/blackpaper">Read the Blackpaper</Link></div>
-            <div className="manual-status-strip"><div><span>Network</span><strong>Testnet only</strong></div><div><span>Execution</span><strong>Native SS58</strong></div><div><span>Media</span><strong>Exact WebP bytes</strong></div><div><span>Indexer</span><strong>Built / not deployed</strong></div></div>
+            <div className="manual-status-strip"><div><span>Network</span><strong>Testnet only</strong></div><div><span>Execution</span><strong>Native SS58</strong></div><div><span>Media</span><strong>Exact WebP bytes</strong></div><div><span>Indexer</span><strong>Primary live / replay pending</strong></div></div>
           </header>
 
-          <section className="manual-alert"><div><span>!</span></div><p><strong>Experimental software.</strong> Never risk TAO you cannot afford to lose. The current forge is pinned to testnet, the public indexer database is not deployed, and marketplace payment is unavailable.</p></section>
+          <section className="manual-alert"><div><span>!</span></div><p><strong>Experimental software.</strong> Never risk TAO you cannot afford to lose. The Forge is pinned to testnet. One public indexer is live, but independent replay quorum and marketplace payment are not.</p></section>
 
           <Section id="architecture" label="01 / Architecture" title="One chain of evidence. Three layers of interpretation.">
             <div className="manual-flow">
@@ -139,7 +139,7 @@ export default function DocsPage() {
 
           <Section id="ownership" label="06 / Identity & ownership" title="Chain position makes the Relic. Signed history assigns the owner.">
             <div className="manual-id"><span>Canonical artifact ID</span><code>br1:&lt;full-genesis-hash&gt;:&lt;finalized-block&gt;:&lt;extrinsic-index&gt;</code></div>
-            <div className="manual-two-column"><article><span>Numbering</span><p>Accepted mints receive one global number and one number inside <code>(netuid, subnet_generation)</code>. Order follows finalized block number then extrinsic index. Invalid candidates consume no number.</p></article><article><span>Ownership</span><p>The mint signer starts as protocol owner. A valid standalone transfer remark must be signed by the current owner and use the exact next ownership nonce. This prevents replay.</p></article><article><span>Subnet identity</span><p>Netuid alone is insufficient because numbers can be reused after deregistration. Relics binds every mint to <code>NetworkRegisteredAt[netuid]</code>.</p></article><article><span>Marketplace</span><p>Sale V2 listings bind the exact seller, ownership nonce, price, expiry, and buyer policy. A purchase is accepted only when the matching TAO payment and ownership receipt succeed together in one finalized atomic batch.</p></article></div>
+            <div className="manual-two-column"><article><span>Numbering</span><p>Accepted mints receive one global number and one number inside <code>(netuid, subnet_generation)</code>. Order follows finalized block number then extrinsic index. Invalid candidates consume no number.</p></article><article><span>Ownership</span><p>The mint signer starts as protocol owner. A valid standalone transfer remark must be signed by the current owner and use the exact next ownership nonce. This prevents replay.</p></article><article><span>Subnet identity</span><p>Netuid alone is insufficient because numbers can be reused after deregistration. Relics binds every mint to <code>NetworkRegisteredAt[netuid]</code>.</p></article><article><span>Marketplace</span><p>Listing V1 binds the seller, ownership nonce, asking price, expiry, and buyer policy for discovery. It does not authorize payment. Buying remains disabled until native chain state can enforce payment and protocol ownership together.</p></article></div>
             <div className="manual-founding"><span>Verified founding testnet Relic</span><div><h3>Shizzy</h3><p>Block 7,698,721 · Extrinsic 6 · 1 test TAO · 1,035.580333229 SN1 alpha burned · 8,698 on-chain image bytes</p></div><a href="/evidence/founding-testnet-relic.json">Evidence JSON →</a></div>
           </Section>
 
@@ -154,7 +154,7 @@ export default function DocsPage() {
 
           <Section id="api" label="09 / API map" title="Finalized reads only. No endpoint creates chain truth.">
             <div className="manual-api"><header><span>Method</span><span>Path</span><span>Returns</span></header>{apiRows.map(([method, path, detail]) => <div key={path}><b>{method}</b><code>{path}</code><p>{detail}</p></div>)}</div>
-            <p className="manual-note">Until the public database is configured, index-backed routes return <code>503 INDEXER_UNAVAILABLE</code> instead of presenting an empty collection. That is intentional fail-closed behavior.</p>
+            <p className="manual-note">The public primary index is live. If its database becomes unavailable, index-backed routes return <code>503 INDEXER_UNAVAILABLE</code> instead of presenting an empty collection. An independent replay database and live quorum gateway are still pending.</p>
           </Section>
 
           <Section id="library" label="10 / Reference library" title="Go deeper without hunting through the repository.">

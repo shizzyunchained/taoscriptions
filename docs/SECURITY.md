@@ -18,10 +18,10 @@
 4. Best-chain or pending operations never receive canonical numbers.
 5. A runtime upgrade never gets decoded using guessed metadata.
 6. Mainnet remains disabled until testnet replay and adversarial tests pass.
-7. Testnet marketplace payment is accepted only when payment and protocol
-   ownership are proven in one successful finalized `batchAll` outcome.
-8. Only an explicit Sale V2 signature authorizes a purchase at its exact terms.
-   Legacy discovery signatures never authorize payment or ownership transfer.
+7. Marketplace payment remains disabled because protocol ownership is derived
+   by indexers rather than enforced by the Subtensor runtime.
+8. Listing V1 signatures authorize discovery only. They never authorize
+   payment or ownership transfer.
 
 ## Initial threat checklist
 

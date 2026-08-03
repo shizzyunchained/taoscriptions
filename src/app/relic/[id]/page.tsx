@@ -81,10 +81,7 @@ export default async function RelicPage({ params }: Props) {
             )}
           </header>
           <RelicListings
-            initialListings={listings.map(({ listingId, priceRao, expiryBlock, sellerAccountHex, ownershipNonce, nonce, buyerAccountHex, signature, message }) => ({
-              listingId, priceRao, expiryBlock, sellerAccountHex, ownershipNonce, nonce, buyerAccountHex, signature, message,
-            }))}
-            artifactId={artifact.artifactId}
+            initialListings={listings.map(({ listingId, priceRao, expiryBlock }) => ({ listingId, priceRao, expiryBlock }))}
             ownerAccountHex={artifact.ownerAccountHex}
             chainGenesis={artifact.artifactId.split(":")[1]}
           />

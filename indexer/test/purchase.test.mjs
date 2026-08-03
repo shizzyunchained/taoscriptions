@@ -8,7 +8,6 @@ import {
   sr25519Sign,
 } from "@polkadot/util-crypto";
 import {
-  buildListingMessage,
   messageId,
   normalizeAccount,
 } from "../../src/lib/listing-protocol.mjs";
@@ -26,16 +25,7 @@ const artifact = `br1:${chain}:100:2`;
 const listingNonce = "a".repeat(64);
 const priceRao = "2500000000";
 const expiryBlock = "500";
-const message = buildListingMessage({
-  chain,
-  artifact,
-  seller,
-  ownershipNonce: "3",
-  priceRao,
-  expiryBlock,
-  nonce: listingNonce,
-  buyer: "*",
-});
+const message = `BITTENSOR_RELICS_SALE_V2\nchain=${chain}\nartifact=${artifact}\nseller=${seller}\nownership_nonce=3\nprice_rao=${priceRao}\nexpiry_block=${expiryBlock}\nnonce=${listingNonce}\nbuyer=*\nsettlement=atomic_tao_transfer_and_relic_ownership\n`;
 const signature = u8aToHex(sr25519Sign(stringToU8a(message), sellerPair));
 const purchase = createPurchasePayload({
   artifactId: artifact,
@@ -83,7 +73,7 @@ const records = [
   event("system", "ExtrinsicSuccess"),
 ];
 
-test("a signed listing settles payment and ownership in one purchase batch", async () => {
+test("the disabled prototype validates an atomic payment and purchase receipt", async () => {
   const result = await validatePurchase({
     api: { events: guards },
     extrinsic,

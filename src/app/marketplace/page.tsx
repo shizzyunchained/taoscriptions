@@ -42,7 +42,7 @@ export default async function MarketplacePage() {
       <section className="market-hero">
         <div>
           <p className="eyebrow">The Relic market</p>
-          <h1>Collect proof.<br />Trade history.</h1>
+          <h1>Collect proof.<br />Discover history.</h1>
           <p>Discover permanent on-chain art backed by a finalized alpha burn. Every card links to the media bytes, inscription, owner, and chain receipt.</p>
           <div className="market-hero-actions">
             <Link href="/wallet#listing">List a Relic</Link>
@@ -51,12 +51,12 @@ export default async function MarketplacePage() {
         </div>
         <dl className="market-stats">
           <div><dt>Relics</dt><dd>{artifacts.length}</dd></div>
-          <div><dt>For sale</dt><dd>{listings.length}</dd></div>
+          <div><dt>Listed</dt><dd>{listings.length}</dd></div>
           <div><dt>Alpha burned</dt><dd>{formatRao(totalAlpha)}</dd></div>
           <div><dt>Network</dt><dd>Testnet</dd></div>
         </dl>
       </section>
-      <section className="settlement-lock"><strong>Testnet marketplace</strong><p>Listing is live and wallet-signed. Paid settlement remains locked until a buyer cannot lose TAO without receiving ownership in the same chain-enforced result.</p></section>
+      <section className="settlement-lock"><strong>Discovery marketplace</strong><p>Asking prices are wallet-signed and checked against current indexed ownership. Buying is disabled until one native state transition can enforce both TAO payment and Relic ownership.</p></section>
       {unavailable ? (
         <section className="indexer-empty"><span>Indexer gate</span><h2>The marketplace index is temporarily unavailable.</h2><p>Relics will never display unverified market inventory.</p><Link href="/explore">View collection status</Link></section>
       ) : (
