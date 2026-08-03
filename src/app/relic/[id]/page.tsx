@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteMark } from "@/components/site-mark";
+import { SiteNav } from "@/components/site-nav";
 import { ListingForm } from "@/components/listing-form";
 import { RelicListings } from "@/components/relic-listings";
 import { compactHex, formatRao } from "@/lib/format";
@@ -35,7 +36,7 @@ export default async function RelicPage({ params }: Props) {
   return (
     <main className="site-shell inner-site">
       <div className="grain" aria-hidden="true" />
-      <nav className="nav" aria-label="Main navigation"><SiteMark /><div className="nav-links"><Link href="/#forge">Forge</Link><Link href="/explore">Explore</Link><Link href="/marketplace">Market</Link><Link href="/wallet">My Relics</Link></div></nav>
+      <SiteNav status="Finalized proof" tone="ready" />
       {unavailable ? (
         <section className="indexer-empty relic-unavailable"><span>Proof unavailable</span><h1>The finalized indexer is offline.</h1><p>This page will not render an unverified artifact from URL data alone.</p><Link href="/explore">Return to collection</Link></section>
       ) : artifact ? (

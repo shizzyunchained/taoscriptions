@@ -18,6 +18,7 @@ import { verifyFinalizedMintReceipt, type MintReceiptExpectation } from "@/lib/m
 import { createMintEvidence, type MintEvidence } from "@/lib/mint-evidence";
 import { assertExpectedGenesis } from "@/lib/chain-guard";
 import { assertMintPreflight } from "@/lib/mint-preflight";
+import { SiteNav } from "@/components/site-nav";
 
 const APP_NAME = "Bittensor Relics";
 const TESTNET_HTTP_RPC = process.env.NEXT_PUBLIC_SUBTENSOR_HTTP_RPC ?? "https://test.chain.opentensor.ai";
@@ -43,6 +44,65 @@ type OnChainImage = { bytes: Uint8Array; previewUrl: string; contentHash: string
 type ConnectionState = "idle" | "connecting" | "connected" | "error";
 type DataState = "connecting" | "ready" | "error";
 type MintState = "idle" | "review" | "signing" | "submitted" | "finalized" | "error";
+
+function SubnetPicker({ subnets, selectedNetuid, onSelect, disabled }: { subnets: Subnet[]; selectedNetuid: number | null; onSelect: (netuid: number) => void; disabled: boolean }) {
+  const selected = subnets.find((subnet) => subnet.netuid === selectedNetuid) ?? null;
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const results = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    const matches = normalized
+      ? subnets.filter((subnet) => `sn${subnet.netuid} ${subnet.netuid} ${subnet.name} ${subnet.symbol}`.toLowerCase().includes(normalized))
+      : [...subnets].sort((a, b) => {
+          const aNamed = /^Subnet \d+$/i.test(a.name) ? 1 : 0;
+          const bNamed = /^Subnet \d+$/i.test(b.name) ? 1 : 0;
+          return aNamed - bNamed || a.netuid - b.netuid;
+        });
+    return matches.slice(0, 10);
+  }, [query, subnets]);
+
+  function choose(subnet: Subnet) {
+    onSelect(subnet.netuid);
+    setQuery("");
+    setOpen(false);
+  }
+
+  return (
+    <div className="field subnet-picker">
+      <span>Alpha economy</span>
+      <div className="subnet-picker-control">
+        <div className="subnet-selected">
+          <strong>{selected ? `SN${selected.netuid} · ${selected.name}` : disabled ? "Reading alpha economies…" : "Choose an alpha economy"}</strong>
+          <small>{selected ? `${selected.symbol} · generation ${selected.generation}` : "Search by subnet name or number"}</small>
+        </div>
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => { setQuery(event.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => window.setTimeout(() => setOpen(false), 120)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && results[0]) { event.preventDefault(); choose(results[0]); }
+            if (event.key === "Escape") setOpen(false);
+          }}
+          placeholder="Search name or SN number"
+          role="combobox"
+          aria-label="Search alpha economies"
+          aria-expanded={open}
+          aria-controls="subnet-results"
+          disabled={disabled}
+        />
+        {open && !disabled && <div className="subnet-results" id="subnet-results" role="listbox">
+          {results.length ? results.map((subnet) => (
+            <button key={`${subnet.netuid}-${subnet.generation}`} type="button" role="option" aria-selected={subnet.netuid === selectedNetuid} onMouseDown={(event) => event.preventDefault()} onClick={() => choose(subnet)}>
+              <span>SN{subnet.netuid}</span><strong>{subnet.name}</strong><em>{subnet.symbol}</em><small>gen {subnet.generation}</small>
+            </button>
+          )) : <p>No matching alpha economy.</p>}
+        </div>}
+      </div>
+    </div>
+  );
+}
 
 function shortAddress(address: string) {
   if (address.length < 18) return address;
@@ -613,40 +673,36 @@ export default function Home() {
   return (
     <main className="site-shell">
       <div className="grain" aria-hidden="true" />
-      <nav className="nav" aria-label="Main navigation">
-        <a className="brand" href="#top" aria-label="Bittensor Relics home"><span className="brand-sigil" aria-hidden="true"><i /></span><span>Bittensor Relics</span></a>
-        <div className="nav-links">
-          <a href="#forge">Forge</a><a href="/explore">Explore</a><a href="/marketplace">Market</a><a href="/wallet">My Relics</a><a href="/network">Network</a><a href="/blackpaper">Blackpaper</a><a href="/docs">Docs</a>
-          <span className={`chain-status ${dataState}`}><i aria-hidden="true" />{dataState === "ready" ? `Testnet v${runtimeVersion}` : dataState === "error" ? "Chain read paused" : "Reading chain"}</span>
-        </div>
-      </nav>
+      <SiteNav status={dataState === "ready" ? `Bittensor Testnet · v${runtimeVersion}` : dataState === "error" ? "Chain read paused" : "Reading chain"} tone={dataState} />
 
       <section className="hero" id="top">
         <div className="hero-copy">
           <p className="eyebrow">A decentralized relic proof network</p>
           <h1>Forge permanence<span>from alpha.</span></h1>
           <p className="intro">Forge a numbered relic from one finalized alpha burn today. The protocol is being engineered to become a Bittensor subnet where miners serve the index and validators independently prove every result.</p>
-          <div className="hero-actions"><a className="primary-link" href="#forge">Preview a forge <span aria-hidden="true">-&gt;</span></a><a className="text-link" href="#protocol">How the proof works</a></div>
+          <div className="hero-actions"><a className="primary-link" href="#forge">Enter the Forge <span aria-hidden="true">-&gt;</span></a><a className="text-link" href="#protocol">How the proof works</a></div>
           <dl className="hero-facts"><div><dt>Execution</dt><dd>Native SS58</dd></div><div><dt>Settlement</dt><dd>Finalized blocks</dd></div><div><dt>Contracts</dt><dd>No EVM</dd></div></dl>
         </div>
 
-        <div className="relic-preview" aria-label="Example alpha burn receipt">
-          <div className="relic-topline"><span>Relic proof</span><span>Testnet preview</span></div>
+        <div className="relic-preview founding-receipt" aria-label="Founding Relic burn receipt">
+          <div className="relic-topline"><span>Founding Relic</span><span>Finalized proof</span></div>
           <div className="relic-orbit" aria-hidden="true">
             <Image className="relic-scarab" src="/relic-scarab.webp" alt="" fill sizes="(max-width: 640px) 255px, 285px" priority />
           </div>
-          <div className="relic-number"><span>Subnet artifact</span><strong>SN{selectedSubnet?.netuid ?? "--"} / #0001</strong></div>
-          <div className="receipt-grid"><div><span>TAO committed</span><strong>{taoAmount || "0"} TAO</strong></div><div><span>Alpha burned</span><strong>{quote ? formatToken(quote.alphaAmount, 4) : "--"} {selectedSubnet?.symbol}</strong></div></div>
-          <p>Burn event + inscription, bound inside one atomic extrinsic.</p>
+          <div className="relic-number"><span>Shizzy</span><strong>SN1 / #0001</strong></div>
+          <div className="receipt-grid"><div><span>TAO committed</span><strong>1 test TAO</strong></div><div><span>Alpha relinquished</span><strong>1,035.580333 α</strong></div></div>
+          <p>Finalized at block 7,698,721 · extrinsic 6.</p>
+          <a className="receipt-proof-link" href="/evidence/founding-testnet-relic.json">Verify the evidence <span aria-hidden="true">→</span></a>
         </div>
       </section>
 
       <section className="forge-section" id="forge">
-        <div className="section-heading"><div><p className="eyebrow">Testnet forge</p><h2>See exactly what the mint will burn.</h2></div><p>Reviewing re-quotes at the current block, checks the subnet generation and balance, then shows every limit before the wallet can sign.</p></div>
+        <div className="section-heading"><div><p className="eyebrow">The Forge</p><h2>See exactly what the mint will burn.</h2></div><p>The Forge re-quotes at the current block, checks the subnet generation and balance, then shows every limit before the wallet can sign.</p></div>
+        <div className="forge-guide" aria-label="Before you forge"><div><span>01</span><strong>Connect TAOStats Wallet</strong><p>Your wallet signs. The site never sees your private key.</p></div><div><span>02</span><strong>Use test TAO</strong><p>Live testnet TAO is available by request; never send mainnet funds.</p><a href="https://docs.learnbittensor.org/evm-tutorials/subtensor-networks" target="_blank" rel="noreferrer">Network details →</a></div><div><span>03</span><strong>Create the artifact</strong><p>Your image is compressed locally, then its exact bytes enter the finalized transaction.</p></div></div>
         <div className="forge-layout">
           <div className="forge-card">
             <div className="step-label"><span>01</span>Select a subnet</div>
-            <label className="field"><span>Alpha economy</span><select value={selectedNetuid ?? ""} onChange={(event) => setSelectedNetuid(Number.parseInt(event.target.value, 10))} disabled={dataState !== "ready"}>{dataState === "connecting" && <option value="">Reading finalized testnet...</option>}{dataState === "error" && <option value="">Testnet data unavailable</option>}{subnets.map((subnet) => <option key={`${subnet.netuid}-${subnet.generation}`} value={subnet.netuid}>SN{subnet.netuid} - {subnet.name} ({subnet.symbol})</option>)}</select></label>
+            <SubnetPicker subnets={subnets} selectedNetuid={selectedNetuid} onSelect={setSelectedNetuid} disabled={dataState !== "ready"} />
             {dataError && <div className="chain-read-error" role="alert"><span>{dataError}</span><button type="button" onClick={() => setDataRetry((value) => value + 1)}>Retry chain read</button></div>}
             {dataState === "ready" && <p className={`signer-readiness ${signerReady ? "ready" : "waiting"}`}><i aria-hidden="true" />Finalized data loaded{signerReady ? " · wallet signer ready" : " · signer connects when you review"}</p>}
             <div className="subnet-meta"><div><span>Subnet generation</span><strong>{selectedSubnet?.generation ?? "--"}</strong></div><div><span>Canonical identity</span><strong>{selectedSubnet ? `SN${selectedSubnet.netuid}:${selectedSubnet.generation}` : "--"}</strong></div></div>
@@ -658,7 +714,7 @@ export default function Home() {
             <div className="step-label content-step"><span>03</span>Write the relic</div>
             <label className="field"><span>Name</span><input maxLength={80} value={relicName} onChange={(event) => { setRelicName(event.target.value); setMintReview(null); setMintState("idle"); }} placeholder="A name that survives the moment" /></label>
             <label className="field"><span>Purpose</span><select value={relicPurpose} onChange={(event) => { const purpose = event.target.value as RelicPurpose; setRelicPurpose(purpose); if (purpose !== "collection") setCollectionLabel(""); setMintReview(null); setMintState("idle"); }}><option value="personal">Personal artifact</option><option value="collection">Collection entry</option><option value="subnet_milestone">Subnet milestone</option><option value="community_message">Community message</option></select><small>The purpose is signed into the Relic manifest.</small></label>
-            {relicPurpose === "collection" && <label className="field"><span>Collection label</span><input maxLength={80} value={collectionLabel} onChange={(event) => { setCollectionLabel(event.target.value); setMintReview(null); setMintState("idle"); }} placeholder="Example: SCORE Origins" /><small>Creator-declared in this prototype. Verified collection authorities and rule manifests are the next protocol stage.</small></label>}
+            {relicPurpose === "collection" && <label className="field"><span>Collection label</span><input maxLength={80} value={collectionLabel} onChange={(event) => { setCollectionLabel(event.target.value); setMintReview(null); setMintState("idle"); }} placeholder="Example: SCORE Origins" /><small>Creator-declared in protocol v1. Verified collection authorities and rule manifests are the next protocol stage.</small></label>}
             <div className="onchain-upload">
               <div className="upload-heading"><div><span>On-chain image</span><strong>Stored inside the finalized transaction</strong></div>{onChainImage && <button type="button" onClick={removeImage}>Remove</button>}</div>
               {onChainImage ? (
@@ -711,10 +767,10 @@ export default function Home() {
                 <button type="button" onClick={downloadMintEvidence}>Download finalized proof</button>
               </div>
             ) : mintState === "review" ? (
-              <button className="forge-button danger" type="button" onClick={signMint}>Sign and forge on testnet <span>Irreversible test burn</span></button>
+              <button className="forge-button danger" type="button" onClick={signMint}>Forge this Relic <span>Irreversible testnet action</span></button>
             ) : (
               <button className="forge-button" type="button" onClick={reviewMint} disabled={!account || !quote || !policyAccepted || quoteLoading || mintState === "signing" || mintState === "submitted"}>
-                {mintState === "signing" ? "Confirm in TAOStats Wallet" : mintState === "submitted" ? "Waiting for finality" : account ? "Review testnet forge" : "Connect wallet to continue"}
+                {mintState === "signing" ? "Confirm in TAOStats Wallet" : mintState === "submitted" ? "Waiting for finality" : account ? "Review Relic" : "Connect wallet to continue"}
                 <span>{mintState === "submitted" ? shortAddress(transactionHash) : "No mainnet funds"}</span>
               </button>
             )}
@@ -726,12 +782,12 @@ export default function Home() {
         <div className="section-heading protocol-heading"><div><p className="eyebrow">One signature, three facts</p><h2>The chain proves the sacrifice.</h2></div><p>Bittensor Relics never pretends metadata lives inside a fungible alpha token. The artifact is derived from public, reproducible chain evidence.</p></div>
         <div className="protocol-steps">
           <article><span>01 / Buy</span><h3>TAO enters the selected pool.</h3><p>The native runtime swaps the committed TAO for that subnet&apos;s alpha.</p></article>
-          <article><span>02 / Burn</span><h3>The acquired alpha is destroyed.</h3><p>A finalized AlphaBurned event records the exact amount, subnet, and signer.</p></article>
+          <article><span>02 / Burn</span><h3>The acquired alpha is relinquished.</h3><p>A finalized AlphaBurned event records the exact amount, subnet, and signer. The present runtime operation is supply-neutral.</p></article>
           <article><span>03 / Inscribe</span><h3>The Relic is permanently identified.</h3><p>The matching remark and burn share one atomic transaction and one canonical number.</p></article>
         </div>
         <div className="protocol-call"><span>Native call path</span><code>batchAll[ addStakeBurn, remarkWithEvent ]</code><em>No EVM. No custody. Finalized testnet only.</em></div>
         <div className="subnet-vision">
-          <div><span>Working subnet prototype</span><h3>Proof-serving, not database trust.</h3><p>Relics can work before its own subnet. We now have a deterministic three-miner challenge simulation where the dapp requires matching checkpoint proofs.</p><p><a className="text-link" href="/network">Open the proof network -&gt;</a></p></div>
+          <div><span>Relics proof network</span><h3>Proof-serving, not database trust.</h3><p>Relics can work before its own subnet. The current research network demonstrates deterministic three-miner challenges where the dapp requires matching checkpoint proofs.</p><p><a className="text-link" href="/network">Open the proof network -&gt;</a></p></div>
           <ol><li><span>Miners</span><strong>Index burns, images, numbering, transfers, and ownership.</strong></li><li><span>Validators</span><strong>Challenge random chain positions and score exact correctness.</strong></li><li><span>Dapp</span><strong>Accepts threshold agreement instead of trusting one server.</strong></li></ol>
         </div>
       </section>

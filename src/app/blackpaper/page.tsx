@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { SiteMark } from "@/components/site-mark";
+import { SiteNav } from "@/components/site-nav";
 
 export const metadata: Metadata = {
   title: "The Blackpaper — Bittensor Relics",
@@ -41,10 +42,7 @@ export default function BlackpaperPage() {
   return (
     <main className="site-shell inner-site docs-site blackpaper-site">
       <div className="grain" aria-hidden="true" />
-      <nav className="nav" aria-label="Main navigation">
-        <SiteMark />
-        <div className="nav-links"><Link href="/#forge">Forge</Link><Link href="/network">Network</Link><Link href="/blackpaper">Blackpaper</Link><Link href="/docs">Docs</Link><span className="chain-status prototype"><i aria-hidden="true" />Draft 0.3</span></div>
-      </nav>
+      <SiteNav status="Blackpaper · Draft 0.3" tone="prototype" />
 
       <header className="blackpaper-hero">
         <p className="eyebrow">Bittensor Relics / The Blackpaper</p>

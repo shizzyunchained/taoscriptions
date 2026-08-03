@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteMark } from "@/components/site-mark";
+import { SiteNav } from "@/components/site-nav";
 import { buildPrototypeReport } from "@/lib/subnet-consensus.mjs";
 
 export const metadata: Metadata = {
@@ -15,14 +16,11 @@ export default function NetworkPage() {
   return (
     <main className="site-shell inner-site">
       <div className="grain" aria-hidden="true" />
-      <nav className="nav" aria-label="Main navigation">
-        <SiteMark />
-        <div className="nav-links"><Link href="/#forge">Forge</Link><Link href="/explore">Explore</Link><Link href="/network">Network</Link><Link href="/blackpaper">Blackpaper</Link><Link href="/docs">Docs</Link><span className="chain-status prototype"><i aria-hidden="true" />Simulation</span></div>
-      </nav>
+      <SiteNav status="Research network" tone="prototype" />
 
       <section className="network-hero">
         <div>
-          <p className="eyebrow">Subnet prototype 001</p>
+          <p className="eyebrow">Relics proof network</p>
           <h1>The subnet<br />before the subnet.</h1>
         </div>
         <div className="network-intro">
@@ -69,7 +67,7 @@ export default function NetworkPage() {
         <article><span>03</span><h3>The dapp requires quorum</h3><p>The gateway serves the answer only when the configured threshold agrees. Otherwise it returns no consensus.</p></article>
       </section>
 
-      <div className="network-actions"><a href="/api/v1/network/prototype">Inspect the JSON proof</a><Link href="/#forge">Return to the testnet forge</Link></div>
+      <div className="network-actions"><a href="/api/v1/network/prototype">Inspect the JSON proof</a><Link href="/#forge">Enter the Forge</Link></div>
       <footer><SiteMark className="footer-brand" /><p>Prototype math, openly testable. Subnet registration comes later.</p><Link href="/">Protocol home -&gt;</Link></footer>
     </main>
   );

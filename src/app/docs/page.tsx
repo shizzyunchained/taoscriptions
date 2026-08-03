@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { SiteMark } from "@/components/site-mark";
+import { SiteNav } from "@/components/site-nav";
 
 export const metadata: Metadata = {
   title: "Protocol Docs — Bittensor Relics",
@@ -56,10 +57,7 @@ export default function DocsPage() {
   return (
     <main className="site-shell inner-site manual-site">
       <div className="grain" aria-hidden="true" />
-      <nav className="nav" aria-label="Main navigation">
-        <SiteMark />
-        <div className="nav-links"><Link href="/#forge">Forge</Link><Link href="/explore">Explore</Link><Link href="/network">Network</Link><Link href="/blackpaper">Blackpaper</Link><Link href="/docs">Docs</Link><span className="chain-status ready"><i aria-hidden="true" />Protocol v1</span></div>
-      </nav>
+      <SiteNav status="Protocol v1" tone="ready" />
 
       <div className="manual-layout">
         <aside className="manual-sidebar">
@@ -73,7 +71,7 @@ export default function DocsPage() {
             <div className="manual-kicker"><span>Protocol documentation</span><i>Last revised 03 Aug 2026</i></div>
             <h1>Build the artifact.<br /><em>Prove the history.</em></h1>
             <p>Bittensor Relics is a non-EVM protocol for binding exact on-chain media to a finalized subnet-alpha burn. This manual explains what the chain proves, what the index derives, and what the proposed subnet must verify.</p>
-            <div className="manual-hero-actions"><Link href="/#forge">Open testnet forge <span>→</span></Link><Link href="/blackpaper">Read the Blackpaper</Link></div>
+            <div className="manual-hero-actions"><Link href="/#forge">Enter the Forge <span>→</span></Link><Link href="/blackpaper">Read the Blackpaper</Link></div>
             <div className="manual-status-strip"><div><span>Network</span><strong>Testnet only</strong></div><div><span>Execution</span><strong>Native SS58</strong></div><div><span>Media</span><strong>Exact WebP bytes</strong></div><div><span>Indexer</span><strong>Built / not deployed</strong></div></div>
           </header>
 

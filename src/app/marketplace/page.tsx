@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteMark } from "@/components/site-mark";
+import { SiteNav } from "@/components/site-nav";
 import { formatRao } from "@/lib/format";
 import { IndexerUnavailableError, listActiveListings } from "@/lib/indexer-db";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "Market Research — Bittensor Relics", description: "The signed discovery and loss-safe settlement research surface for Bittensor Relics." };
 
 export default async function MarketplacePage() {
   let listings: Awaited<ReturnType<typeof listActiveListings>> = [];
@@ -16,7 +19,7 @@ export default async function MarketplacePage() {
   return (
     <main className="site-shell inner-site">
       <div className="grain" aria-hidden="true" />
-      <nav className="nav" aria-label="Main navigation"><SiteMark /><div className="nav-links"><Link href="/#forge">Forge</Link><Link href="/explore">Explore</Link><Link href="/marketplace">Market</Link><Link href="/wallet">My Relics</Link><span className="chain-status"><i aria-hidden="true" />Settlement locked</span></div></nav>
+      <SiteNav status="Settlement research" />
       <section className="collection-hero market-hero"><p className="eyebrow">Signed discovery market</p><h1>Offers without<br />false settlement.</h1><p>Owners can publish wallet-signed asking prices. Purchases stay locked until one chain-enforced action can exchange TAO and ownership without loss.</p></section>
       <section className="settlement-lock"><strong>Buying is intentionally disabled</strong><p>A listing is an authenticated offer, not an escrow. Bittensor Relics will not ask buyers to send TAO based on an indexer promise.</p></section>
       {unavailable ? <section className="indexer-empty"><span>Indexer gate</span><h2>The discovery market is not online yet.</h2><p>Listings require the finalized ownership database.</p><Link href="/explore">View collection status</Link></section>
