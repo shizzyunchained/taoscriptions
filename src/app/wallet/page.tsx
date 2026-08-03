@@ -15,13 +15,14 @@ export default function WalletPage() {
     <main className="site-shell inner-site">
       <div className="grain" aria-hidden="true" />
       <SiteNav status="My Relics" tone="ready" />
-      <section className="collection-hero wallet-hero">
-        <p className="eyebrow">Your finalized collection</p>
-        <h1>Your Relics.</h1>
+      <section className="wallet-hero">
+        <div>
+          <p className="eyebrow">Wallet collection</p>
+          <h1>My Relics</h1>
+        </div>
         <p>
-          Every image, inscription, burn receipt, and chain position owned by
-          your connected wallet—shown together as a collection, with ownership
-          tools kept secondary.
+          View the finalized Relics held by your connected SS58 wallet. Select
+          an item only when you want its proof, listing, or transfer controls.
         </p>
       </section>
       <WalletWorkspace />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ListingForm } from "@/components/listing-form";
@@ -113,6 +113,8 @@ export function WalletWorkspace() {
     "idle" | "review" | "signing" | "submitted" | "finalized" | "error"
   >("idle");
   const [transactionHash, setTransactionHash] = useState("");
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<"newest" | "oldest" | "alpha">("newest");
   const [transferEvidence, setTransferEvidence] =
     useState<TransferEvidence | null>(null);
 
@@ -134,7 +136,7 @@ export function WalletWorkspace() {
           wallet.accountHex.toLowerCase() === FOUNDING_OWNER_HEX
         ) {
           setRelics([FOUNDING_RELIC]);
-          setSelected(FOUNDING_RELIC);
+          setSelected(null);
           setProofMode(true);
           setState("ready");
           setMessage(
@@ -157,7 +159,7 @@ export function WalletWorkspace() {
       }
       const collection = body.artifacts ?? [];
       setRelics(collection);
-      setSelected(collection[0] ?? null);
+      setSelected(null);
       setProofMode(false);
       setState("ready");
     } catch (error) {
@@ -435,6 +437,46 @@ export function WalletWorkspace() {
     URL.revokeObjectURL(url);
   }
 
+  const visibleRelics = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    const matches = term
+      ? relics.filter((relic) =>
+          [
+            relic.name,
+            relic.body ?? "",
+            relic.globalNumber,
+            relic.subnetNumber,
+            `sn${relic.netuid}`,
+          ].some((value) => value.toLowerCase().includes(term)),
+        )
+      : [...relics];
+
+    return matches.sort((a, b) => {
+      if (sort === "alpha") {
+        const alphaA = BigInt(a.alphaBurnedRao);
+        const alphaB = BigInt(b.alphaBurnedRao);
+        return alphaA === alphaB ? 0 : alphaA > alphaB ? -1 : 1;
+      }
+      const direction = sort === "newest" ? -1 : 1;
+      return (Number(a.globalNumber) - Number(b.globalNumber)) * direction;
+    });
+  }, [relics, search, sort]);
+
+  const collectionTotals = useMemo(
+    () => ({
+      alpha: relics.reduce(
+        (total, relic) => total + BigInt(relic.alphaBurnedRao),
+        0n,
+      ),
+      tao: relics.reduce(
+        (total, relic) => total + BigInt(relic.taoSpentRao),
+        0n,
+      ),
+      subnets: new Set(relics.map((relic) => relic.netuid)).size,
+    }),
+    [relics],
+  );
+
   return (
     <section className="wallet-workspace">
       {!account ? (
@@ -462,9 +504,14 @@ export function WalletWorkspace() {
         </div>
       ) : (
         <>
-          <header>
-            <div>
-              <span>Connected owner</span>
+          <header className="wallet-account-bar">
+            <div className="wallet-identity">
+              <div className="wallet-avatar" aria-hidden="true">
+                {account.name.slice(0, 1).toUpperCase()}
+              </div>
+              <div>
+              <span>Connected wallet</span>
+              <strong>{account.name}</strong>
               <select
                 aria-label="Connected wallet account"
                 value={account.address}
@@ -499,6 +546,7 @@ export function WalletWorkspace() {
                 ))}
               </select>
               <p>{compact(account.address)}</p>
+              </div>
             </div>
             <button
               type="button"
@@ -538,6 +586,41 @@ export function WalletWorkspace() {
           ) : (
             <>
             <div className="owned-layout">
+              <section className="wallet-collection-summary">
+                <div>
+                  <span>Collection</span>
+                  <h2>Owned Relics</h2>
+                  <p>Finalized on-chain items held by this wallet.</p>
+                </div>
+                <dl>
+                  <div><dt>Items</dt><dd>{relics.length}</dd></div>
+                  <div><dt>Subnets</dt><dd>{collectionTotals.subnets}</dd></div>
+                  <div><dt>Alpha burned</dt><dd>{formatRao(collectionTotals.alpha.toString())}</dd></div>
+                  <div><dt>TAO committed</dt><dd>{formatRao(collectionTotals.tao.toString())}</dd></div>
+                </dl>
+              </section>
+              <div className="owned-toolbar">
+                <label>
+                  <span className="sr-only">Search your Relics</span>
+                  <i aria-hidden="true">⌕</i>
+                  <input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Search by name, inscription, number, or subnet"
+                  />
+                </label>
+                <select
+                  aria-label="Sort owned Relics"
+                  value={sort}
+                  onChange={(event) =>
+                    setSort(event.target.value as "newest" | "oldest" | "alpha")
+                  }
+                >
+                  <option value="newest">Recently forged</option>
+                  <option value="oldest">Oldest first</option>
+                  <option value="alpha">Most alpha burned</option>
+                </select>
+              </div>
               <div className="owned-list">
                 <div>
                   <span>
@@ -545,9 +628,9 @@ export function WalletWorkspace() {
                       ? "Verified founding receipt"
                       : "Finalized collection"}
                   </span>
-                  <strong>{relics.length} owned</strong>
+                  <strong>{visibleRelics.length} shown</strong>
                 </div>
-                {relics.map((relic) => (
+                {visibleRelics.map((relic) => (
                   <button
                     type="button"
                     key={relic.artifactId}
@@ -569,7 +652,7 @@ export function WalletWorkspace() {
                             ? "/founding-relic.webp"
                             : `/api/v1/artifacts/${encodeURIComponent(relic.artifactId)}/media`
                         }
-                        alt=""
+                        alt={relic.name}
                         width={520}
                         height={520}
                         unoptimized={!proofMode}
@@ -578,27 +661,42 @@ export function WalletWorkspace() {
                     </div>
                     <div className="owned-card-copy">
                       <span>
-                        Relic #{relic.globalNumber} · SN{relic.netuid} / #{relic.subnetNumber}
+                        SN{relic.netuid} · Relic #{relic.subnetNumber}
                       </span>
                       <h3>{relic.name}</h3>
                       <p>{relic.body ?? "Image-only Relic · no separate inscription"}</p>
                       <dl>
                         <div>
                           <dt>Alpha burned</dt>
-                          <dd>{formatRao(relic.alphaBurnedRao)}</dd>
+                            <dd>{formatRao(relic.alphaBurnedRao)} α</dd>
                         </div>
                         <div>
                           <dt>TAO spent</dt>
                           <dd>{formatRao(relic.taoSpentRao)}</dd>
                         </div>
                       </dl>
+                      <span className="owned-card-action">View and manage →</span>
                     </div>
                   </button>
                 ))}
+                {!visibleRelics.length && (
+                  <div className="owned-no-results">
+                    <strong>No matching Relics</strong>
+                    <p>Try a different name, number, or subnet.</p>
+                  </div>
+                )}
               </div>
-              <div className="transfer-console">
+              {selected && <div className="transfer-console" id="relic-manager">
                 {selected ? (
                   <>
+                    <button
+                      type="button"
+                      className="close-relic-manager"
+                      onClick={() => setSelected(null)}
+                      aria-label="Close Relic details"
+                    >
+                      Close ×
+                    </button>
                     <span>
                       {proofMode
                         ? "Finalized founding proof"
@@ -773,7 +871,7 @@ export function WalletWorkspace() {
                     </p>
                   </div>
                 )}
-              </div>
+              </div>}
             </div>
             {selected && !proofMode && (
               <div id="listing">

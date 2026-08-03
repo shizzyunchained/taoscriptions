@@ -6179,3 +6179,343 @@ footer > a:last-child:hover {
     justify-content: center;
   }
 }
+
+/* My Relics — collection-first portfolio */
+.wallet-hero {
+  min-height: 190px;
+  padding: 48px 0 34px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 560px);
+  gap: 48px;
+  align-items: end;
+  border-bottom: 1px solid var(--line);
+}
+.wallet-hero h1 {
+  margin-top: 12px;
+  color: var(--ink);
+  font: 400 clamp(46px, 6vw, 76px)/0.92 Georgia, serif;
+  letter-spacing: -0.055em;
+}
+.wallet-hero > p {
+  margin: 0 0 4px;
+  color: #aeb6aa;
+  font-size: 16px;
+  line-height: 1.65;
+}
+.wallet-workspace {
+  margin-top: 28px;
+  background: rgba(9, 12, 10, 0.94);
+}
+.wallet-workspace > .wallet-account-bar {
+  min-height: 104px;
+  padding: 18px 24px;
+}
+.wallet-identity {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.wallet-avatar {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(200, 245, 107, 0.42);
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgba(200, 245, 107, 0.14), rgba(255, 159, 67, 0.08));
+  color: var(--acid);
+  font: 700 20px var(--font-geist-mono), monospace;
+}
+.wallet-identity > div:last-child {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  column-gap: 12px;
+}
+.wallet-identity strong {
+  color: var(--ink);
+  font-size: 18px;
+}
+.wallet-workspace > header .wallet-identity select {
+  grid-column: 1 / -1;
+  min-width: min(380px, 54vw);
+  margin-top: 7px;
+  padding: 8px 30px 8px 10px;
+  font-size: 14px;
+}
+.wallet-workspace > header .wallet-identity p {
+  display: none;
+}
+.wallet-collection-summary {
+  padding: 32px 28px;
+  display: grid;
+  grid-template-columns: minmax(220px, 0.72fr) minmax(0, 1.28fr);
+  gap: 42px;
+  align-items: end;
+  border-bottom: 1px solid var(--line);
+}
+.wallet-collection-summary > div > span {
+  color: var(--ember);
+  font: 13px var(--font-geist-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.wallet-collection-summary h2 {
+  margin-top: 9px;
+  color: var(--ink);
+  font-size: clamp(30px, 4vw, 48px);
+  font-weight: 590;
+  letter-spacing: -0.05em;
+}
+.wallet-collection-summary p {
+  margin-top: 8px;
+  color: #aeb6aa;
+  font-size: 15px;
+}
+.wallet-collection-summary dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+.wallet-collection-summary dl > div {
+  min-height: 92px;
+  padding: 17px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.wallet-collection-summary dt {
+  color: #8f998d;
+  font-size: 12px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.wallet-collection-summary dd {
+  margin-top: 15px;
+  color: var(--ink);
+  font: 650 17px var(--font-geist-mono), monospace;
+  overflow-wrap: anywhere;
+}
+.wallet-collection-summary dl > div:nth-child(3) dd {
+  color: var(--acid);
+}
+.owned-toolbar {
+  padding: 18px 28px;
+  display: flex;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.owned-toolbar label {
+  min-width: 0;
+  flex: 1;
+  position: relative;
+}
+.owned-toolbar i {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  color: #aeb6aa;
+  font-size: 22px;
+  font-style: normal;
+  transform: translateY(-55%);
+}
+.owned-toolbar input,
+.owned-toolbar select {
+  min-height: 50px;
+  border: 1px solid var(--line-strong);
+  outline: 0;
+  background: var(--field);
+  color: var(--ink);
+  font-size: 15px;
+}
+.owned-toolbar input {
+  width: 100%;
+  padding: 0 18px 0 48px;
+}
+.owned-toolbar input::placeholder {
+  color: #788176;
+}
+.owned-toolbar select {
+  min-width: 190px;
+  padding: 0 34px 0 14px;
+}
+.owned-list {
+  padding: 24px 28px 34px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.owned-list > div:first-child {
+  margin-bottom: 2px;
+}
+.owned-list > div:first-child span,
+.owned-list > div:first-child strong {
+  font-size: 13px;
+}
+.owned-list > button {
+  display: flex;
+  flex-direction: column;
+  border-color: rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.025);
+}
+.owned-card-media {
+  width: 100%;
+  min-height: 0;
+  aspect-ratio: 1;
+  border-right: 0;
+  border-bottom: 1px solid var(--line);
+}
+.owned-card-media > strong {
+  top: 12px;
+  left: 12px;
+  padding: 7px 9px;
+  font-size: 15px;
+}
+.owned-card-copy {
+  width: 100%;
+  min-height: 240px;
+  padding: 18px;
+}
+.owned-card-copy > span:not(.owned-card-action) {
+  color: #9ca598;
+  font-size: 12px;
+}
+.owned-card-copy h3 {
+  margin-top: 9px;
+  font-size: clamp(23px, 2vw, 31px);
+  line-height: 1.05;
+}
+.owned-card-copy > p {
+  min-height: 44px;
+  margin-top: 12px;
+  display: -webkit-box;
+  overflow: hidden;
+  color: #bdc5b9;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.owned-card-copy dl {
+  padding-top: 16px;
+  gap: 8px;
+}
+.owned-card-copy dl div {
+  padding-top: 10px;
+}
+.owned-card-copy dt {
+  color: #8f998d;
+  font-size: 11px;
+}
+.owned-card-copy dd {
+  margin-top: 5px;
+  font-size: 14px;
+}
+.owned-card-action {
+  width: 100%;
+  margin-top: 16px;
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+  color: var(--ink) !important;
+  font-size: 13px !important;
+  font-weight: 700;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+.owned-list > button:hover .owned-card-action,
+.owned-list > button.active .owned-card-action {
+  color: var(--acid) !important;
+}
+.owned-no-results {
+  grid-column: 1 / -1 !important;
+  min-height: 220px;
+  padding: 48px !important;
+  display: grid !important;
+  place-content: center;
+  text-align: center;
+}
+.owned-no-results strong {
+  color: var(--ink) !important;
+  font-size: 22px !important;
+  text-transform: none !important;
+}
+.owned-no-results p {
+  margin-top: 8px;
+  color: #aeb6aa;
+}
+.transfer-console {
+  position: relative;
+  border-top: 1px solid rgba(200, 245, 107, 0.25);
+  background: rgba(200, 245, 107, 0.018);
+}
+.close-relic-manager {
+  position: absolute;
+  top: 22px;
+  right: 24px;
+  z-index: 2;
+  padding: 9px 12px;
+  border: 1px solid var(--line-strong);
+  background: #0b0f0c;
+  color: var(--ink);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+@media (max-width: 1200px) {
+  .owned-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .wallet-collection-summary {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+@media (max-width: 850px) {
+  .wallet-hero {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .wallet-hero > p {
+    max-width: 620px;
+  }
+  .wallet-collection-summary dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .owned-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .wallet-workspace > .wallet-account-bar {
+    align-items: flex-start;
+  }
+  .wallet-avatar {
+    display: none;
+  }
+  .wallet-workspace > header .wallet-identity select {
+    min-width: 0;
+    width: 64vw;
+  }
+  .wallet-collection-summary,
+  .owned-toolbar,
+  .owned-list {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .owned-toolbar {
+    flex-direction: column;
+  }
+  .owned-toolbar select {
+    width: 100%;
+  }
+  .owned-list {
+    grid-template-columns: 1fr;
+  }
+  .owned-card-copy {
+    min-height: 215px;
+  }
+}
