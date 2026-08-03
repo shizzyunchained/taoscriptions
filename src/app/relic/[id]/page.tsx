@@ -4,7 +4,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteMark } from "@/components/site-mark";
 import { SiteNav } from "@/components/site-nav";
-import { ListingForm } from "@/components/listing-form";
 import { RelicListings } from "@/components/relic-listings";
 import { compactHex, formatRao } from "@/lib/format";
 import {
@@ -81,6 +80,7 @@ export default async function RelicPage({ params }: Props) {
               <div className="detail-orbit" aria-hidden="true"><i /></div>
             )}
           </header>
+          <RelicListings initialListings={listings.map(({ listingId, priceRao, expiryBlock }) => ({ listingId, priceRao, expiryBlock }))} ownerAccountHex={artifact.ownerAccountHex} chainGenesis={artifact.artifactId.split(":")[1]} />
           <section className="relic-content">
             <span>{artifact.mediaType}{artifact.mediaByteLength ? ` · ${artifact.mediaByteLength.toLocaleString()} bytes fully on-chain` : ""}</span>
             {artifact.body ? (
@@ -115,8 +115,6 @@ export default async function RelicPage({ params }: Props) {
               <ol>{transfers.map((transfer) => <li key={transfer.transferId}><span>Nonce {transfer.ownershipNonce}</span><strong>{compactHex(transfer.fromAccountHex)} <i aria-hidden="true">-&gt;</i> {compactHex(transfer.toAccountHex)}</strong><small>Block #{transfer.blockNumber} · extrinsic {transfer.extrinsicIndex}{transfer.transactionFeeRao ? ` · fee ${formatRao(transfer.transactionFeeRao)} TAO` : ""}</small></li>)}</ol>
             ) : <p>The creator remains the current protocol owner.</p>}
           </section>
-          <RelicListings initialListings={listings.map(({ listingId, priceRao, expiryBlock }) => ({ listingId, priceRao, expiryBlock }))} ownerAccountHex={artifact.ownerAccountHex} chainGenesis={artifact.artifactId.split(":")[1]} />
-          <ListingForm artifactId={artifact.artifactId} ownerAccountHex={artifact.ownerAccountHex} ownershipNonce={artifact.ownershipNonce} chainGenesis={artifact.artifactId.split(":")[1]} />
           <div className="detail-actions"><Link href="/marketplace">&lt;- Marketplace</Link><span>Ownership nonce {artifact.ownershipNonce}</span></div>
         </article>
       ) : null}

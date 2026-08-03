@@ -46,5 +46,36 @@ export function RelicListings({ initialListings, ownerAccountHex, chainGenesis }
     } finally { setBusyId(null); }
   }
 
-  return <section className="active-offers"><div><h2>Signed offers</h2><span>{listings.length} active</span></div>{listings.length ? listings.map((listing) => <article key={listing.listingId}><strong>{formatRao(listing.priceRao)} TAO</strong><span>Expires block #{listing.expiryBlock}</span><div><button type="button" disabled>Purchase locked</button><button type="button" className="cancel-listing" disabled={busyId !== null} onClick={() => cancel(listing.listingId)}>{busyId === listing.listingId ? "Confirm in wallet" : "Cancel listing"}</button></div></article>) : <p>This relic has no active owner-signed listing.</p>}{message && <p className="listing-action-message" role="status">{message}</p>}</section>;
+  return (
+    <section className="active-offers purchase-panel">
+      <div>
+        <div>
+          <span>Marketplace listing</span>
+          <h2>{listings.length ? "Buy this Relic" : "Not currently for sale"}</h2>
+        </div>
+        <span>{listings.length} active</span>
+      </div>
+      {listings.length ? listings.map((listing) => (
+        <article key={listing.listingId}>
+          <div className="purchase-price">
+            <span>Price</span>
+            <strong>{formatRao(listing.priceRao)} TAO</strong>
+          </div>
+          <span>Listing expires at block #{listing.expiryBlock}</span>
+          <div>
+            <button type="button" className="buy-relic-button" disabled>
+              Buy Relic
+            </button>
+            <button type="button" className="cancel-listing" disabled={busyId !== null} onClick={() => cancel(listing.listingId)}>
+              {busyId === listing.listingId ? "Confirm in wallet" : "Cancel listing"}
+            </button>
+          </div>
+        </article>
+      )) : <p>This Relic has no active marketplace listing.</p>}
+      {listings.length > 0 && (
+        <small>Buying will unlock when TAO payment and Relic ownership can settle together safely.</small>
+      )}
+      {message && <p className="listing-action-message" role="status">{message}</p>}
+    </section>
+  );
 }

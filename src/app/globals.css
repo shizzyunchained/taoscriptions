@@ -2613,6 +2613,55 @@ footer > a:last-child:hover {
 .active-offers .listing-action-message {
   color: var(--muted);
 }
+.purchase-panel {
+  padding: 28px clamp(28px, 5vw, 52px);
+  background: linear-gradient(100deg, rgba(200, 245, 107, 0.045), rgba(255, 159, 67, 0.025));
+}
+.purchase-panel > div:first-child > div {
+  display: block;
+}
+.purchase-panel > div:first-child > div > span,
+.purchase-price > span {
+  display: block;
+  color: var(--dim);
+  font: 12px var(--font-geist-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.purchase-panel > div:first-child h2 {
+  margin-top: 7px;
+  font-size: clamp(25px, 3vw, 38px);
+}
+.purchase-panel article {
+  grid-template-columns: minmax(170px, 0.7fr) 1fr minmax(260px, 0.8fr);
+}
+.purchase-panel article > .purchase-price {
+  display: block;
+}
+.purchase-panel .purchase-price strong {
+  display: block;
+  margin-top: 7px;
+  color: var(--acid);
+  font: 700 24px var(--font-geist-mono), monospace;
+}
+.purchase-panel .buy-relic-button {
+  min-height: 46px;
+  border-color: var(--acid);
+  background: var(--acid);
+  color: #11150d;
+  font-size: 14px;
+  font-weight: 780;
+}
+.purchase-panel .buy-relic-button:disabled {
+  opacity: 0.72;
+}
+.purchase-panel > small {
+  margin-top: 16px;
+  display: block;
+  color: var(--ember-bright);
+  font-size: 12px;
+  line-height: 1.5;
+}
 .listing-panel {
   display: grid;
   grid-template-columns: 1fr minmax(180px, 240px) minmax(170px, 210px);
