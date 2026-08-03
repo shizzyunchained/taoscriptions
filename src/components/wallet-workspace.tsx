@@ -477,6 +477,20 @@ export function WalletWorkspace() {
     [relics],
   );
 
+  function openRelicManager(relic: OwnedRelic) {
+    setSelected(relic);
+    setReview(null);
+    setTransferEvidence(null);
+    setTransferState("idle");
+    if (!proofMode) setMessage("");
+    window.setTimeout(() => {
+      document.getElementById("relic-manager")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 50);
+  }
+
   return (
     <section className="wallet-workspace">
       {!account ? (
@@ -637,13 +651,7 @@ export function WalletWorkspace() {
                     className={
                       selected?.artifactId === relic.artifactId ? "active" : ""
                     }
-                    onClick={() => {
-                      setSelected(relic);
-                      setReview(null);
-                      setTransferEvidence(null);
-                      setTransferState("idle");
-                      if (!proofMode) setMessage("");
-                    }}
+                    onClick={() => openRelicManager(relic)}
                   >
                     <div className="owned-card-media">
                       <Image
