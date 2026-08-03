@@ -11,6 +11,11 @@ type EventRecord = {
   };
 };
 
+// The runtime can cap the burn at the alpha actually available after the
+// stake leg. Current Subtensor rounding can leave that balance one alpha-rao
+// below the AddStakeBurn event's nominal alpha value.
+const MAX_ALPHA_BURN_ROUNDING_RAO = 1n;
+
 export type MintReceiptExpectation = {
   signerAccountHex: string;
   routeHotkeyHex: string;
@@ -63,12 +68,12 @@ export function verifyFinalizedMintReceipt(input: {
   const stakeBurn = eventRecords.find((record) => isEvent(record, "subtensorModule", "AddStakeBurn"));
   if (!stakeBurn) throw new Error("MISSING_ADD_STAKE_BURN_EVENT");
   const [eventNetuid, eventHotkey, eventAmount, eventAlpha] = eventData(stakeBurn);
-  const alphaBurnedRao = BigInt(eventAlpha.toString());
+  const nominalAlphaRao = BigInt(eventAlpha.toString());
   if (
     Number(eventNetuid.toString()) !== expected.netuid
     || codecHex(eventHotkey, "ADD_STAKE_BURN_HOTKEY") !== hotkeyHex
     || BigInt(eventAmount.toString()) !== expected.taoAmountRao
-    || alphaBurnedRao <= 0n
+    || nominalAlphaRao <= 0n
   ) {
     throw new Error("ADD_STAKE_BURN_EVENT_MISMATCH");
   }
@@ -76,10 +81,14 @@ export function verifyFinalizedMintReceipt(input: {
   const alphaBurn = eventRecords.find((record) => isEvent(record, "subtensorModule", "AlphaBurned"));
   if (!alphaBurn) throw new Error("MISSING_ALPHA_BURNED_EVENT");
   const [eventSigner, burnedHotkey, burnedAlpha, burnedNetuid] = eventData(alphaBurn);
+  const alphaBurnedRao = BigInt(burnedAlpha.toString());
+  const roundingDeltaRao = nominalAlphaRao - alphaBurnedRao;
   if (
     codecHex(eventSigner, "ALPHA_BURNED_SIGNER") !== signerHex
     || codecHex(burnedHotkey, "ALPHA_BURNED_HOTKEY") !== hotkeyHex
-    || BigInt(burnedAlpha.toString()) !== alphaBurnedRao
+    || alphaBurnedRao <= 0n
+    || roundingDeltaRao < 0n
+    || roundingDeltaRao > MAX_ALPHA_BURN_ROUNDING_RAO
     || Number(burnedNetuid.toString()) !== expected.netuid
   ) {
     throw new Error("ALPHA_BURNED_EVENT_MISMATCH");

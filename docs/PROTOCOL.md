@@ -170,15 +170,20 @@ The indexer MUST verify all of the following:
 7. Payload `subnet_generation` equals `NetworkRegisteredAt[netuid]` in the
    state applicable to that extrinsic.
 8. A matching `SubtensorModule.AlphaBurned` event exists for signer, hotkey,
-   netuid, and actual alpha amount.
+   netuid, and a nonzero actual alpha amount. This event is the canonical burn.
 9. A matching `SubtensorModule.AddStakeBurn` event exists for hotkey, netuid,
-   TAO input, and actual alpha amount.
+   TAO input, and a nonzero nominal alpha amount. The runtime may cap the burn
+   at the alpha actually available after the stake leg, so the canonical
+   `AlphaBurned` amount MAY be one alpha-rao below this nominal value. Any
+   larger difference is invalid under protocol v1.
 10. The actual alpha amount is greater than zero.
 11. The `System.Remarked` event matches the signer and remark hash.
 
 The event values, not values claimed in JSON, are the source of truth for TAO
-spent and alpha burned. Transaction fees, including alpha-paid transaction
-fees, MUST NOT count toward the Relic's burn proof.
+spent and alpha burned. Specifically, the actual `AlphaBurned` amount is stored
+as the Relic's burn proof rather than the nominal `AddStakeBurn.alpha` value.
+Transaction fees, including alpha-paid transaction fees, MUST NOT count toward
+the Relic's burn proof.
 
 `Utility.batch_all` is required because it rolls back all inner calls if an
 inner call fails. A plain `Utility.batch` is invalid.

@@ -143,6 +143,14 @@ test("accepted mints require the finalized fee payer and actual fee", () => {
   ];
   const result = validateMint({ api: { events: guards }, extrinsic, eventRecords: records, subnetGeneration: "123" });
   assert.equal(result.transactionFeeRao, 1_710_598n);
+  const roundedRecords = [...records];
+  roundedRecords[2] = event("subtensorModule", "AlphaBurned", [codec(signer), codec(hotkey), codec(5_202_999_999), codec(1)]);
+  assert.equal(validateMint({ api: { events: guards }, extrinsic, eventRecords: roundedRecords, subnetGeneration: "123" }).alphaBurnedRao, 5_202_999_999n);
+  roundedRecords[2] = event("subtensorModule", "AlphaBurned", [codec(signer), codec(hotkey), codec(5_202_999_998), codec(1)]);
+  assert.throws(
+    () => validateMint({ api: { events: guards }, extrinsic, eventRecords: roundedRecords, subnetGeneration: "123" }),
+    /ALPHA_BURNED_EVENT_MISMATCH/,
+  );
   assert.throws(
     () => validateMint({ api: { events: guards }, extrinsic, eventRecords: records.slice(1), subnetGeneration: "123" }),
     /MISSING_TRANSACTION_FEE_EVENT/,

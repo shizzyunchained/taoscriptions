@@ -16,7 +16,7 @@ services:
       - key: SUPPORTED_SPEC_VERSION
         value: "440"
       - key: START_BLOCK
-        sync: false
+        value: "7698720"
       - key: STOP_BLOCK
         sync: false
   - type: worker
@@ -36,6 +36,6 @@ services:
       - key: SUPPORTED_SPEC_VERSION
         value: "440"
       - key: START_BLOCK
-        sync: false
+        value: "7698720"
       - key: STOP_BLOCK
         sync: false

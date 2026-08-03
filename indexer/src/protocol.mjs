@@ -14,6 +14,7 @@ const MAX_JSON_REMARK_BYTES = 2_048;
 const MAX_MINT_REMARK_BYTES = 16_384;
 const MAX_ONCHAIN_IMAGE_BYTES = 12_288;
 const RELIC_PURPOSES = new Set(["personal", "collection", "subnet_milestone", "community_message"]);
+const MAX_ALPHA_BURN_ROUNDING_RAO = 1n;
 
 function hasImageMagic(bytes) {
   return bytes.length >= IMAGE_MAGIC.length && IMAGE_MAGIC.every((value, index) => bytes[index] === value);
@@ -235,13 +236,15 @@ export function validateMint({ api, extrinsic, eventRecords, subnetGeneration })
   const stakeBurn = eventRecords.find(({ event }) => api.events.subtensorModule.AddStakeBurn.is(event));
   if (!stakeBurn) throw new Error("MISSING_ADD_STAKE_BURN_EVENT");
   const [eventNetuid, eventHotkey, eventAmount, eventAlpha] = stakeBurn.event.data;
-  const alphaBurnedRao = BigInt(eventAlpha.toString());
-  if (Number(eventNetuid.toString()) !== netuid || accountHex(eventHotkey) !== hotkeyHex || BigInt(eventAmount.toString()) !== taoSpentRao || alphaBurnedRao <= 0n) throw new Error("ADD_STAKE_BURN_EVENT_MISMATCH");
+  const nominalAlphaRao = BigInt(eventAlpha.toString());
+  if (Number(eventNetuid.toString()) !== netuid || accountHex(eventHotkey) !== hotkeyHex || BigInt(eventAmount.toString()) !== taoSpentRao || nominalAlphaRao <= 0n) throw new Error("ADD_STAKE_BURN_EVENT_MISMATCH");
 
   const alphaBurn = eventRecords.find(({ event }) => api.events.subtensorModule.AlphaBurned.is(event));
   if (!alphaBurn) throw new Error("MISSING_ALPHA_BURNED_EVENT");
   const [eventSigner, burnedHotkey, burnedAlpha, burnedNetuid] = alphaBurn.event.data;
-  if (accountHex(eventSigner) !== signer || accountHex(burnedHotkey) !== hotkeyHex || BigInt(burnedAlpha.toString()) !== alphaBurnedRao || Number(burnedNetuid.toString()) !== netuid) throw new Error("ALPHA_BURNED_EVENT_MISMATCH");
+  const alphaBurnedRao = BigInt(burnedAlpha.toString());
+  const roundingDeltaRao = nominalAlphaRao - alphaBurnedRao;
+  if (accountHex(eventSigner) !== signer || accountHex(burnedHotkey) !== hotkeyHex || alphaBurnedRao <= 0n || roundingDeltaRao < 0n || roundingDeltaRao > MAX_ALPHA_BURN_ROUNDING_RAO || Number(burnedNetuid.toString()) !== netuid) throw new Error("ALPHA_BURNED_EVENT_MISMATCH");
 
   const remarkHash = blake2AsHex(bytes, 256);
   const remarked = eventRecords.find(({ event }) => api.events.system.Remarked.is(event));

@@ -28,6 +28,15 @@ test("accepts only a finalized mint receipt matching every signed intent field",
   });
 });
 
+test("uses the actual AlphaBurned amount when runtime rounding is one alpha-rao", () => {
+  const roundedEvents = validEvents();
+  roundedEvents[2] = event("subtensorModule", "AlphaBurned", [codec(signer, signer), codec(hotkey, hotkey), codec(5_202_999_999), codec(1)]);
+  assert.equal(verifyFinalizedMintReceipt({ eventRecords: roundedEvents, expected }).alphaBurnedRao, 5_202_999_999n);
+
+  roundedEvents[2] = event("subtensorModule", "AlphaBurned", [codec(signer, signer), codec(hotkey, hotkey), codec(5_202_999_998), codec(1)]);
+  assert.throws(() => verifyFinalizedMintReceipt({ eventRecords: roundedEvents, expected }), /ALPHA_BURNED_EVENT_MISMATCH/);
+});
+
 test("rejects a receipt with missing success or mismatched burn and remark evidence", () => {
   assert.throws(
     () => verifyFinalizedMintReceipt({ eventRecords: validEvents().filter(({ event: item }) => item.method !== "ExtrinsicSuccess"), expected }),

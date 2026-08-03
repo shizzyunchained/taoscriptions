@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { ApiPromise, WsProvider } from "@polkadot/api";
+import { ApiPromise, HttpProvider, WsProvider } from "@polkadot/api";
 import { parseMintEvidenceJson } from "../src/lib/mint-evidence.ts";
 import { calculateLimitPrice, DEFAULT_SLIPPAGE_BPS } from "../src/lib/protocol.ts";
 import { accountHex, validateMint } from "../indexer/src/protocol.mjs";
@@ -9,13 +9,16 @@ import { accountHex, validateMint } from "../indexer/src/protocol.mjs";
 const evidencePath = process.argv[2];
 if (!evidencePath) throw new Error("Usage: npm run verify:mint-evidence -- <downloaded-proof.json>");
 const evidence = parseMintEvidenceJson(await readFile(resolve(evidencePath), "utf8"));
-const endpoint = process.env.SUBTENSOR_RPC ?? "wss://test.chain.opentensor.ai";
+const endpoint = process.env.SUBTENSOR_RPC ?? "https://test.chain.opentensor.ai";
 const expectedGenesis = process.env.CHAIN_GENESIS_HASH ?? "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105";
 const supportedSpec = Number.parseInt(process.env.SUPPORTED_SPEC_VERSION ?? "440", 10);
 const blockNumber = Number(evidence.blockNumber);
 if (!Number.isSafeInteger(blockNumber) || blockNumber < 2) throw new Error("INVALID_EVIDENCE_BLOCK_NUMBER");
 
-const api = await ApiPromise.create({ provider: new WsProvider(endpoint), noInitWarn: true });
+const provider = endpoint.startsWith("http://") || endpoint.startsWith("https://")
+  ? new HttpProvider(endpoint)
+  : new WsProvider(endpoint);
+const api = await ApiPromise.create({ provider, noInitWarn: true });
 try {
   assert.equal(api.genesisHash.toHex(), expectedGenesis, "GENESIS_HASH_MISMATCH");
   assert.equal(evidence.genesisHash, expectedGenesis, "EVIDENCE_GENESIS_MISMATCH");
