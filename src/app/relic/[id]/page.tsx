@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { SiteMark } from "@/components/site-mark";
 import { SiteNav } from "@/components/site-nav";
 import { RelicListings } from "@/components/relic-listings";
+import { BuyerCheckout } from "@/components/buyer-checkout";
 import { compactHex, formatRao } from "@/lib/format";
 import {
   getArtifact,
@@ -85,6 +86,19 @@ export default async function RelicPage({ params }: Props) {
             ownerAccountHex={artifact.ownerAccountHex}
             chainGenesis={artifact.artifactId.split(":")[1]}
           />
+          {listings[0] && <BuyerCheckout
+            artifactId={artifact.artifactId}
+            artifactName={artifact.name}
+            artifactNumber={artifact.globalNumber}
+            chainGenesis={artifact.artifactId.split(":")[1]}
+            listing={{
+              listingId: listings[0].listingId,
+              sellerAccountHex: listings[0].sellerAccountHex,
+              ownershipNonce: listings[0].ownershipNonce,
+              priceRao: listings[0].priceRao,
+              expiryBlock: listings[0].expiryBlock,
+            }}
+          />}
           <section className="relic-content">
             <span>{artifact.mediaType}{artifact.mediaByteLength ? ` · ${artifact.mediaByteLength.toLocaleString()} bytes fully on-chain` : ""}</span>
             {artifact.body ? (
