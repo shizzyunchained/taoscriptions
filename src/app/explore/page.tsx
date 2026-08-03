@@ -4,6 +4,7 @@ import Image from "next/image";
 import { RelicCard } from "@/components/relic-card";
 import { SiteMark } from "@/components/site-mark";
 import { SiteNav } from "@/components/site-nav";
+import { compactHex, formatRao } from "@/lib/format";
 import {
   IndexerUnavailableError,
   listArtifacts,
@@ -34,6 +35,7 @@ export default async function ExplorePage({
     if (error instanceof IndexerUnavailableError) unavailable = true;
     else throw error;
   }
+  const featured = result?.artifacts.length === 1 ? result.artifacts[0] : null;
 
   return (
     <main className="site-shell inner-site">
@@ -64,11 +66,7 @@ export default async function ExplorePage({
           <div className="founding-explorer-copy">
             <span>Founding Relic · #0001</span>
             <h2>Shizzy</h2>
-            <p>
-              The public collection index is preparing its first reproducible
-              sync. The founding receipt remains independently verifiable from
-              finalized chain evidence.
-            </p>
+            <p>Finalized on Bittensor testnet. The exact image, signed manifest, burn receipt, and transaction position can all be reconstructed from chain history.</p>
             <dl>
               <div>
                 <dt>Position</dt>
@@ -79,7 +77,7 @@ export default async function ExplorePage({
                 <dd>1 test TAO</dd>
               </div>
               <div>
-                <dt>Alpha relinquished</dt>
+                <dt>Alpha burned</dt>
                 <dd>1,035.580333229 α</dd>
               </div>
               <div>
@@ -92,6 +90,38 @@ export default async function ExplorePage({
                 Verify evidence →
               </a>
               <Link href="/#forge">Enter the Forge</Link>
+            </div>
+          </div>
+        </section>
+      ) : featured ? (
+        <section className="founding-explorer live-featured-relic">
+          <div className="founding-explorer-art">
+            <Image
+              src={`/api/v1/artifacts/${encodeURIComponent(featured.artifactId)}/media`}
+              alt={featured.name}
+              fill
+              sizes="(max-width: 700px) 92vw, 48vw"
+              unoptimized
+              priority
+            />
+          </div>
+          <div className="founding-explorer-copy">
+            <span>Founding Relic · #{String(featured.globalNumber).padStart(4, "0")}</span>
+            <h2>{featured.name}</h2>
+            <p className={featured.body ? "relic-inscription" : "relic-inscription absent"}>
+              {featured.body ?? "No separate inscription text was finalized with this mint. The name, image, burn receipt, purpose, and safety attestation are the complete signed Relic."}
+            </p>
+            <dl>
+              <div><dt>Position</dt><dd>Block {Number(featured.blockNumber).toLocaleString()} · {featured.extrinsicIndex}</dd></div>
+              <div><dt>Purpose</dt><dd>{featured.purpose}</dd></div>
+              <div><dt>TAO spent</dt><dd>{formatRao(featured.taoSpentRao)} test TAO</dd></div>
+              <div><dt>Alpha burned</dt><dd>{formatRao(featured.alphaBurnedRao)} α</dd></div>
+              <div><dt>On-chain image</dt><dd>{featured.mediaByteLength?.toLocaleString()} bytes</dd></div>
+              <div><dt>Current owner</dt><dd>{compactHex(featured.ownerAccountHex)}</dd></div>
+            </dl>
+            <div className="founding-explorer-actions">
+              <Link href={`/relic/${encodeURIComponent(featured.artifactId)}`} className="primary">List this Relic →</Link>
+              <Link href={`/relic/${encodeURIComponent(featured.artifactId)}`}>Verify full proof</Link>
             </div>
           </div>
         </section>

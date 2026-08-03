@@ -683,7 +683,7 @@ export function WalletWorkspace() {
                       <Link
                         href={`/relic/${encodeURIComponent(selected.artifactId)}`}
                       >
-                        Inspect full provenance
+                        Open proof &amp; list in Marketplace
                       </Link>
                     )}
                   </>

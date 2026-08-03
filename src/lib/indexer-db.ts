@@ -26,6 +26,7 @@ export type Artifact = {
   ownerAccountHex: string;
   hotkeyAccountHex: string;
   name: string;
+  purpose: string;
   mediaType: string;
   body: string | null;
   contentUri: string | null;
@@ -53,6 +54,7 @@ type ArtifactRow = {
   owner_account_hex: string;
   hotkey_account_hex: string;
   name: string;
+  purpose: string | null;
   media_type: string;
   body: string | null;
   content_uri: string | null;
@@ -107,6 +109,7 @@ function artifact(row: ArtifactRow): Artifact {
     ownerAccountHex: row.owner_account_hex,
     hotkeyAccountHex: row.hotkey_account_hex,
     name: row.name,
+    purpose: row.purpose ?? "personal",
     mediaType: row.media_type,
     body: row.body,
     contentUri: row.content_uri,
@@ -178,7 +181,7 @@ export async function listArtifacts(filters: ListFilters) {
     `SELECT artifact_id, block_number, block_hash, extrinsic_index, extrinsic_hash,
       global_number, subnet_number, netuid, subnet_generation,
       creator_account_hex, owner_account_hex, hotkey_account_hex,
-      name, media_type, body, content_uri, content_hash, media_byte_length, payload_hash,
+      name, payload_json ->> 'purpose' AS purpose, media_type, body, content_uri, content_hash, media_byte_length, payload_hash,
       tao_spent_rao, alpha_burned_rao, limit_price_rao, transaction_fee_rao, ownership_nonce
      FROM artifacts ${where}
      ORDER BY global_number DESC
@@ -195,7 +198,7 @@ export async function getArtifact(artifactId: string) {
     `SELECT artifact_id, block_number, block_hash, extrinsic_index, extrinsic_hash,
       global_number, subnet_number, netuid, subnet_generation,
       creator_account_hex, owner_account_hex, hotkey_account_hex,
-      name, media_type, body, content_uri, content_hash, media_byte_length, payload_hash,
+      name, payload_json ->> 'purpose' AS purpose, media_type, body, content_uri, content_hash, media_byte_length, payload_hash,
       tao_spent_rao, alpha_burned_rao, limit_price_rao, transaction_fee_rao, ownership_nonce
      FROM artifacts WHERE artifact_id = $1`,
     [artifactId],
@@ -328,6 +331,8 @@ export class MarketplaceStateError extends Error {
 export type Listing = {
   listingId: string;
   artifactId: string;
+  artifactName: string | null;
+  mediaByteLength: number | null;
   sellerAccountHex: string;
   ownershipNonce: string;
   priceRao: string;
@@ -342,6 +347,8 @@ export type Listing = {
 type ListingRow = {
   listing_id: string;
   artifact_id: string;
+  artifact_name?: string | null;
+  media_byte_length?: number | null;
   seller_account_hex: string;
   ownership_nonce: string;
   price_rao: string;
@@ -357,6 +364,8 @@ function listing(row: ListingRow): Listing {
   return {
     listingId: row.listing_id,
     artifactId: row.artifact_id,
+    artifactName: row.artifact_name ?? null,
+    mediaByteLength: row.media_byte_length ?? null,
     sellerAccountHex: row.seller_account_hex,
     ownershipNonce: row.ownership_nonce,
     priceRao: row.price_rao,
@@ -374,7 +383,8 @@ export async function listActiveListings(artifactId: string | null, limit = DEFA
   const artifactFilter = artifactId ? `AND l.artifact_id = $${values.push(artifactId)}` : "";
   values.push(Math.min(Math.max(limit, 1), MAX_LIMIT));
   const result = await pool().query<ListingRow>(
-    `SELECT l.listing_id, l.artifact_id, l.seller_account_hex, l.ownership_nonce,
+    `SELECT l.listing_id, l.artifact_id, a.name AS artifact_name,
+      a.media_byte_length, l.seller_account_hex, l.ownership_nonce,
       l.price_rao, l.expiry_block, l.nonce, l.buyer_account_hex,
       l.message_text, l.signature, l.created_at
      FROM listings l
@@ -389,7 +399,7 @@ export async function listActiveListings(artifactId: string | null, limit = DEFA
   return result.rows.map(listing);
 }
 
-type NewListing = Omit<Listing, "createdAt"> & { chainGenesis: string };
+type NewListing = Omit<Listing, "createdAt" | "artifactName" | "mediaByteLength"> & { chainGenesis: string };
 
 export async function createListingAuthorization(input: NewListing) {
   const client = await pool().connect();
