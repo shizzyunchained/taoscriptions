@@ -1,0 +1,192 @@
+# Bittensor Relics Indexer v1
+
+This document turns `PROTOCOL.md` into an implementation boundary. The protocol
+document wins if these notes conflict.
+
+## Pipeline
+
+```text
+Subtensor finalized head
+  -> fetch block, signed extrinsics, events, runtime version
+  -> decode operations using metadata for that block
+  -> strict protocol validation
+  -> one database transaction per block
+  -> derived artifacts, ownership, numbering, and rejection records
+  -> read-only API
+```
+
+The indexer follows finalized heads, not best heads.
+
+## Quorum checkpoint
+
+Every committed block advances a deterministic BLAKE2-256 state root. The
+transition commits to the prior root and a canonical transcript containing the
+finalized block position plus every accepted mint, accepted transfer, and
+rejected protocol operation in extrinsic order. Independent workers that replay
+the same supported range must therefore publish the same checkpoint block,
+block hash, transcript hash, and state root.
+
+The public status endpoint exposes this proof material. During the bootstrap
+phase the website may read one worker, but it must not call that a quorum. The
+next phase queries three isolated workers and reports verified only when at
+least two match exactly. A mismatch is displayed as disputed and is never
+silently resolved by choosing the primary database.
+
+## Minimum persisted evidence
+
+For every processed finalized block:
+
+- genesis hash, block number, block hash, parent hash, and runtime spec version;
+- raw or reproducibly encoded extrinsic data;
+- signer AccountId32, extrinsic hash, index, success, and relevant events;
+- original remark bytes and BLAKE2-256 payload hash;
+- validation result and stable reason code;
+- indexer build version.
+
+The database also stores exactly one immutable activation block per genesis.
+Primary and replay databases must agree on it before their row digests can be
+compared.
+
+For every accepted mint:
+
+- canonical artifact ID, global number, and subnet number;
+- netuid and subnet registration block;
+- creator and current owner;
+- TAO input, actual alpha burned, hotkey, limit price, and transaction fee;
+- media manifest and content verification status;
+- full creation chain position.
+
+For every accepted transfer, the index stores the exact extrinsic, original
+payload bytes, from/to AccountId32 values, sequential ownership nonce, event
+evidence, actual transaction fee, and chain position. Artifact ownership and
+transfer history update in the same serializable block transaction.
+
+## Suggested database constraints
+
+- unique `(genesis_hash, block_number)`;
+- unique `(genesis_hash, block_hash)`;
+- unique `(genesis_hash, block_number, extrinsic_index, operation_index)`;
+- unique `artifact_id`;
+- unique `(genesis_hash, global_number)`;
+- unique `(genesis_hash, netuid, subnet_generation, subnet_number)`;
+- unique accepted ownership nonce per artifact;
+- unique listing ID.
+
+Numbers are allocated inside the same serializable database transaction that
+accepts the mint. Replaying a block returns the previously stored result.
+
+## Reference implementation status
+
+`indexer/src` implements the finalized-head worker, strict payload parser,
+Postgres migration, atomic block checkpointing, evidence retention, rejection
+records, and deterministic mint numbering. The checked-in `render.yaml` defines
+separate primary and replay background workers and disables automatic deploys
+for both. They are intentionally not launched until two databases are selected
+and `START_BLOCK` is frozen at or before the first protocol mint.
+
+For a reproducibility run, set the same optional `STOP_BLOCK` on the primary
+and replay workers. Each worker processes only finalized blocks through that
+checkpoint, reports `stopped` as a healthy state, retains its database advisory
+lock, and stops reading the chain. A database whose existing checkpoint is
+already beyond the requested stop fails closed instead of claiming comparable
+evidence.
+
+The initial worker supports one tested runtime spec per deployment. It reads the
+spec version at every block and stops before committing an unsupported version.
+A rebuild beginning before the configured spec boundary requires a decoder that
+installs the historical metadata for each block; v0.1 does not pretend current
+metadata can safely decode an older runtime.
+
+## Runtime upgrades
+
+The indexer maintains an allowlist of tested spec versions. At an unknown
+version it stops advancing and reports the boundary through logs and health
+state. It never guesses a new call or event layout.
+
+## API boundary
+
+The public API is read-only for canonical state. Write endpoints may relay
+signed listings or media uploads, but must not create ownership or accepted
+protocol operations. All state-changing truth comes from finalized chain data.
+
+Initial endpoints:
+
+```text
+GET /health
+GET /v1/status
+GET /v1/artifacts
+GET /v1/artifacts/:id
+GET /v1/artifacts/:id/transfers
+GET /v1/subnets/:netuid/:generation/artifacts
+GET /v1/accounts/:account/artifacts
+GET /v1/operations/:block/:extrinsic
+GET /v1/rejections/:block/:extrinsic
+GET /v1/listings
+POST /v1/listings
+DELETE /v1/listings/:id
+```
+
+The listing write endpoints store portable wallet authorizations for discovery
+only. They cannot alter finalized artifact ownership, and no purchase or payment
+endpoint exists in v1.
+
+## Recovery
+
+A complete rebuild from genesis or a documented checkpoint must reproduce all
+artifact IDs, numbers, ownership states, and payload hashes. A release is not
+production-ready until this reproducibility test passes against a second empty
+database.
+
+After the primary and independent replay workers report `stopped` at the exact
+same finalized checkpoint, set `DATABASE_URL`, `REPLAY_DATABASE_URL`, and
+`CHAIN_GENESIS_HASH`, then run:
+
+```bash
+npm run indexer:audit
+```
+
+The command is read-only. It computes canonical SHA-256 digests and row counts
+for the checkpoint, finalized block sequence, artifacts (including current
+ownership and evidence), transfers, and rejected operations. It fails if the
+URLs are identical, either checkpoint is missing, or any dataset differs.
+Off-chain marketplace listings are intentionally excluded because they are not
+derived by replaying finalized chain history.
+
+## Render deployment gate
+
+Render background workers do not expose incoming network traffic, so the local
+health endpoint is diagnostic rather than a Render HTTP health check. Deployment
+requires a paid worker plan, a Postgres `DATABASE_URL`, and an explicit
+`START_BLOCK`; none of those are created automatically by this repository.
+
+Render runs `npm run indexer:migrate && npm run indexer:doctor` before starting
+the worker. The doctor is read-only after migration and fails the deployment if
+the RPC genesis or finalized runtime spec differs from configuration, either
+block bound is not finalized, an existing checkpoint conflicts with those
+bounds, or the required evidence schema (including actual transaction fees) is
+missing. Its JSON report never prints the database URL and should be retained
+with the deployment record.
+
+The worker emits a structured `indexer_health` JSON heartbeat every 60 seconds
+and on fatal startup failure. It reports status, chain, checkpoint, latest seen
+finalized head, lag in blocks, last committed time, indexer version, and the
+current error. Production monitoring should alert when status is not `ready`,
+lag grows beyond the documented catch-up threshold, or `lastCommittedAt` stops
+advancing while finalized heads continue.
+
+The intended first deployment sequence is:
+
+1. record the finalized block immediately before the first accepted test mint;
+   first run `npm run verify:mint-evidence -- <downloaded-proof.json>` to
+   independently re-read the canonical block, extrinsic, events, runtime, and
+   timestamp. Use its `recommendedStartBlock` only after `verified: true`;
+2. create two dedicated Postgres databases;
+3. choose one finalized audit checkpoint and set the same `START_BLOCK` and
+   `STOP_BLOCK` for two workers backed by those separate databases;
+4. run the pre-deploy migration and retain each successful `indexer:doctor`
+   report;
+5. confirm both workers report `stopped` at the chosen checkpoint;
+6. run `npm run indexer:audit` and retain its JSON output as release evidence;
+7. remove `STOP_BLOCK` from the primary worker only and restart it to follow new
+   finalized heads; and
+8. preserve the stopped replay database as the release comparison record.

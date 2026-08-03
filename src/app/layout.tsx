@@ -13,9 +13,35 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TAOscriptions — Native TAO Inscriptions",
+  metadataBase: new URL("https://bittensorrelics.com"),
+  title: "Bittensor Relics — Alpha Burn Artifacts on Bittensor",
   description:
-    "Connect your TAOStats wallet to the native inscription experience for Subtensor.",
+    "Forge numbered digital artifacts by atomically buying and burning subnet alpha on Bittensor.",
+  applicationName: "Bittensor Relics",
+  icons: {
+    icon: "/brand-relic.webp",
+    shortcut: "/brand-relic.webp",
+    apple: "/brand-relic.webp",
+  },
+  openGraph: {
+    title: "Bittensor Relics",
+    description: "Forge permanence from alpha on Bittensor.",
+    type: "website",
+    images: [
+      {
+        url: "/og-social.png",
+        width: 1200,
+        height: 630,
+        alt: "Bittensor Relics — Forge permanence from alpha.",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Bittensor Relics",
+    description: "Forge permanence from alpha on Bittensor.",
+    images: ["/og-social.png"],
+  },
 };
 
 export default function RootLayout({
@@ -24,11 +50,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en">
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        {children}
+      </body>
     </html>
   );
 }

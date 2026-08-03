@@ -1,0 +1,41 @@
+services:
+  - type: worker
+    name: bittensor-relics-indexer
+    runtime: node
+    buildCommand: npm ci
+    preDeployCommand: npm run indexer:migrate && npm run indexer:doctor
+    startCommand: npm run indexer:start
+    autoDeployTrigger: "off"
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SUBTENSOR_RPC
+        value: wss://test.chain.opentensor.ai
+      - key: CHAIN_GENESIS_HASH
+        value: 0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105
+      - key: SUPPORTED_SPEC_VERSION
+        value: "440"
+      - key: START_BLOCK
+        value: "7698720"
+      - key: STOP_BLOCK
+        sync: false
+  - type: worker
+    name: bittensor-relics-indexer-replay
+    runtime: node
+    buildCommand: npm ci
+    preDeployCommand: npm run indexer:migrate && npm run indexer:doctor
+    startCommand: npm run indexer:start
+    autoDeployTrigger: "off"
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SUBTENSOR_RPC
+        value: wss://test.chain.opentensor.ai
+      - key: CHAIN_GENESIS_HASH
+        value: 0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105
+      - key: SUPPORTED_SPEC_VERSION
+        value: "440"
+      - key: START_BLOCK
+        value: "7698720"
+      - key: STOP_BLOCK
+        sync: false

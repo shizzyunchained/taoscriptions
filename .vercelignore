@@ -1,0 +1,4 @@
+contracts/relic-settlement/target
+.git
+.next
+node_modules
