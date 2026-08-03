@@ -34,7 +34,7 @@ the [launch checklist](docs/LAUNCH_CHECKLIST.md) and a machine-checked
 - No EVM; the current dapp does not require a subnet to work
 - Finalized blocks only
 - Marketplace listings are signed discovery offers; buyer payments are disabled
-- A native chain-enforced payment-and-ownership mechanism is required before settlement
+- A native ink!/WASM settlement prototype is compiled for future v2 Relics; deployment, live testnet proof, and independent review are still required
 
 The `/wallet` workspace reads the connected account's finalized collection.
 Transfer review refreshes ownership without CDN caching, validates the next

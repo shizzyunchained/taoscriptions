@@ -110,7 +110,7 @@ export function BuyerCheckout({ artifactId, artifactName, artifactNumber, chainG
               <code>{compactHex(buyer.address, 14, 12)}</code>
               <dl>
                 <div><dt>Testnet balance</dt><dd>{formatRao(buyer.balanceRao)} TAO</dd></div>
-                <div><dt>Network fee</dt><dd>Pending settlement design</dd></div>
+                <div><dt>Network fee</dt><dd>Testnet contract dry-run required</dd></div>
                 <div><dt>Destination owner</dt><dd>{compactHex(buyer.accountHex, 12, 10)}</dd></div>
               </dl>
               {!hasAskingPrice && <p className="checkout-warning">This wallet does not currently hold the full asking price. No payment attempt will be made.</p>}
@@ -124,10 +124,10 @@ export function BuyerCheckout({ artifactId, artifactName, artifactNumber, chainG
       <ol className="checkout-gates">
         <li data-state={state === "ready" && hasAskingPrice && !isSeller ? "pass" : state === "ready" ? "blocked" : "waiting"}><span>1</span><div><strong>Wallet and balance</strong><small>{state === "ready" ? hasAskingPrice && !isSeller ? "Testnet buyer and asking-price balance verified" : "Buyer account is not purchase-ready" : "Waiting for buyer"}</small></div></li>
         <li data-state={state === "ready" ? "pass" : "waiting"}><span>2</span><div><strong>Listing and ownership</strong><small>{state === "ready" ? "Current owner and nonce match" : "Checked after connection"}</small></div></li>
-        <li data-state="blocked"><span>3</span><div><strong>Atomic settlement</strong><small>Native payment plus ownership enforcement is not available</small></div></li>
+        <li data-state="blocked"><span>3</span><div><strong>Atomic settlement</strong><small>Native ink!/WASM prototype compiled; deployment and audit are still required</small></div></li>
       </ol>
       <div className="checkout-action">
-        <div><strong>{state === "ready" ? "Review complete. Settlement remains locked." : "No signature. No transaction. No TAO movement."}</strong><p>The Buy button unlocks only after payment and Relic ownership can succeed or fail together.</p></div>
+        <div><strong>{state === "ready" ? "Review complete. Settlement remains locked." : "No signature. No transaction. No TAO movement."}</strong><p>Buying unlocks only after the published contract is deployed and proves payment and Relic ownership succeed or fail together on testnet.</p></div>
         {state === "ready" ? <button type="button" disabled>Settlement locked</button> : <button type="button" onClick={connectAndReview} disabled={state === "checking"}>{state === "checking" ? "Verifying wallet and listing…" : "Connect wallet and review"}</button>}
       </div>
       {message && <p className="error-message checkout-error" role="alert">{message}</p>}

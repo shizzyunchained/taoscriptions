@@ -19,6 +19,7 @@
 
 # production
 /build
+/contracts/relic-settlement/target/
 
 # misc
 .DS_Store
