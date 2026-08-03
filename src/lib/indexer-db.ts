@@ -494,6 +494,50 @@ export async function getListing(listingId: string) {
   return result.rows[0] ?? null;
 }
 
+export async function getListingStatus(listingId: string) {
+  const result = await pool().query<ListingRow & {
+    chain_genesis: string;
+    cancelled_at: Date | null;
+    checkpoint_block: string;
+    current_owner_account_hex: string;
+    current_ownership_nonce: string;
+  }>(
+    `SELECT l.listing_id, l.artifact_id, l.chain_genesis,
+      l.seller_account_hex, l.ownership_nonce, l.price_rao,
+      l.expiry_block, l.nonce, l.buyer_account_hex, l.message_text,
+      l.signature, l.created_at, l.cancelled_at,
+      c.block_number AS checkpoint_block,
+      a.owner_account_hex AS current_owner_account_hex,
+      a.ownership_nonce AS current_ownership_nonce
+     FROM listings l
+     JOIN artifacts a ON a.artifact_id = l.artifact_id
+     JOIN chain_checkpoints c ON c.chain_genesis = l.chain_genesis
+     WHERE l.listing_id = $1`,
+    [listingId],
+  );
+  const row = result.rows[0];
+  if (!row) return null;
+  const inactiveReason = row.cancelled_at
+    ? "cancelled"
+    : row.seller_account_hex !== row.current_owner_account_hex
+      ? "owner_changed"
+      : row.ownership_nonce !== row.current_ownership_nonce
+        ? "ownership_nonce_changed"
+        : BigInt(row.expiry_block) <= BigInt(row.checkpoint_block)
+          ? "expired"
+          : null;
+  return {
+    ...listing(row),
+    chainGenesis: row.chain_genesis,
+    active: inactiveReason === null,
+    inactiveReason,
+    cancelledAt: row.cancelled_at?.toISOString() ?? null,
+    checkpointBlock: row.checkpoint_block,
+    currentOwnerAccountHex: row.current_owner_account_hex,
+    currentOwnershipNonce: row.current_ownership_nonce,
+  };
+}
+
 export async function cancelListingAuthorization(listingId: string, seller: string, message: string, signature: string) {
   const result = await pool().query(
     `UPDATE listings SET cancellation_message = $1, cancellation_signature = $2,

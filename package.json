@@ -11,6 +11,8 @@
     "verify:runtime": "node scripts/verify-runtime.mjs",
     "verify:transaction": "node scripts/verify-transaction.mjs",
     "verify:mint-evidence": "node scripts/verify-mint-evidence.mjs",
+    "verify:marketplace-beta": "node scripts/verify-marketplace-beta.mjs",
+    "verify:production": "node scripts/verify-production.mjs",
     "release:check": "node scripts/check-release.mjs",
     "test:indexer": "node --test indexer/test/*.test.mjs",
     "indexer:migrate": "node indexer/src/migrate.mjs",

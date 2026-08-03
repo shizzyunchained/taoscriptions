@@ -1,8 +1,19 @@
 import { apiError, apiJson } from "@/lib/api-response";
-import { cancelListingAuthorization, getListing } from "@/lib/indexer-db";
+import { cancelListingAuthorization, getListing, getListingStatus } from "@/lib/indexer-db";
 import { marketplaceRequestError, verifiedCancellationRequest } from "@/lib/marketplace-request";
 
 type Props = { params: Promise<{ id: string }> };
+
+export async function GET(_: Request, { params }: Props) {
+  try {
+    const { id } = await params;
+    const listing = await getListingStatus(id);
+    if (!listing) return apiJson({ error: { code: "LISTING_NOT_FOUND", message: "The listing was not found." } }, { status: 404 });
+    return apiJson({ listing, settlementEnabled: false });
+  } catch (error) {
+    return apiError(error);
+  }
+}
 
 export async function DELETE(request: Request, { params }: Props) {
   try {
