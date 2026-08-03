@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ApiPromise } from "@polkadot/api";
+import type { EventRecord } from "@polkadot/types/interfaces";
 import {
   calculateLimitPrice,
   CONTENT_POLICY_ID,
@@ -19,7 +20,7 @@ import { assertExpectedGenesis } from "@/lib/chain-guard";
 import { assertMintPreflight } from "@/lib/mint-preflight";
 
 const APP_NAME = "Bittensor Relics";
-const TESTNET_RPC = process.env.NEXT_PUBLIC_SUBTENSOR_RPC ?? "wss://test.chain.opentensor.ai";
+const TESTNET_HTTP_RPC = process.env.NEXT_PUBLIC_SUBTENSOR_HTTP_RPC ?? "https://test.chain.opentensor.ai";
 const TESTNET_GENESIS = process.env.NEXT_PUBLIC_CHAIN_GENESIS_HASH ?? "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105";
 const RAO_PER_TAO = 1_000_000_000n;
 const ALLOWED_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
@@ -72,6 +73,48 @@ function quoteImpactBps(quote: BurnQuote) {
 
 function formatBps(bps: bigint) {
   return `${bps / 100n}.${(bps % 100n).toString().padStart(2, "0")}%`;
+}
+
+function waitFor(milliseconds: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+}
+
+async function waitForFinalizedExtrinsic(api: ApiPromise, txHash: string, afterBlock: number) {
+  const deadline = Date.now() + 180_000;
+  let checkedBlock = afterBlock;
+  while (Date.now() < deadline) {
+    const finalizedHash = await api.rpc.chain.getFinalizedHead();
+    const finalizedHeader = await api.rpc.chain.getHeader(finalizedHash);
+    const finalizedNumber = finalizedHeader.number.toNumber();
+    for (let blockNumber = checkedBlock + 1; blockNumber <= finalizedNumber; blockNumber += 1) {
+      const blockHash = await api.rpc.chain.getBlockHash(blockNumber);
+      const signedBlock = await api.rpc.chain.getBlock(blockHash);
+      const extrinsicIndex = signedBlock.block.extrinsics.findIndex(
+        (extrinsic) => extrinsic.hash.toHex().toLowerCase() === txHash,
+      );
+      if (extrinsicIndex >= 0) {
+        const [eventCodec, blockTimestamp, finalizedRuntime] = await Promise.all([
+          api.query.system.events.at(blockHash),
+          api.query.timestamp.now.at(blockHash),
+          api.rpc.state.getRuntimeVersion(blockHash),
+        ]);
+        const eventRecords = Array.from(eventCodec as unknown as Iterable<EventRecord>).filter(
+          (record) => record.phase.isApplyExtrinsic && record.phase.asApplyExtrinsic.toNumber() === extrinsicIndex,
+        );
+        return {
+          blockHash: blockHash.toHex().toLowerCase(),
+          blockNumber,
+          blockTimestamp,
+          eventRecords,
+          extrinsicIndex,
+          finalizedRuntime,
+        };
+      }
+      checkedBlock = blockNumber;
+    }
+    await waitFor(4_000);
+  }
+  throw new Error("The transaction was submitted but finality confirmation timed out. Check the transaction hash before trying again.");
 }
 
 function canvasBlob(canvas: HTMLCanvasElement, quality: number) {
@@ -178,8 +221,8 @@ export default function Home() {
     if (apiRef.current) return apiRef.current;
     if (!apiPromiseRef.current) {
       apiPromiseRef.current = (async () => {
-        const { ApiPromise, WsProvider } = await import("@polkadot/api");
-        const api = await ApiPromise.create({ provider: new WsProvider(TESTNET_RPC, 3_000), noInitWarn: true });
+        const { ApiPromise, HttpProvider } = await import("@polkadot/api");
+        const api = await ApiPromise.create({ provider: new HttpProvider(TESTNET_HTTP_RPC), noInitWarn: true });
         assertExpectedGenesis(api.genesisHash.toHex(), TESTNET_GENESIS);
         apiRef.current = api;
         setSignerReady(true);
@@ -512,81 +555,44 @@ export default function Home() {
       setQuote(assembled.freshQuote);
       const { web3FromSource } = await import("@polkadot/extension-dapp");
       const injector = await web3FromSource(account.source);
-      const subscription = { unsubscribe: undefined as (() => void) | undefined };
-      subscription.unsubscribe = await assembled.batch.signAndSend(
-        account.address,
-        { signer: injector.signer },
-        (result) => {
-          setTransactionHash(result.txHash.toHex());
-          if (result.dispatchError) {
-            const error = result.dispatchError;
-            const message = error.isModule
-              ? (() => {
-                  const decoded = assembled.api.registry.findMetaError(error.asModule);
-                  return `${decoded.section}.${decoded.name}: ${decoded.docs.join(" ")}`;
-                })()
-              : error.toString();
-            setMintError(message);
-            setMintState("error");
-            subscription.unsubscribe?.();
-            return;
-          }
-          if (result.status.isInBlock) setMintState("submitted");
-          if (result.status.isFinalized) {
-            void (async () => {
-              try {
-                const receipt = verifyFinalizedMintReceipt({
-                  eventRecords: result.events,
-                  expected: assembled.receiptExpectation,
-                });
-                const finalizedHash = result.status.asFinalized.toHex().toLowerCase();
-                const [header, signedBlock, blockTimestamp, finalizedRuntime] = await Promise.all([
-                  assembled.api.rpc.chain.getHeader(finalizedHash),
-                  assembled.api.rpc.chain.getBlock(finalizedHash),
-                  assembled.api.query.timestamp.now.at(finalizedHash),
-                  assembled.api.rpc.state.getRuntimeVersion(finalizedHash),
-                ]);
-                const txHash = result.txHash.toHex().toLowerCase();
-                const locatedIndex = signedBlock.block.extrinsics.findIndex(
-                  (extrinsic) => extrinsic.hash.toHex().toLowerCase() === txHash,
-                );
-                if (locatedIndex < 0 || (result.txIndex !== undefined && result.txIndex !== locatedIndex)) {
-                  throw new Error("FINALIZED_EXTRINSIC_POSITION_MISMATCH");
-                }
-                setMintEvidence(createMintEvidence({
-                  genesisHash: assembled.api.genesisHash.toHex(),
-                  runtimeSpec: finalizedRuntime.specVersion.toString(),
-                  blockNumber: header.number.toString(),
-                  blockHash: finalizedHash,
-                  extrinsicIndex: locatedIndex,
-                  extrinsicHash: txHash,
-                  signerAddress: account.address,
-                  signerAccountHex: assembled.receiptExpectation.signerAccountHex,
-                  routeHotkey: assembled.review.routeHotkey,
-                  routeHotkeyHex: assembled.receiptExpectation.routeHotkeyHex,
-                  netuid: assembled.receiptExpectation.netuid,
-                  subnetGeneration: assembled.currentGeneration,
-                  taoSpentRao: assembled.receiptExpectation.taoAmountRao.toString(),
-                  alphaBurnedRao: receipt.alphaBurnedRao.toString(),
-                  limitPriceRao: assembled.review.limitPrice.toString(),
-                  transactionFeeRao: receipt.transactionFeeRao.toString(),
-                  transactionTipRao: receipt.transactionTipRao.toString(),
-                  payload: assembled.review.payload,
-                  payloadHash: assembled.receiptExpectation.remarkHash,
-                  quoteBlock: assembled.review.quoteBlock,
-                  finalizedAt: new Date(Number(blockTimestamp.toString())).toISOString(),
-                }));
-                setMintState("finalized");
-              } catch {
-                setMintError("The finalized chain proof did not exactly match the Bittensor Relics transaction you signed.");
-                setMintState("error");
-              } finally {
-                subscription.unsubscribe?.();
-              }
-            })();
-          }
-        },
-      );
+      const baselineHash = await assembled.api.rpc.chain.getFinalizedHead();
+      const baselineHeader = await assembled.api.rpc.chain.getHeader(baselineHash);
+      await assembled.batch.signAsync(account.address, { signer: injector.signer });
+      const txHash = assembled.batch.hash.toHex().toLowerCase();
+      const submittedHash = await assembled.api.rpc.author.submitExtrinsic(assembled.batch);
+      if (submittedHash.toHex().toLowerCase() !== txHash) throw new Error("The node returned a different transaction hash.");
+      setTransactionHash(txHash);
+      setMintState("submitted");
+
+      const finalized = await waitForFinalizedExtrinsic(assembled.api, txHash, baselineHeader.number.toNumber());
+      const receipt = verifyFinalizedMintReceipt({
+        eventRecords: finalized.eventRecords,
+        expected: assembled.receiptExpectation,
+      });
+      setMintEvidence(createMintEvidence({
+        genesisHash: assembled.api.genesisHash.toHex(),
+        runtimeSpec: finalized.finalizedRuntime.specVersion.toString(),
+        blockNumber: finalized.blockNumber.toString(),
+        blockHash: finalized.blockHash,
+        extrinsicIndex: finalized.extrinsicIndex,
+        extrinsicHash: txHash,
+        signerAddress: account.address,
+        signerAccountHex: assembled.receiptExpectation.signerAccountHex,
+        routeHotkey: assembled.review.routeHotkey,
+        routeHotkeyHex: assembled.receiptExpectation.routeHotkeyHex,
+        netuid: assembled.receiptExpectation.netuid,
+        subnetGeneration: assembled.currentGeneration,
+        taoSpentRao: assembled.receiptExpectation.taoAmountRao.toString(),
+        alphaBurnedRao: receipt.alphaBurnedRao.toString(),
+        limitPriceRao: assembled.review.limitPrice.toString(),
+        transactionFeeRao: receipt.transactionFeeRao.toString(),
+        transactionTipRao: receipt.transactionTipRao.toString(),
+        payload: assembled.review.payload,
+        payloadHash: assembled.receiptExpectation.remarkHash,
+        quoteBlock: assembled.review.quoteBlock,
+        finalizedAt: new Date(Number(finalized.blockTimestamp.toString())).toISOString(),
+      }));
+      setMintState("finalized");
     } catch (cause) {
       setMintError(cause instanceof Error ? cause.message : "The wallet did not complete the testnet mint.");
       setMintState("error");

@@ -57,8 +57,9 @@ Open [http://localhost:3000](http://localhost:3000). The default RPC is
 `NEXT_PUBLIC_CHAIN_GENESIS_HASH` and fails closed if that endpoint serves a
 different chain. Public subnet lists and quotes are read through the server-side
 HTTPS endpoint configured by `SUBTENSOR_HTTP_RPC`, so a browser WebSocket outage
-cannot leave the forge selector blank. The WebSocket remains isolated to wallet
-transaction construction, signing, submission, and finality.
+cannot leave the forge selector blank. The forge also uses the public HTTPS RPC
+for transaction construction, submission, and finalized-block polling, avoiding
+shared WebSocket subscription exhaustion while preserving wallet-native signing.
 
 ## Verification
 
