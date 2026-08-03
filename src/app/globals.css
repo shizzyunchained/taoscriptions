@@ -485,6 +485,11 @@ h1 span {
 .quote-card {
   border-left: 1px solid var(--line-strong);
   background: var(--panel);
+  position: sticky;
+  top: 96px;
+  align-self: start;
+  max-height: calc(100vh - 112px);
+  overflow-y: auto;
 }
 .step-label {
   display: flex;
@@ -611,6 +616,24 @@ h1 span {
 .content-covenant code {
   color: var(--ember);
   font: inherit;
+}
+.forge-covenant {
+  margin-top: 20px;
+  padding: 18px;
+  grid-template-columns: 22px 1fr;
+  gap: 13px;
+}
+.forge-covenant strong {
+  font-size: 14px;
+}
+.forge-covenant em {
+  margin-top: 7px;
+  font-size: 12px;
+}
+.forge-covenant small {
+  margin-top: 9px;
+  font-size: 10px;
+  line-height: 1.55;
 }
 .field select:disabled {
   color: var(--dim);
@@ -1566,6 +1589,9 @@ footer > a:last-child:hover {
   .quote-card {
     border-left: 0;
     border-top: 1px solid var(--line-strong);
+    position: static;
+    max-height: none;
+    overflow: visible;
   }
   .protocol-call {
     grid-template-columns: 1fr;

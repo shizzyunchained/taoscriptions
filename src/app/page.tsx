@@ -1287,37 +1287,6 @@ export default function Home() {
               />
               <small>{Array.from(relicBody).length}/1,024 characters</small>
             </label>
-            <label className="content-covenant">
-              <input
-                type="checkbox"
-                checked={policyAccepted}
-                onChange={(event) => {
-                  setPolicyAccepted(event.target.checked);
-                  setMintReview(null);
-                  setMintState("idle");
-                }}
-              />
-              <span>
-                <strong>
-                  Experimental protocol — never risk TAO you cannot afford to
-                  lose
-                </strong>
-                <em>
-                  Bittensor Relics is an experiment. Use testnet TAO only. Do
-                  not use mainnet TAO.
-                </em>
-                <small>
-                  <b>Relics content covenant:</b> I confirm this Relic contains
-                  no sexual or exploitative content, graphic violence,
-                  weapons-focused imagery, hate, or illegal material. The{" "}
-                  <code>{CONTENT_POLICY_ID}</code> attestation is included in
-                  the signed manifest; because on-chain bytes cannot be removed,
-                  miners, validators, and the marketplace may refuse
-                  noncompliant content.
-                </small>
-              </span>
-            </label>
-
             <div className="step-label wallet-step">
               <span>04</span>Connect the signer
             </div>
@@ -1454,6 +1423,30 @@ export default function Home() {
               <p className="error-message" role="alert">
                 {mintError}
               </p>
+            )}
+            {mintState !== "finalized" && (
+              <label className="content-covenant forge-covenant">
+                <input
+                  type="checkbox"
+                  checked={policyAccepted}
+                  onChange={(event) => {
+                    setPolicyAccepted(event.target.checked);
+                    setMintReview(null);
+                    setMintState("idle");
+                  }}
+                />
+                <span>
+                  <strong>Confirm before forging</strong>
+                  <em>Experimental protocol · use testnet TAO only</em>
+                  <small>
+                    <b>Relics content covenant:</b> I confirm this Relic contains
+                    no sexual or exploitative content, graphic violence,
+                    weapons-focused imagery, hate, or illegal material. The{" "}
+                    <code>{CONTENT_POLICY_ID}</code> attestation is included in
+                    the signed manifest. On-chain bytes cannot be removed.
+                  </small>
+                </span>
+              </label>
             )}
             {mintState === "finalized" && mintEvidence ? (
               <div className="mint-success">
