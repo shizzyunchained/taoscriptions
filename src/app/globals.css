@@ -108,6 +108,18 @@ a:focus-visible {
   flex: 0 0 auto;
   white-space: nowrap;
 }
+.brand-logo {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(157, 91, 255, 0.58);
+  border-radius: 50%;
+  object-fit: cover;
+  filter: brightness(1.12) contrast(1.08);
+  box-shadow:
+    0 0 0 3px rgba(157, 91, 255, 0.08),
+    0 0 24px rgba(137, 67, 255, 0.22);
+}
 .brand-sigil {
   width: 34px;
   height: 34px;
@@ -1569,9 +1581,9 @@ footer {
 .footer-brand {
   font-size: 15px;
 }
-.footer-brand .brand-sigil {
-  width: 28px;
-  height: 28px;
+.footer-brand .brand-logo {
+  width: 38px;
+  height: 38px;
 }
 footer p,
 footer > a:last-child {

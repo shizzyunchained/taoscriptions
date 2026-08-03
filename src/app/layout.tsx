@@ -18,6 +18,11 @@ export const metadata: Metadata = {
   description:
     "Forge numbered digital artifacts by atomically buying and burning subnet alpha on Bittensor.",
   applicationName: "Bittensor Relics",
+  icons: {
+    icon: "/brand-relic.webp",
+    shortcut: "/brand-relic.webp",
+    apple: "/brand-relic.webp",
+  },
   openGraph: {
     title: "Bittensor Relics",
     description: "Forge permanence from alpha on Bittensor.",
