@@ -3217,7 +3217,7 @@ footer > a:last-child:hover {
   outline: 0;
   background: var(--field);
   color: var(--ink);
-  font-size: 12px;
+  font-size: 14px;
 }
 .market-search input::placeholder {
   color: var(--dim);
@@ -3230,7 +3230,7 @@ footer > a:last-child:hover {
   justify-content: center;
   background: var(--acid);
   color: #11150d;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 780;
   text-decoration: none;
 }
@@ -3249,7 +3249,7 @@ footer > a:last-child:hover {
   display: block;
   margin-bottom: 13px;
   color: var(--dim);
-  font: 8px var(--font-geist-mono), monospace;
+  font: 10px var(--font-geist-mono), monospace;
   text-transform: uppercase;
   letter-spacing: 0.09em;
 }
@@ -3290,29 +3290,29 @@ footer > a:last-child:hover {
 }
 .market-active-filter strong {
   color: var(--ink);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 550;
 }
 .market-active-filter small {
   color: var(--dim);
-  font: 8px var(--font-geist-mono), monospace;
+  font: 10px var(--font-geist-mono), monospace;
 }
 .market-filters > div:first-child > a {
   margin: 15px 11px 0;
   display: inline-block;
   color: var(--acid);
-  font-size: 8px;
+  font-size: 10px;
   text-decoration: none;
 }
 .market-filter-proof strong {
   color: var(--ink);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
 }
 .market-filter-proof p {
   margin-top: 9px;
   color: var(--dim);
-  font-size: 8px;
+  font-size: 10px;
   line-height: 1.55;
 }
 .market-results > header {
@@ -3331,11 +3331,11 @@ footer > a:last-child:hover {
 }
 .market-results > header strong {
   color: var(--ink);
-  font-size: 12px;
+  font-size: 14px;
 }
 .market-results > header span {
   color: var(--dim);
-  font-size: 8px;
+  font-size: 10px;
   text-transform: uppercase;
 }
 .market-results select {
@@ -3344,7 +3344,7 @@ footer > a:last-child:hover {
   border: 1px solid var(--line);
   background: var(--field);
   color: var(--muted);
-  font-size: 9px;
+  font-size: 11px;
 }
 .market-card-grid {
   padding: 16px;
@@ -3385,7 +3385,7 @@ footer > a:last-child:hover {
   top: 12px;
   border: 1px solid var(--line-strong);
   background: rgba(4, 7, 4, 0.88);
-  font: 8px var(--font-geist-mono), monospace;
+  font: 10px var(--font-geist-mono), monospace;
   font-style: normal;
   text-transform: uppercase;
   backdrop-filter: blur(10px);
@@ -3403,7 +3403,7 @@ footer > a:last-child:hover {
 }
 .market-card-body > span {
   color: var(--dim);
-  font: 8px var(--font-geist-mono), monospace;
+  font: 10px var(--font-geist-mono), monospace;
   text-transform: uppercase;
 }
 .market-card-body h2 {
@@ -3413,12 +3413,12 @@ footer > a:last-child:hover {
   letter-spacing: -0.035em;
 }
 .market-card-body > p {
-  height: 31px;
+  height: 40px;
   margin-top: 9px;
   overflow: hidden;
   color: var(--muted);
-  font-size: 9px;
-  line-height: 1.65;
+  font-size: 12px;
+  line-height: 1.55;
 }
 .market-card-body dl {
   margin-top: 13px;
@@ -3436,13 +3436,13 @@ footer > a:last-child:hover {
 }
 .market-card-body dt {
   color: var(--dim);
-  font-size: 7px;
+  font-size: 9px;
   text-transform: uppercase;
 }
 .market-card-body dd {
   margin-top: 8px;
   color: var(--ink);
-  font: 8px var(--font-geist-mono), monospace;
+  font: 10px var(--font-geist-mono), monospace;
   line-height: 1.45;
   overflow-wrap: anywhere;
 }
@@ -3457,7 +3457,7 @@ footer > a:last-child:hover {
   justify-content: center;
   border: 1px solid var(--line-strong);
   color: var(--ink);
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   text-decoration: none;
 }
