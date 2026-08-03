@@ -799,10 +799,6 @@ footer > a:last-child:hover { color: var(--ink); }
 .paper-status ul { margin: 26px 0 0; padding-left: 18px; color: var(--dim); font-size: 10px; line-height: 1.9; }
 
 /* Bittensor Relics Blackpaper */
-.blackpaper-warning { margin-top: 38px; padding: clamp(26px, 4vw, 44px); border: 1px solid rgba(255,177,74,.52); background: linear-gradient(135deg, rgba(255,159,67,.12), rgba(255,159,67,.025)); box-shadow: inset 4px 0 0 var(--ember); }
-.blackpaper-warning > span { color: var(--ember); font: 9px var(--font-geist-mono), monospace; text-transform: uppercase; letter-spacing: .12em; }
-.blackpaper-warning > strong { max-width: 940px; margin-top: 15px; display: block; color: #ffd19a; font: 400 clamp(27px, 4vw, 52px)/1.06 Georgia, serif; }
-.blackpaper-warning > p { max-width: 900px; margin-top: 18px; color: #b8beb5; font-size: 12px; line-height: 1.75; }
 .blackpaper-thesis { padding: clamp(70px, 11vw, 140px) 0; border-bottom: 1px solid var(--line); }
 .blackpaper-thesis p { color: var(--ink); font: 400 clamp(36px, 6.1vw, 80px)/1.02 Georgia, serif; letter-spacing: -.045em; }
 .blackpaper-thesis p:nth-child(2) { color: var(--ember); }
@@ -882,6 +878,5 @@ footer > a:last-child:hover { color: var(--ink); }
   .score-example dl div { flex-direction: column; gap: 7px; }
   .score-example dd { max-width: none; text-align: left; }
   .blackpaper-contents ol, .paper-state-grid, .paper-metrics, .founding-proof, .paper-status-table, .blackpaper-references > div { grid-template-columns: 1fr; }
-  .blackpaper-warning { padding: 24px 22px; }
   .blackpaper-prose p, .blackpaper-prose li { font-size: 17px; }
 }

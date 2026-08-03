@@ -57,12 +57,6 @@ export default function BlackpaperPage() {
         <div><span>Protocol v1 / Draft 0.2</span><strong>A complete account of the experiment, its working testnet implementation, its hard limits, and its proposed path to a Bittensor subnet.</strong></div>
       </header>
 
-      <section className="blackpaper-warning" aria-label="Experimental software warning">
-        <span>Experimental protocol</span>
-        <strong>Use testnet TAO only. Never risk TAO you cannot afford to lose.</strong>
-        <p>Bittensor Relics is unfinished software. Mainnet minting and marketplace settlement are disabled. Nothing in this paper is a promise of value, profit, token appreciation, permanent service availability, or future subnet registration.</p>
-      </section>
-
       <section className="blackpaper-thesis">
         <p>The Relic is the art.</p><p>The burn is the proof.</p><p>The network verifies the memory.</p>
       </section>
