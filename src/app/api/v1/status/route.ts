@@ -18,6 +18,9 @@ export async function GET() {
       checkpoint: {
         blockNumber: status.block_number,
         blockHash: status.block_hash,
+        checkpointVersion: status.checkpoint_version,
+        stateRoot: status.state_root,
+        transcriptHash: status.transcript_hash,
         updatedAt: status.updated_at.toISOString(),
       },
       artifactCount: status.artifact_count,

@@ -17,6 +17,21 @@ Subtensor finalized head
 
 The indexer follows finalized heads, not best heads.
 
+## Quorum checkpoint
+
+Every committed block advances a deterministic BLAKE2-256 state root. The
+transition commits to the prior root and a canonical transcript containing the
+finalized block position plus every accepted mint, accepted transfer, and
+rejected protocol operation in extrinsic order. Independent workers that replay
+the same supported range must therefore publish the same checkpoint block,
+block hash, transcript hash, and state root.
+
+The public status endpoint exposes this proof material. During the bootstrap
+phase the website may read one worker, but it must not call that a quorum. The
+next phase queries three isolated workers and reports verified only when at
+least two match exactly. A mismatch is displayed as disputed and is never
+silently resolved by choosing the primary database.
+
 ## Minimum persisted evidence
 
 For every processed finalized block:

@@ -145,8 +145,12 @@ export async function indexerStatus() {
     updated_at: Date;
     artifact_count: string;
     activation_block: string;
+    checkpoint_version: number | null;
+    state_root: string | null;
+    transcript_hash: string | null;
   }>(
-    `SELECT c.block_number, c.block_hash, c.updated_at, p.activation_block,
+    `SELECT c.block_number, c.block_hash, c.updated_at, c.checkpoint_version,
+      c.state_root, c.transcript_hash, p.activation_block,
       (SELECT COUNT(*) FROM artifacts a WHERE a.chain_genesis = c.chain_genesis) AS artifact_count
      FROM chain_checkpoints c
      JOIN protocol_config p ON p.chain_genesis = c.chain_genesis

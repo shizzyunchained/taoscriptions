@@ -3,7 +3,10 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { newDb } from "pg-mem";
 
-const migration = await readFile(new URL("../sql/001_initial.sql", import.meta.url), "utf8");
+const migration = [
+  await readFile(new URL("../sql/001_initial.sql", import.meta.url), "utf8"),
+  await readFile(new URL("../sql/002_checkpoint_roots.sql", import.meta.url), "utf8"),
+].join("\n");
 
 test("migration creates the finalized-state schema", async () => {
   const memory = newDb();
@@ -16,6 +19,14 @@ test("migration creates the finalized-state schema", async () => {
   assert.deepEqual(
     tables.rows.map((row) => row.table_name),
     ["artifacts", "chain_checkpoints", "indexed_blocks", "listings", "protocol_config", "rejected_operations", "transfers"],
+  );
+  const checkpointColumns = await pool.query(
+    `SELECT column_name FROM information_schema.columns
+     WHERE table_name = 'chain_checkpoints' ORDER BY column_name`,
+  );
+  assert.deepEqual(
+    checkpointColumns.rows.map((row) => row.column_name),
+    ["block_hash", "block_number", "chain_genesis", "checkpoint_version", "state_root", "transcript_hash", "updated_at"],
   );
   await pool.end();
 });

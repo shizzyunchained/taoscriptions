@@ -1,16 +1,21 @@
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
+import path from "node:path";
 import pg from "pg";
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DATABASE_URL is required.");
 
-const sqlUrl = new URL("../sql/001_initial.sql", import.meta.url);
-const sql = await readFile(fileURLToPath(sqlUrl), "utf8");
+const sqlDirectory = fileURLToPath(new URL("../sql/", import.meta.url));
+const migrations = (await readdir(sqlDirectory))
+  .filter((name) => /^\d+_.+\.sql$/.test(name))
+  .sort();
 const pool = new pg.Pool({ connectionString: databaseUrl, ssl: databaseUrl.includes("localhost") ? false : { rejectUnauthorized: false } });
 
 try {
-  await pool.query(sql);
+  for (const migration of migrations) {
+    await pool.query(await readFile(path.join(sqlDirectory, migration), "utf8"));
+  }
   console.log("Bittensor Relics indexer schema is ready.");
 } finally {
   await pool.end();

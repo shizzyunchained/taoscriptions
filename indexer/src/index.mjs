@@ -11,6 +11,12 @@ import {
   validateMint,
   validateTransfer,
 } from "./protocol.mjs";
+import {
+  CHECKPOINT_GENESIS_ROOT,
+  CHECKPOINT_VERSION,
+  nextCheckpointRoot,
+  transcriptForBlock,
+} from "./checkpoint.mjs";
 
 const databaseUrl = process.env.DATABASE_URL;
 const rpcUrl = process.env.SUBTENSOR_RPC ?? "wss://test.chain.opentensor.ai";
@@ -228,17 +234,87 @@ async function processBlock(api, blockNumber) {
       }
     }
 
+    const priorCheckpoint = await client.query(
+      `SELECT state_root FROM chain_checkpoints WHERE chain_genesis = $1 FOR UPDATE`,
+      [expectedGenesis],
+    );
+    const transcript = await transcriptForBlock(client, expectedGenesis, blockNumber, blockHash);
+    const checkpoint = nextCheckpointRoot(
+      priorCheckpoint.rows[0]?.state_root ?? CHECKPOINT_GENESIS_ROOT,
+      transcript,
+    );
     await client.query(
-      `INSERT INTO chain_checkpoints (chain_genesis, block_number, block_hash)
-       VALUES ($1,$2,$3)
+      `INSERT INTO chain_checkpoints (
+        chain_genesis, block_number, block_hash, checkpoint_version, state_root, transcript_hash
+       ) VALUES ($1,$2,$3,$4,$5,$6)
        ON CONFLICT (chain_genesis) DO UPDATE
-       SET block_number = EXCLUDED.block_number, block_hash = EXCLUDED.block_hash, updated_at = NOW()`,
-      [expectedGenesis, blockNumber, blockHash],
+       SET block_number = EXCLUDED.block_number, block_hash = EXCLUDED.block_hash,
+         checkpoint_version = EXCLUDED.checkpoint_version, state_root = EXCLUDED.state_root,
+         transcript_hash = EXCLUDED.transcript_hash, updated_at = NOW()`,
+      [expectedGenesis, blockNumber, blockHash, CHECKPOINT_VERSION, checkpoint.stateRoot, checkpoint.transcriptHash],
     );
     await client.query("COMMIT");
     health.checkpoint = blockNumber;
     health.lastCommittedAt = new Date().toISOString();
     health.lagBlocks = health.finalizedHead === null ? null : Math.max(health.finalizedHead - blockNumber, 0);
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function backfillCheckpointRoot() {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN ISOLATION LEVEL SERIALIZABLE");
+    const checkpoint = await client.query(
+      `SELECT block_number, state_root FROM chain_checkpoints
+       WHERE chain_genesis = $1 FOR UPDATE`,
+      [expectedGenesis],
+    );
+    if (!checkpoint.rowCount || checkpoint.rows[0].state_root) {
+      await client.query("COMMIT");
+      return;
+    }
+    const checkpointBlock = Number(checkpoint.rows[0].block_number);
+    const blocks = await client.query(
+      `SELECT block_number, block_hash FROM indexed_blocks
+       WHERE chain_genesis = $1 AND block_number BETWEEN $2 AND $3
+       ORDER BY block_number ASC`,
+      [expectedGenesis, startBlock, checkpointBlock],
+    );
+    const expectedCount = checkpointBlock - startBlock + 1;
+    if (blocks.rowCount !== expectedCount) {
+      throw new Error(`CHECKPOINT_ROOT_BACKFILL_GAP:${blocks.rowCount}/${expectedCount}`);
+    }
+    let stateRoot = CHECKPOINT_GENESIS_ROOT;
+    let transcriptHash = null;
+    for (let offset = 0; offset < blocks.rows.length; offset += 1) {
+      const row = blocks.rows[offset];
+      if (Number(row.block_number) !== startBlock + offset) {
+        throw new Error(`CHECKPOINT_ROOT_BACKFILL_NONCONTIGUOUS:${row.block_number}`);
+      }
+      const transcript = await transcriptForBlock(
+        client,
+        expectedGenesis,
+        Number(row.block_number),
+        row.block_hash,
+      );
+      ({ stateRoot, transcriptHash } = nextCheckpointRoot(stateRoot, transcript));
+    }
+    await client.query(
+      `UPDATE chain_checkpoints SET checkpoint_version = $1, state_root = $2,
+        transcript_hash = $3, updated_at = NOW() WHERE chain_genesis = $4`,
+      [CHECKPOINT_VERSION, stateRoot, transcriptHash, expectedGenesis],
+    );
+    await client.query("COMMIT");
+    console.log(JSON.stringify({
+      event: "checkpoint_root_backfilled",
+      blockNumber: checkpointBlock,
+      stateRoot,
+    }));
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
@@ -264,6 +340,7 @@ async function main() {
   if (!protocolConfig.rowCount || Number(protocolConfig.rows[0].activation_block) !== startBlock) {
     throw new Error(`ACTIVATION_BLOCK_MISMATCH:${protocolConfig.rows[0]?.activation_block ?? "missing"}`);
   }
+  await backfillCheckpointRoot();
 
   const api = await ApiPromise.create({ provider: new WsProvider(rpcUrl), noInitWarn: true });
   const genesis = api.genesisHash.toHex();
