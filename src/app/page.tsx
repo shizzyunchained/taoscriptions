@@ -1431,8 +1431,19 @@ export default function Home() {
             )}
             {mintState === "finalized" && mintEvidence ? (
               <div className="mint-success">
-                <strong>Relic mint finalized</strong>
-                <span>{mintEvidence.artifactId}</span>
+                <div className="mint-success-head">
+                  <i aria-hidden="true">✓</i>
+                  <div>
+                    <strong>Relic finalized</strong>
+                    <p>Recorded in finalized Bittensor testnet history.</p>
+                  </div>
+                </div>
+                <div className="mint-success-id">
+                  <small>Relic ID</small>
+                  <code title={mintEvidence.artifactId}>
+                    {shortAddress(mintEvidence.artifactId)}
+                  </code>
+                </div>
                 <dl>
                   <div>
                     <dt>Finalized block</dt>

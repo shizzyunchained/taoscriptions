@@ -1247,37 +1247,69 @@ h1 span {
 }
 .mint-success {
   margin-top: 14px;
-  padding: 16px;
+  padding: clamp(20px, 3vw, 28px);
   border: 1px solid rgba(200, 245, 107, 0.4);
-  background: rgba(200, 245, 107, 0.06);
+  background: linear-gradient(145deg, rgba(200, 245, 107, 0.085), rgba(200, 245, 107, 0.025));
 }
-.mint-success strong,
-.mint-success span {
-  display: block;
+.mint-success-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.mint-success-head > i {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(200, 245, 107, 0.48);
+  border-radius: 50%;
+  color: var(--acid);
+  font-size: 16px;
+  font-style: normal;
 }
 .mint-success strong {
   color: var(--acid);
-  font-size: 12px;
+  font-size: 17px;
 }
-.mint-success span {
-  margin-top: 6px;
-  color: #b5bbb1;
-  font:
-    9px var(--font-geist-mono),
-    monospace;
-}
-.mint-success p {
-  margin-top: 10px;
+.mint-success-head p {
+  margin-top: 4px;
   color: var(--dim);
-  font-size: 10px;
+  font-size: 9px;
   line-height: 1.5;
 }
+.mint-success-id {
+  min-width: 0;
+  margin-top: 20px;
+  padding: 13px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border: 1px solid rgba(200, 245, 107, 0.16);
+  background: rgba(0, 0, 0, 0.18);
+}
+.mint-success-id small {
+  flex: 0 0 auto;
+  color: var(--dim);
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.mint-success-id code {
+  min-width: 0;
+  overflow: hidden;
+  color: #dfe6da;
+  font: 10px var(--font-geist-mono), monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .mint-success dl {
-  margin-top: 14px;
+  margin-top: 18px;
   border-top: 1px solid rgba(200, 245, 107, 0.18);
 }
 .mint-success dl div {
-  padding: 8px 0;
+  padding: 11px 0;
   display: flex;
   justify-content: space-between;
   gap: 16px;
@@ -1297,8 +1329,8 @@ h1 span {
 }
 .mint-success button {
   width: 100%;
-  margin-top: 14px;
-  padding: 12px;
+  margin-top: 20px;
+  padding: 15px;
   border: 1px solid rgba(200, 245, 107, 0.45);
   background: transparent;
   color: var(--acid);
@@ -5336,6 +5368,14 @@ footer > a:last-child:hover {
 }
 
 @media (max-width: 560px) {
+  .mint-success-id {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .mint-success-id code {
+    width: 100%;
+  }
   .live-featured-relic .founding-explorer-copy {
     padding: 30px 22px;
   }
