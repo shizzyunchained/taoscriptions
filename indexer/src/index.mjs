@@ -24,6 +24,7 @@ const expectedGenesis = process.env.CHAIN_GENESIS_HASH ?? "0x8f9cf856bf558a14440
 const supportedSpec = Number.parseInt(process.env.SUPPORTED_SPEC_VERSION ?? "440", 10);
 const { startBlock, stopBlock } = parseBlockBounds();
 const port = Number.parseInt(process.env.PORT ?? "10000", 10);
+const lockRetryMs = Number.parseInt(process.env.INDEXER_LOCK_RETRY_MS ?? "5000", 10);
 
 if (!databaseUrl) throw new Error("DATABASE_URL is required.");
 
@@ -46,6 +47,8 @@ const health = {
 function healthSnapshot() {
   return { event: "indexer_health", version: INDEXER_VERSION, ...health };
 }
+
+const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
 setInterval(() => console.log(JSON.stringify(healthSnapshot())), 60_000).unref();
 
@@ -328,8 +331,15 @@ async function backfillCheckpointRoot() {
 
 async function main() {
   const lockClient = await pool.connect();
-  const lock = await lockClient.query("SELECT pg_try_advisory_lock(684927314) AS acquired");
-  if (!lock.rows[0].acquired) throw new Error("Another Bittensor Relics indexer owns the database lock.");
+  while (true) {
+    const lock = await lockClient.query("SELECT pg_try_advisory_lock(684927314) AS acquired");
+    if (lock.rows[0].acquired) break;
+    health.status = "waiting";
+    health.error = "Waiting for the retiring indexer instance to release the database lock.";
+    console.log(JSON.stringify(healthSnapshot()));
+    await wait(lockRetryMs);
+  }
+  health.error = null;
 
   await pool.query(
     `INSERT INTO protocol_config (chain_genesis, activation_block)
