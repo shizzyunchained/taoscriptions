@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { ListingForm } from "@/components/listing-form";
 import type { ApiPromise } from "@polkadot/api";
 import { createTransferPayload } from "@/lib/protocol";
 import { formatRao } from "@/lib/format";
@@ -507,6 +508,7 @@ export function WalletWorkspace() {
               <Link href="/#forge">Enter the Forge</Link>
             </div>
           ) : (
+            <>
             <div className="owned-layout">
               <div className="owned-list">
                 <div>
@@ -680,11 +682,9 @@ export function WalletWorkspace() {
                         Download verified evidence
                       </a>
                     ) : (
-                      <Link
-                        href={`/relic/${encodeURIComponent(selected.artifactId)}`}
-                      >
-                        Open proof &amp; list in Marketplace
-                      </Link>
+                      <a href={`/api/v1/artifacts/${encodeURIComponent(selected.artifactId)}?fresh=1`}>
+                        View indexed evidence
+                      </a>
                     )}
                   </>
                 ) : (
@@ -699,6 +699,15 @@ export function WalletWorkspace() {
                 )}
               </div>
             </div>
+            {selected && !proofMode && (
+              <ListingForm
+                artifactId={selected.artifactId}
+                ownerAccountHex={selected.ownerAccountHex}
+                ownershipNonce={selected.ownershipNonce}
+                chainGenesis={TESTNET_GENESIS}
+              />
+            )}
+            </>
           )}
         </>
       )}

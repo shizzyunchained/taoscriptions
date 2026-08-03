@@ -120,8 +120,8 @@ export default async function ExplorePage({
               <div><dt>Current owner</dt><dd>{compactHex(featured.ownerAccountHex)}</dd></div>
             </dl>
             <div className="founding-explorer-actions">
-              <Link href={`/relic/${encodeURIComponent(featured.artifactId)}`} className="primary">List this Relic →</Link>
-              <Link href={`/relic/${encodeURIComponent(featured.artifactId)}`}>Verify full proof</Link>
+              <Link href="/wallet" className="primary">List this Relic →</Link>
+              <a href="/evidence/founding-testnet-relic.json">Verify evidence</a>
             </div>
           </div>
         </section>
